@@ -82,10 +82,14 @@ export async function POST(request: Request) {
   let pdfContext = "";
   if (documentIds.length > 0) {
     try {
+      const cookie = request.headers.get('cookie') || '';
       const backendUrl = process.env.BACKEND_URL || "http://localhost:4000";
       const res = await fetch(`${backendUrl}/api/chat/context`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          cookie: cookie,
+        },
         body: JSON.stringify({ prompt, documentIds }),
       });
       if (res.ok) {

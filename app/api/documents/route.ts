@@ -14,9 +14,13 @@ export async function DELETE(request: Request) {
   }
 
   try {
+    const cookie = request.headers.get('cookie') || '';
     const backendUrl = process.env.BACKEND_URL || 'http://localhost:4000';
     const res = await fetch(`${backendUrl}/api/documents/${body.documentId}`, {
       method: 'DELETE',
+      headers: {
+        cookie: cookie,
+      },
     });
 
     if (!res.ok) {
@@ -51,9 +55,13 @@ export async function POST(request: Request) {
     const backendFormData = new FormData();
     backendFormData.append('file', file);
 
+    const cookie = request.headers.get('cookie') || '';
     const res = await fetch(`${backendUrl}/api/documents`, {
       method: 'POST',
       body: backendFormData,
+      headers: {
+        cookie: cookie,
+      },
     });
 
     if (!res.ok) {
