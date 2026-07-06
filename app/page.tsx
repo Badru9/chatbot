@@ -1,8 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import PortalLayout from './(portal)/layout';
-import PortalGrid from './components/portal/PortalGrid';
+import PortalLayout from "./(portal)/layout";
+import PortalGrid from "./components/portal/PortalGrid";
 
 export default function App() {
   return (

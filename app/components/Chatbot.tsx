@@ -2,11 +2,15 @@
 
 import { SparkleIcon } from '@phosphor-icons/react';
 import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { sendChatMessage } from '../../services/chatService';
+import { uploadDocument, deleteDocument } from '../../services/documentService';
 
 import ChatInputBar from './ChatInputBar';
 import ChatSidebar, { type SidebarLibraryFile, type SidebarSession } from './ChatSidebar';
 import MarkdownRenderer from './MarkdownRenderer';
 import UploadFileModal from './UploadFileModal';
+import { ScrollShadow } from '@heroui/react';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -152,16 +156,9 @@ export default function Chatbot() {
     setIsUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', uploadFile);
+      const payload = await uploadMutation.mutateAsync(uploadFile);
 
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        body: formData,
-      });
-      const payload = (await response.json()) as UploadDocumentResponse;
-
-      if (!response.ok || !payload.document) {
+      if (!payload.document) {
         throw new Error(payload.error ?? 'Gagal upload PDF.');
       }
 
@@ -188,7 +185,7 @@ export default function Chatbot() {
     setMessages([]);
     setInput('');
     setStreamingContent('');
-    setSelectedFileIds([]);
+    setSelectedFileIds([]); ``
     setActiveMenu('new');
   };
 
@@ -206,11 +203,11 @@ export default function Chatbot() {
     setLibraryFiles((prev) => prev.filter((file) => file.id !== fileId));
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
 
-    await fetch('/api/documents', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ documentId: fileId }),
-    }).catch(() => undefined);
+    try {
+      await deleteMutation.mutateAsync(fileId);
+    } catch (error) {
+      console.error('Failed to delete file from backend:', error);
+    }
   };
 
   const toggleFile = (fileId: string) => {
@@ -231,6 +228,17 @@ export default function Chatbot() {
     if (event.key === 'Enter') handleSubmit();
     if (event.key === 'Escape') setInput((value) => value.replace(/@[^\s]*$/, ''));
   };
+  const chatMutation = useMutation({
+    mutationFn: sendChatMessage,
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: uploadDocument,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+  });
 
   const handleSubmit = async () => {
     if (!input.trim() || isLoading) return;
@@ -244,37 +252,21 @@ export default function Chatbot() {
     setInput('');
 
     try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: userMessage.content,
-          documentIds: selectedFileIds,
-          messages: updatedMessages,
-        }),
+      let finalResponse = '';
+      await chatMutation.mutateAsync({
+        prompt: userMessage.content,
+        documentIds: selectedFileIds,
+        messages: updatedMessages.map(msg => ({
+          role: msg.role === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        })),
+        onChunk: (accumulatedText) => {
+          finalResponse = accumulatedText;
+          setStreamingContent(accumulatedText);
+        },
       });
 
-      if (!res.ok) {
-        const errorPayload = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(errorPayload?.error ?? 'Request chat gagal.');
-      }
-
-      if (!res.body) throw new Error('Response body kosong');
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullResponse = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const text = decoder.decode(value, { stream: true });
-        fullResponse += text;
-        setStreamingContent(fullResponse);
-      }
-
-      setMessages((prev) => [...prev, { role: 'assistant', content: fullResponse }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: finalResponse }]);
       setStreamingContent('');
     } catch (error) {
       setMessages((prev) => [
@@ -288,11 +280,11 @@ export default function Chatbot() {
       setIsLoading(false);
     }
   };
-
   return (
     <main
       id='chatbot-wrapper'
-      className="relative h-full w-full overflow-hidden bg-white text-[#111111] lg:pl-[292px]"
+      className="relative h-full max-w-full overflow-x-hidden bg-white text-[#111111] lg:pl-[292px]"
+      style={{ minHeight: 0 }}
     >
       <ChatSidebar
         activeMenu={activeMenu}
@@ -307,16 +299,16 @@ export default function Chatbot() {
       />
 
       <section className='mx-auto flex h-full w-full max-w-[900px] flex-col items-center justify-end gap-4 px-4 pb-36 pt-16 sm:px-6 lg:px-10 overflow-y-auto'>
-        <div className='w-full flex-1 space-y-3'>
+        <ScrollShadow className='w-full flex-1 space-y-3'>
           {messages.length === 0 && !isLoading ? (
             <div className='mx-auto mt-20 max-w-2xl text-center'>
-              <div className='mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-[#e5e7eb] bg-[#f8f9fa] text-[#111111]'>
+              <div className='mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline bg-surface-soft text-body'>
                 <SparkleIcon size={22} weight='fill' />
               </div>
-              <p className='text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-[#111111] sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]'>
+              <p className='text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]'>
                 Tanya apapun ke mb.ai.
               </p>
-              <p className='mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-[#374151]'>
+              <p className='mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-body'>
                 Upload PDF, lalu ketik <span className='font-semibold text-[#111111]'>@</span> untuk memilih dokumen sebagai konteks RAG.
               </p>
             </div>
@@ -325,11 +317,10 @@ export default function Chatbot() {
               {messages.map((message, index) => (
                 <div key={`${message.role}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div
-                    className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${
-                      message.role === 'user'
-                        ? 'bg-[#111111] text-white'
-                        : 'border border-[#e5e7eb] bg-[#f8f9fa] text-[#374151]'
-                    }`}
+                    className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${message.role === 'user'
+                      ? 'bg-body text-white'
+                      : 'border border-outline bg-surface-soft text-body'
+                      }`}
                   >
                     {message.role === 'user' ? (
                       <p className='whitespace-pre-wrap'>{message.content}</p>
@@ -344,7 +335,7 @@ export default function Chatbot() {
 
               {isLoading && streamingContent ? (
                 <div className='flex justify-start'>
-                  <div className='max-w-[82%] rounded-xl border border-[#e5e7eb] bg-[#f8f9fa] px-4 py-3 text-[15px] leading-[1.6] text-[#374151]'>
+                  <div className='max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body'>
                     <div className='prose prose-sm max-w-none'>
                       <MarkdownRenderer content={streamingContent} />
                     </div>
@@ -354,7 +345,7 @@ export default function Chatbot() {
 
               {isLoading && !streamingContent ? (
                 <div className='flex justify-start'>
-                  <div className='rounded-xl border border-[#e5e7eb] bg-[#f8f9fa] px-4 py-3 text-[15px] leading-[1.6] text-[#374151]'>
+                  <div className='rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body'>
                     <span className='animate-pulse'>mb.ai sedang berpikir...</span>
                   </div>
                 </div>
@@ -362,7 +353,7 @@ export default function Chatbot() {
             </>
           )}
           <div ref={messagesEndRef} />
-        </div>
+        </ScrollShadow>
       </section>
 
       <ChatInputBar

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Modal } from '@heroui/react';
+import { Button, Modal } from '@heroui/react';
+import { X, XIcon } from '@phosphor-icons/react';
 import Chatbot from '../Chatbot';
 import LoginForm from '../portal/LoginForm';
 import { useSession } from '../../../lib/auth-client';
@@ -15,31 +16,38 @@ export default function AiAssistantModal({ isOpen, onClose }: AiAssistantModalPr
   const { data: session, isPending } = useSession();
 
   return (
-    <Modal.Backdrop 
-      isOpen={isOpen} 
-      onOpenChange={(open) => !open && onClose()}
-      variant="blur"
-    >
-      <Modal.Container placement="center" size="md" className="max-w-5xl h-[85vh] overflow-hidden">
-        <Modal.Dialog className="p-0 h-full flex flex-col relative border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl">
-          <Modal.CloseTrigger />
-          <Modal.Body className="p-0 h-full overflow-hidden">
-            {isPending ? (
-              <div className="flex items-center justify-center h-full">
-                <span className="text-neutral-500 font-medium">Memuat data...</span>
-              </div>
-            ) : !session ? (
-              <div className="flex items-center justify-center h-full p-8">
+    <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <Modal.Backdrop>
+        <Modal.Container size={!session ? 'md' : 'cover'} placement="center">
+          <Modal.Dialog className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl flex flex-col outline-none relative overflow-hidden shadow-2xl">
+            <Button
+              onClick={onClose}
+              isIconOnly
+              variant='ghost'
+              className='absolute top-4 right-4 z-50'
+              aria-label="Tutup asisten"
+            >
+              <XIcon size={18} />
+            </Button>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-hidden relative">
+              {isPending ? (
+                <div className="flex flex-col items-center justify-center h-full gap-3">
+                  <div className="w-8 h-8 border-3 border-neutral-200 border-t-neutral-900 rounded-full animate-spin" />
+                  <span className="text-neutral-500 text-sm font-medium">
+                    Memuat data...
+                  </span>
+                </div>
+              ) : !session ? (
                 <LoginForm onSuccess={onClose} />
-              </div>
-            ) : (
-              <div className="h-full overflow-hidden">
+              ) : (
                 <Chatbot />
-              </div>
-            )}
-          </Modal.Body>
-        </Modal.Dialog>
-      </Modal.Container>
-    </Modal.Backdrop>
+              )}
+            </div>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+    </Modal>
   );
 }

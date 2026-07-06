@@ -31,7 +31,7 @@ export default function UploadFileModal({
   onSubmit,
 }: UploadFileModalProps) {
   return (
-    <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} variant='blur'>
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} variant='blur' isDismissable={isUploading ? false : true}>
       <Modal.Container placement='center' size='sm'>
         <Modal.Dialog>
           <Modal.CloseTrigger />

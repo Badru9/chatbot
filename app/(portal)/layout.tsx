@@ -13,11 +13,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-16 flex flex-col items-center">
         {children}
       </main>
-      
-      {/* Fixed Floating Elements */}
-      <ProfileFab />
-      <AiFab onClick={() => setIsAiOpen(true)} />
-      
+
+      <div className='flex absolute right-8 bottom-8 flex-col gap-4'>
+        <ProfileFab />
+        <AiFab onClick={() => setIsAiOpen(true)} />
+      </div>
+
       <AiAssistantModal isOpen={isAiOpen} onClose={() => setIsAiOpen(false)} />
     </div>
   );
