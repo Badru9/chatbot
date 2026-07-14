@@ -1,3 +1,4 @@
+```plantuml
 @startuml
 title Activity Diagram Portal Dosen dengan Chatbot Personal
 
@@ -332,3 +333,4 @@ endif
 
 stop
 @enduml
+```

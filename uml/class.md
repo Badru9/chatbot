@@ -1,3 +1,4 @@
+```
 @startuml
 title Class Diagram Portal Dosen dengan Chatbot Personal
 
@@ -311,3 +312,4 @@ harus disertai peringatan kepada dosen.
 end note
 
 @enduml
+```

@@ -1,3 +1,4 @@
+```
 @startuml
 title Sequence Diagram Mengelola Menu Portal
 
@@ -70,3 +71,4 @@ API --> Web : Operasi berhasil
 Web --> Admin : Menampilkan hasil operasi
 
 @enduml
+```

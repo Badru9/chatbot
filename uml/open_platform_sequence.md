@@ -1,3 +1,4 @@
+```
 @startuml
 title Sequence Diagram Melihat dan Membuka Platform
 
@@ -23,3 +24,4 @@ Web -> External : Membuka URL pada tab baru
 External --> Dosen : Menampilkan platform eksternal
 
 @enduml
+```

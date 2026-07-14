@@ -1,3 +1,4 @@
+```
 @startuml
 title Sequence Diagram Mengelola Akun Dosen
 
@@ -80,3 +81,4 @@ else Menghapus akun
 end
 
 @enduml
+```
