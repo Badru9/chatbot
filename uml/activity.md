@@ -4,29 +4,24 @@
 @startuml
 title Activity Diagram Portal Dosen dengan Chatbot Personal
 
-skinparam shadowing false
-skinparam activity {
-BackgroundColor White
-BorderColor Black
-ArrowColor Black
-DiamondBackgroundColor White
-DiamondBorderColor Black
-}
-
+|Portal Web|
 start
 
-|Portal Web|
 :Menampilkan halaman portal;
 
 |Backend dan Database|
-:Mengambil menu portal aktif\nberdasarkan urutan;
+:Mengambil menu portal aktif;
+:Mengurutkan menu portal;
 
 |Portal Web|
 :Menampilkan daftar platform;
 
-if (Pengguna membuka\nplatform eksternal?) then (Ya)
 |Dosen|
-:Memilih platform;
+:Melihat daftar platform;
+
+if (Membuka platform?) then (Ya)
+
+    :Memilih platform;
 
     |Portal Web|
     :Membuka tautan pada tab baru;
@@ -35,29 +30,28 @@ if (Pengguna membuka\nplatform eksternal?) then (Ya)
     :Mengakses platform eksternal;
 
 else (Tidak)
+
 endif
 
-|Portal Web|
-if (Pengguna membutuhkan\nfitur personal?) then (Ya)
+if (Menggunakan fitur personal?) then (Tidak)
 
-    :Menampilkan halaman login;
+    |Dosen|
+    :Menggunakan portal tanpa login;
 
-    if (Login sebagai?) then (Dosen)
+    stop
 
-        |Dosen|
-        :Memasukkan email dan password;
-
-    else (Admin)
-
-        |Admin / USI|
-        :Memasukkan email dan password;
-    endif
+else (Ya)
 
     |Portal Web|
-    :Mengirim kredensial;
+    :Menampilkan halaman login;
+
+    |Dosen|
+    :Memasukkan email dan password;
 
     |Backend dan Database|
-    :Memvalidasi kredensial,\nstatus akun, dan role;
+    :Memvalidasi kredensial;
+    :Memeriksa status akun;
+    :Memeriksa role pengguna;
 
     if (Login valid?) then (Tidak)
 
@@ -78,208 +72,54 @@ if (Pengguna membutuhkan\nfitur personal?) then (Ya)
             :Menampilkan halaman dosen;
 
             |Dosen|
-            while (Masih menggunakan sistem?) is (Ya)
+            :Memilih fitur dosen;
 
-                :Memilih fitur dosen;
+            if (Fitur dosen?) then (Profil)
 
-                if (Fitur yang dipilih?) then (Profil)
+                |Portal Web|
+                :Menampilkan data profil;
 
-                    |Portal Web|
-                    :Menampilkan data profil;
+                |Dosen|
+                :Mengubah data profil;
 
-                    |Dosen|
-                    :Melihat atau mengubah\nprofil sendiri;
+                |Backend dan Database|
+                :Memvalidasi kepemilikan akun;
+                :Menyimpan perubahan profil;
 
-                    |Backend dan Database|
-                    :Memvalidasi kepemilikan akun;
-                    :Memperbarui data profil;
+                |Portal Web|
+                :Menampilkan profil terbaru;
 
-                    |Portal Web|
-                    :Menampilkan hasil perubahan;
+            elseif (Dokumen)
 
-                elseif (Dokumen)
+                |Backend dan Database|
+                :Mengambil dokumen milik dosen;
 
-                    |Portal Web|
-                    :Menampilkan daftar dokumen;
+                |Portal Web|
+                :Menampilkan daftar dokumen;
 
-                    |Backend dan Database|
-                    :Mengambil dokumen\nberdasarkan ownerId;
+                |Dosen|
+                :Memilih PDF baru atau versi terbaru;
 
-                    |Portal Web|
-                    :Menampilkan dokumen dan\nstatus pemrosesan;
+                |Portal Web|
+                :Memvalidasi ekstensi file;
 
-                    |Dosen|
-                    if (Menambahkan atau\nmemperbarui dokumen?) then (Ya)
-                        :Memilih file PDF;
+                |Backend dan Database|
+                :Memvalidasi file PDF;
 
-                        |Portal Web|
-                        :Memvalidasi format awal PDF;
-
-                        |Backend dan Database|
-                        :Memvalidasi MIME type\ndan isi file;
-
-                        if (PDF valid?) then (Tidak)
-
-                            |Portal Web|
-                            :Menampilkan pesan kesalahan\nyang mudah dipahami;
-
-                        else (Ya)
-
-                            |Backend dan Database|
-                            :Menyimpan metadata dokumen;
-                            :Mengubah status menjadi PROCESSING;
-
-                            |RAG-LLM|
-                            :Mengekstrak teks PDF;
-                            :Membagi teks menjadi chunk;
-                            :Membuat embedding dengan BGE-M3;
-                            :Menyimpan embedding ke pgvector;
-
-                            if (Pemrosesan berhasil?) then (Ya)
-
-                                |Backend dan Database|
-                                :Mengubah status menjadi COMPLETED;
-
-                            else (Tidak)
-
-                                |Backend dan Database|
-                                :Mengubah status menjadi FAILED;
-                                :Menyimpan pesan kesalahan;
-                            endif
-
-                            |Portal Web|
-                            :Menampilkan status pemrosesan;
-                        endif
-                    endif
-
-                elseif (Chatbot)
+                if (PDF valid?) then (Tidak)
 
                     |Portal Web|
-                    :Menampilkan halaman chatbot;
+                    :Menampilkan pesan kesalahan;
+
+                else (Ya)
 
                     |Backend dan Database|
-                    :Mengambil dokumen COMPLETED\nmilik dosen;
-
-                    |Portal Web|
-                    :Menampilkan pilihan dokumen;
-
-                    |Dosen|
-                    :Memilih dokumen sumber;
-                    :Menulis pertanyaan;
-
-                    |Backend dan Database|
-                    :Memvalidasi kepemilikan dokumen;
-
-                    if (Dokumen valid dan\nmilik dosen?) then (Tidak)
-
-                        |Portal Web|
-                        :Menampilkan pesan akses ditolak;
-
-                    else (Ya)
-
-                        |Backend dan Database|
-                        :Menyimpan pesan dosen;
-                        :Memuat konteks percakapan;
-
-                        |RAG-LLM|
-                        :Membuat embedding pertanyaan;
-                        :Mengidentifikasi jenis pertanyaan;
-
-                        if (Jenis pertanyaan?) then (Personal / Mata Kuliah)
-                            :Mencari chunk pada\ndokumen pribadi terpilih;
-                        else (Kebijakan Institusi)
-                            :Mencari informasi pada\ndataset institusi;
-                        endif
-
-                        if (Konteks relevan ditemukan?) then (Ya)
-
-                            :Menyusun prompt berdasarkan\nkonteks dan riwayat;
-                            :Menghasilkan jawaban dengan\nQwen melalui Ollama;
-
-                            |Backend dan Database|
-                            :Menyimpan jawaban dan\nnama dokumen sumber;
-
-                            |Portal Web|
-                            :Menampilkan jawaban dan sumber;
-
-                        else (Tidak)
-
-                            |RAG-LLM|
-                            :Menghasilkan jawaban umum\ndengan Qwen melalui Ollama;
-
-                            |Backend dan Database|
-                            :Menyimpan jawaban umum;
-                            :Menandai isGeneralAnswer = true;
-
-                            |Portal Web|
-                            :Menampilkan jawaban umum dan\nperingatan tidak berasal dari dokumen;
-                        endif
-
-                        |Dosen|
-                        :Membaca, menyalin, mengirim ulang,\natau menghapus pesan;
-                    endif
-
-                else (Riwayat Percakapan)
-
-                    |Backend dan Database|
-                    :Mengambil riwayat percakapan;
-
-                    |Portal Web|
-                    :Menampilkan daftar percakapan;
-
-                    |Dosen|
-                    :Melanjutkan percakapan,\nmengubah judul, atau menghapus;
-
-                    |Backend dan Database|
-                    :Memperbarui riwayat percakapan;
-                endif
-
-            endwhile (Tidak)
-
-            |Backend dan Database|
-            :Mengakhiri session;
-
-            |Dosen|
-            :Logout;
-
-        else (Admin)
-
-            |Portal Web|
-            :Menampilkan portal dan modal admin;
-
-            |Admin / USI|
-            while (Masih menggunakan panel admin?) is (Ya)
-
-                :Memilih fitur admin;
-
-                if (Fitur yang dipilih?) then (Akun Dosen)
-
-                    :Menambah, mengaktifkan,\nmenonaktifkan, mereset password,\natau menghapus akun;
-
-                    |Backend dan Database|
-                    :Memproses perubahan akun;
-                    :Mencatat audit log;
-
-                elseif (Menu Portal)
-
-                    |Admin / USI|
-                    :Menambah, mengubah, mengurutkan,\nmengaktifkan, atau menghapus menu;
-
-                    |Backend dan Database|
-                    :Memperbarui menu portal;
-                    :Mencatat audit log;
-
-                elseif (Dataset Institusi)
-
-                    |Admin / USI|
-                    :Menambah atau memperbarui\nPDF maupun data tanya jawab;
-
-                    |Backend dan Database|
-                    :Menyimpan dataset;
+                    :Menyimpan metadata dokumen;
                     :Mengubah status menjadi PROCESSING;
 
-                    |RAG-LLM|
-                    :Mengekstrak atau memproses teks;
+                    |RAG dan LLM|
+                    :Mengekstrak teks PDF;
+                    :Membagi teks menjadi chunk;
                     :Membuat embedding dengan BGE-M3;
                     :Menyimpan embedding ke pgvector;
 
@@ -293,45 +133,201 @@ if (Pengguna membutuhkan\nfitur personal?) then (Ya)
                         |Backend dan Database|
                         :Mengubah status menjadi FAILED;
                         :Menyimpan pesan kesalahan;
+
                     endif
 
-                    :Mencatat audit log;
-
-                elseif (Metadata Dokumen)
-
-                    |Backend dan Database|
-                    :Mengambil metadata dokumen dosen;
-
                     |Portal Web|
-                    :Menampilkan metadata tanpa isi dokumen;
+                    :Menampilkan status pemrosesan;
 
-                else (Audit Log)
-
-                    |Backend dan Database|
-                    :Mengambil log aktivitas;
-
-                    |Portal Web|
-                    :Menampilkan audit log;
                 endif
 
-                |Admin / USI|
+            elseif (Chatbot)
 
-            endwhile (Tidak)
+                |Backend dan Database|
+                :Mengambil dokumen COMPLETED milik dosen;
+
+                |Portal Web|
+                :Menampilkan pilihan dokumen;
+
+                |Dosen|
+                :Memilih dokumen sumber;
+                :Menulis pertanyaan;
+
+                |Backend dan Database|
+                :Memvalidasi kepemilikan dokumen;
+
+                if (Dokumen valid?) then (Tidak)
+
+                    |Portal Web|
+                    :Menampilkan pesan akses ditolak;
+
+                else (Ya)
+
+                    |Backend dan Database|
+                    :Menyimpan pertanyaan;
+                    :Memuat riwayat percakapan;
+
+                    |RAG dan LLM|
+                    :Mengidentifikasi jenis pertanyaan;
+                    :Membuat embedding pertanyaan;
+
+                    if (Jenis pertanyaan?) then (Personal)
+
+                        :Mencari informasi pada dokumen terpilih;
+
+                    else (Institusi)
+
+                        :Mencari informasi pada dataset institusi;
+
+                    endif
+
+                    if (Konteks ditemukan?) then (Ya)
+
+                        :Menyusun prompt berdasarkan konteks;
+                        :Menghasilkan jawaban dengan Qwen;
+
+                        |Backend dan Database|
+                        :Menyimpan jawaban;
+                        :Menyimpan nama dokumen sumber;
+
+                        |Portal Web|
+                        :Menampilkan jawaban dan sumber;
+
+                    else (Tidak)
+
+                        |RAG dan LLM|
+                        :Menghasilkan jawaban umum dengan Qwen;
+
+                        |Backend dan Database|
+                        :Menyimpan jawaban umum;
+                        :Menandai jawaban sebagai general answer;
+
+                        |Portal Web|
+                        :Menampilkan jawaban umum;
+                        :Menampilkan peringatan sumber;
+
+                    endif
+
+                    |Dosen|
+                    :Menyalin, mengirim ulang,\natau menghapus pesan;
+
+                endif
+
+            else (Riwayat)
+
+                |Backend dan Database|
+                :Mengambil riwayat percakapan;
+
+                |Portal Web|
+                :Menampilkan daftar percakapan;
+
+                |Dosen|
+                :Melanjutkan percakapan;
+                :Mengubah judul atau menghapus percakapan;
+
+                |Backend dan Database|
+                :Menyimpan perubahan riwayat;
+
+            endif
+
+            |Dosen|
+            :Memilih logout;
 
             |Backend dan Database|
             :Mengakhiri session;
 
-            |Admin / USI|
-            :Logout;
+        else (Admin)
+
+            |Portal Web|
+            :Menampilkan portal dan panel admin;
+
+            |Admin atau USI|
+            :Memilih fitur admin;
+
+            if (Fitur admin?) then (Akun Dosen)
+
+                :Menambah akun dosen;
+                :Mengaktifkan atau menonaktifkan akun;
+                :Mereset password atau menghapus akun;
+
+                |Backend dan Database|
+                :Memvalidasi data akun;
+                :Menyimpan perubahan akun;
+                :Mencatat audit log;
+
+            elseif (Menu Portal)
+
+                |Admin atau USI|
+                :Menambah atau mengubah menu;
+                :Mengatur urutan menu;
+                :Mengaktifkan atau menghapus menu;
+
+                |Backend dan Database|
+                :Menyimpan perubahan menu;
+                :Mencatat audit log;
+
+            elseif (Dataset Institusi)
+
+                |Admin atau USI|
+                :Menambah atau memperbarui dataset;
+
+                |Backend dan Database|
+                :Menyimpan dataset;
+                :Mengubah status menjadi PROCESSING;
+
+                |RAG dan LLM|
+                :Mengekstrak teks dataset;
+                :Membuat embedding dengan BGE-M3;
+                :Menyimpan embedding ke pgvector;
+
+                if (Pemrosesan berhasil?) then (Ya)
+
+                    |Backend dan Database|
+                    :Mengubah status menjadi COMPLETED;
+
+                else (Tidak)
+
+                    |Backend dan Database|
+                    :Mengubah status menjadi FAILED;
+                    :Menyimpan pesan kesalahan;
+
+                endif
+
+                :Mencatat audit log;
+
+            elseif (Metadata Dokumen)
+
+                |Backend dan Database|
+                :Mengambil metadata dokumen dosen;
+
+                |Portal Web|
+                :Menampilkan metadata dokumen;
+                :Tidak menampilkan isi dokumen;
+
+            else (Audit Log)
+
+                |Backend dan Database|
+                :Mengambil log aktivitas;
+
+                |Portal Web|
+                :Menampilkan audit log;
+
+            endif
+
+            |Admin atau USI|
+            :Memilih logout;
+
+            |Backend dan Database|
+            :Mengakhiri session;
+
         endif
+
     endif
 
-else (Tidak)
-
-    |Dosen|
-    :Menggunakan portal tanpa login;
-
 endif
+
+|Portal Web|
+:Kembali ke halaman portal;
 
 stop
 @enduml

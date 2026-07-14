@@ -4,313 +4,265 @@
 @startuml
 title Class Diagram Portal Dosen dengan Chatbot Personal
 
-left to right direction
-skinparam shadowing false
-skinparam class {
-BackgroundColor White
-BorderColor Black
-ArrowColor Black
-}
-skinparam packageStyle rectangle
+class User {
+    +id : String
+    +nidnNip : String
+    +name : String
+    +email : String
+    +programStudi : String
+    +role : UserRole
+    +isActive : Boolean
+    +emailVerified : Boolean
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-package "Authentication Domain" {
-
-    enum UserRole {
-        ADMIN
-        DOSEN
-    }
-
-    class User {
-        +id: String
-        +nidnNip: String
-        +name: String
-        +email: String
-        +programStudi: String
-        +role: UserRole
-        +isActive: Boolean
-        +emailVerified: Boolean
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +login()
-        +logout()
-        +updateOwnProfile()
-    }
-
-    class Account {
-        +id: String
-        +userId: String
-        +providerId: String
-        +accountId: String
-        -password: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +updatePassword()
-    }
-
-    class Session {
-        +id: String
-        +userId: String
-        +token: String
-        +expiresAt: DateTime
-        +ipAddress: String
-        +userAgent: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +isExpired(): Boolean
-        +revoke()
-    }
-
-    class Verification {
-        +id: String
-        +identifier: String
-        +value: String
-        +expiresAt: DateTime
-        +createdAt: DateTime
-        +updatedAt: DateTime
-    }
-
+    +login()
+    +logout()
+    +updateProfile()
 }
 
-package "Portal Domain" {
-
-    class PortalMenu {
-        +id: String
-        +title: String
-        +description: String
-        +href: String
-        +order: Integer
-        +isActive: Boolean
-        +createdBy: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +create()
-        +update()
-        +changeOrder()
-        +toggleStatus()
-        +delete()
-    }
-
+enum UserRole {
+    ADMIN
+    DOSEN
 }
 
-package "Document Domain" {
+class Account {
+    +id : String
+    +userId : String
+    +accountId : String
+    +providerId : String
+    -password : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-    enum DocumentScope {
-        PERSONAL
-        INSTITUTIONAL
-    }
-
-    enum ProcessingStatus {
-        PENDING
-        PROCESSING
-        COMPLETED
-        FAILED
-    }
-
-    class Document {
-        +id: String
-        +ownerId: String
-        +createdBy: String
-        +title: String
-        +fileName: String
-        +filePath: String
-        +fileHash: String
-        +mimeType: String
-        +fileSize: Integer
-        +scope: DocumentScope
-        +status: ProcessingStatus
-        +version: Integer
-        +isActive: Boolean
-        +errorMessage: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +upload()
-        +uploadNewVersion()
-        +updateStatus()
-        +activate()
-        +deactivate()
-    }
-
-    class PdfChunk {
-        +id: Integer
-        +documentId: String
-        +pageNumber: Integer
-        +chunkIndex: Integer
-        +chunkText: Text
-        +tokenCount: Integer
-        +embedding: Vector
-        +metadata: Json
-        +createdAt: DateTime
-        --
-        +createEmbedding()
-    }
-
-    class InstitutionalQA {
-        +id: String
-        +question: Text
-        +answer: Text
-        +embedding: Vector
-        +isActive: Boolean
-        +createdBy: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +create()
-        +update()
-        +toggleStatus()
-        +delete()
-    }
-
+    +updatePassword()
 }
 
-package "Chatbot Domain" {
+class Session {
+    +id : String
+    +userId : String
+    +token : String
+    +expiresAt : DateTime
+    +ipAddress : String
+    +userAgent : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-    enum MessageRole {
-        USER
-        ASSISTANT
-        SYSTEM
-    }
-
-    class Conversation {
-        +id: String
-        +userId: String
-        +title: String
-        +createdAt: DateTime
-        +updatedAt: DateTime
-        --
-        +create()
-        +generateTitle()
-        +rename()
-        +delete()
-    }
-
-    class Message {
-        +id: String
-        +conversationId: String
-        +role: MessageRole
-        +content: Text
-        +isGeneralAnswer: Boolean
-        +deletedAt: DateTime
-        +createdAt: DateTime
-        --
-        +copy()
-        +regenerate()
-        +softDelete()
-    }
-
-    class MessageDocumentSelection {
-        +id: String
-        +messageId: String
-        +documentId: String
-        +createdAt: DateTime
-    }
-
-    class MessageSource {
-        +id: String
-        +messageId: String
-        +documentId: String
-        +createdAt: DateTime
-    }
-
+    +isExpired()
+    +revoke()
 }
 
-package "Security Domain" {
+class PortalMenu {
+    +id : String
+    +title : String
+    +description : String
+    +href : String
+    +order : Integer
+    +isActive : Boolean
+    +createdBy : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-    class AuditLog {
-        +id: String
-        +actorId: String
-        +action: String
-        +entityType: String
-        +entityId: String
-        +ipAddress: String
-        +userAgent: String
-        +metadata: Json
-        +createdAt: DateTime
-        --
-        +record()
-    }
-
+    +create()
+    +update()
+    +changeOrder()
+    +toggleStatus()
+    +delete()
 }
 
-package "Application Services" {
+class Document {
+    +id : String
+    +ownerId : String
+    +createdBy : String
+    +title : String
+    +fileName : String
+    +filePath : String
+    +fileHash : String
+    +mimeType : String
+    +fileSize : Integer
+    +scope : DocumentScope
+    +status : ProcessingStatus
+    +version : Integer
+    +isActive : Boolean
+    +errorMessage : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-    class ChatbotService <<service>> {
-        +classifyQuestion()
-        +loadConversationContext()
-        +retrievePersonalDocuments()
-        +retrieveInstitutionalDataset()
-        +generateDocumentAnswer()
-        +generateGeneralAnswer()
-    }
-
-    class DocumentProcessingService <<service>> {
-        +validatePdf()
-        +extractText()
-        +splitChunks()
-        +generateEmbedding()
-        +processDocument()
-        +reprocessDocument()
-    }
-
+    +upload()
+    +uploadNewVersion()
+    +updateStatus()
+    +toggleStatus()
 }
 
-User --> UserRole : role
-User "1" _-- "0.._" Account : owns
-User "1" _-- "0.._" Session : has
-User "1" --> "0..\*" Verification : requests
+enum DocumentScope {
+    PERSONAL
+    INSTITUTIONAL
+}
 
-User "1" --> "0.._" Document : owns/uploads
-User "1" --> "0.._" Conversation : creates
-User "1" --> "0.._" PortalMenu : manages
-User "1" --> "0.._" InstitutionalQA : manages
-User "0..1" --> "0..\*" AuditLog : performs
+enum ProcessingStatus {
+    PENDING
+    PROCESSING
+    COMPLETED
+    FAILED
+}
 
-Document --> DocumentScope : scope
-Document --> ProcessingStatus : status
-Document "1" _-- "0.._" PdfChunk : contains
+class PdfChunk {
+    +id : Integer
+    +documentId : String
+    +pageNumber : Integer
+    +chunkIndex : Integer
+    +chunkText : Text
+    +tokenCount : Integer
+    +embedding : Vector
+    +metadata : Json
+    +createdAt : DateTime
+}
 
-Conversation "1" _-- "1.._" Message : contains
-Message --> MessageRole : role
+class InstitutionalQA {
+    +id : String
+    +question : Text
+    +answer : Text
+    +embedding : Vector
+    +isActive : Boolean
+    +createdBy : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-Message "1" _-- "0.._" MessageDocumentSelection : selections
-Document "1" <-- "0..\*" MessageDocumentSelection : selectedDocument
+    +create()
+    +update()
+    +toggleStatus()
+    +delete()
+}
 
-Message "1" _-- "0.._" MessageSource : sources
-Document "1" <-- "0..\*" MessageSource : sourceDocument
+class Conversation {
+    +id : String
+    +userId : String
+    +title : String
+    +createdAt : DateTime
+    +updatedAt : DateTime
 
-DocumentProcessingService ..> Document : processes
-DocumentProcessingService ..> PdfChunk : creates
-DocumentProcessingService ..> InstitutionalQA : processes
+    +create()
+    +generateTitle()
+    +rename()
+    +delete()
+}
 
-ChatbotService ..> Conversation : reads
-ChatbotService ..> Message : creates
-ChatbotService ..> PdfChunk : retrieves
-ChatbotService ..> InstitutionalQA : retrieves
-ChatbotService ..> MessageSource : records
+class Message {
+    +id : String
+    +conversationId : String
+    +role : MessageRole
+    +content : Text
+    +isGeneralAnswer : Boolean
+    +deletedAt : DateTime
+    +createdAt : DateTime
+
+    +copy()
+    +regenerate()
+    +deleteMessage()
+}
+
+enum MessageRole {
+    USER
+    ASSISTANT
+    SYSTEM
+}
+
+class MessageDocumentSelection {
+    +id : String
+    +messageId : String
+    +documentId : String
+    +createdAt : DateTime
+}
+
+class MessageSource {
+    +id : String
+    +messageId : String
+    +documentId : String
+    +createdAt : DateTime
+}
+
+class AuditLog {
+    +id : String
+    +actorId : String
+    +action : String
+    +entityType : String
+    +entityId : String
+    +ipAddress : String
+    +userAgent : String
+    +metadata : Json
+    +createdAt : DateTime
+}
+
+class ChatbotService {
+    +classifyQuestion()
+    +loadConversationContext()
+    +retrievePersonalDocuments()
+    +retrieveInstitutionalDataset()
+    +generateDocumentAnswer()
+    +generateGeneralAnswer()
+}
+
+class DocumentProcessingService {
+    +validatePdf()
+    +extractText()
+    +splitChunks()
+    +generateEmbedding()
+    +processDocument()
+    +reprocessDocument()
+}
+
+User --> UserRole : memiliki role
+
+User "1" -- "1" Account : memiliki
+User "1" -- "0..n" Session : memiliki
+User "1" -- "0..n" PortalMenu : mengelola
+User "1" -- "0..n" Document : mengunggah
+User "1" -- "0..n" InstitutionalQA : mengelola
+User "1" -- "0..n" Conversation : membuat
+User "1" -- "0..n" AuditLog : melakukan
+
+Document --> DocumentScope : memiliki scope
+Document --> ProcessingStatus : memiliki status
+Document "1" -- "0..n" PdfChunk : terdiri dari
+
+Conversation "1" -- "1..n" Message : terdiri dari
+Message --> MessageRole : memiliki role
+
+Message "1" -- "0..n" MessageDocumentSelection : memilih
+Document "1" -- "0..n" MessageDocumentSelection : dipilih
+
+Message "1" -- "0..n" MessageSource : memiliki sumber
+Document "1" -- "0..n" MessageSource : menjadi sumber
+
+DocumentProcessingService ..> Document : memproses
+DocumentProcessingService ..> PdfChunk : menghasilkan
+DocumentProcessingService ..> InstitutionalQA : memproses
+
+ChatbotService ..> Conversation : membaca konteks
+ChatbotService ..> Message : menghasilkan jawaban
+ChatbotService ..> PdfChunk : mengambil informasi
+ChatbotService ..> InstitutionalQA : mengambil informasi
+ChatbotService ..> MessageSource : mencatat sumber
 
 note right of User
-Admin dan Dosen tidak dibuat
-sebagai class terpisah.
+Admin dan dosen direpresentasikan
+oleh satu class User.
 
-Perbedaan hak akses ditentukan
-melalui atribut role.
+Hak akses dibedakan berdasarkan
+atribut role.
 end note
 
-note bottom of Document
-Dokumen PERSONAL wajib memiliki ownerId.
+note right of Document
+Dokumen PERSONAL dimiliki dosen.
 
-Dokumen INSTITUTIONAL dikelola Admin/USI
-dan digunakan sebagai dataset dasar.
+Dokumen INSTITUTIONAL dikelola
+oleh Admin atau USI.
 end note
 
-note bottom of Message
-isGeneralAnswer = true menunjukkan bahwa
-jawaban tidak berasal dari dokumen dan
-harus disertai peringatan kepada dosen.
+note right of Message
+isGeneralAnswer bernilai true
+jika jawaban tidak berasal
+dari dokumen.
 end note
 
 @enduml
