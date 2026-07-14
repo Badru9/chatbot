@@ -1,4 +1,8 @@
-```
+## Sequence Diagram
+
+## Sequence Diagram untuk Reset Password
+
+```plantuml
 @startuml
 title Sequence Diagram Reset Password Dosen
 

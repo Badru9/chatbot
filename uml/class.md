@@ -1,4 +1,6 @@
-```
+# Class Diagram
+
+```plantuml
 @startuml
 title Class Diagram Portal Dosen dengan Chatbot Personal
 

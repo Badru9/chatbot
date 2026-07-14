@@ -1,4 +1,8 @@
-```
+# Sequence Diagram
+
+## Sequence Diagram untuk Chatbot
+
+```plantuml
 @startuml
 title Sequence Diagram Chatbot Personal Berbasis RAG-LLM
 

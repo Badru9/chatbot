@@ -1,4 +1,8 @@
-```
+# Sequence Diagram
+
+## Sequence Diagram untuk Mengelola Akun Dosen
+
+```plantuml
 @startuml
 title Sequence Diagram Mengelola Akun Dosen
 

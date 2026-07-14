@@ -1,4 +1,8 @@
-```
+# Sequence Diagram
+
+## Sequence Diagram untuk Mengelola Menu Portal
+
+```plantuml
 @startuml
 title Sequence Diagram Mengelola Menu Portal
 

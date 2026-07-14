@@ -1,4 +1,8 @@
-```
+# Sequence Diagram
+
+## Sequence Diagram ketika Membuka Platform
+
+```plantuml
 @startuml
 title Sequence Diagram Melihat dan Membuka Platform
 
