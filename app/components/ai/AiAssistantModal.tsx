@@ -1,30 +1,38 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button, Modal } from '@heroui/react';
-import { X, XIcon } from '@phosphor-icons/react';
-import Chatbot from '../Chatbot';
-import LoginForm from '../portal/LoginForm';
-import { useSession } from '../../../lib/auth-client';
+import React from "react";
+import { Button, Modal } from "@heroui/react";
+import { X, XIcon } from "@phosphor-icons/react";
+import Chatbot from "../Chatbot";
+import LoginForm from "../portal/LoginForm";
+import { useSession } from "../../../lib/auth-client";
 
 interface AiAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function AiAssistantModal({ isOpen, onClose }: AiAssistantModalProps) {
+export default function AiAssistantModal({
+  isOpen,
+  onClose,
+}: AiAssistantModalProps) {
   const { data: session, isPending } = useSession();
 
   return (
-    <Modal isOpen={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Modal
+      isOpen={isOpen}
+      onOpenChange={(open) => {
+        if (!open) onClose();
+      }}
+    >
       <Modal.Backdrop>
-        <Modal.Container size={!session ? 'md' : 'cover'} placement="center">
+        <Modal.Container size={!session ? "md" : "cover"} placement="center">
           <Modal.Dialog className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl flex flex-col outline-none relative overflow-hidden shadow-2xl">
             <Button
               onClick={onClose}
               isIconOnly
-              variant='ghost'
-              className='absolute top-4 right-4 z-50'
+              variant="ghost"
+              className="absolute top-4 right-4 z-50"
               aria-label="Tutup asisten"
             >
               <XIcon size={18} />

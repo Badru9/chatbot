@@ -1,16 +1,16 @@
-import type { Metadata } from 'next';
-import { Lexend } from 'next/font/google';
-import './globals.css';
-import Providers from './providers';
+import type { Metadata } from "next";
+import { Lexend } from "next/font/google";
+import "./globals.css";
+import Providers from "./providers";
 
 const lexend = Lexend({
-  subsets: ['latin'],
-  variable: '--font-lexend',
+  subsets: ["latin"],
+  variable: "--font-lexend",
 });
 
 export const metadata: Metadata = {
-  title: 'mb.ai - Portal Dosen',
-  description: 'Personal Assistant Dosen Universitas',
+  title: "mb.ai - Portal Dosen",
+  description: "Personal Assistant Dosen Universitas",
 };
 
 export default function RootLayout({
@@ -20,11 +20,11 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang='en'
+      lang="en"
       className={`${lexend.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className='min-h-full flex flex-col'>
+      <body className="min-h-full flex flex-col">
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,19 +1,30 @@
-'use client';
+"use client";
 
-import { SparkleIcon } from '@phosphor-icons/react';
-import { type ChangeEvent, type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { sendChatMessage } from '../../services/chatService';
-import { uploadDocument, deleteDocument } from '../../services/documentService';
+import { SparkleIcon } from "@phosphor-icons/react";
+import {
+  type ChangeEvent,
+  type KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useMutation } from "@tanstack/react-query";
+import { sendChatMessage } from "../../services/chatService";
+import { uploadDocument, deleteDocument } from "../../services/documentService";
 
-import ChatInputBar from './ChatInputBar';
-import ChatSidebar, { type SidebarLibraryFile, type SidebarSession } from './ChatSidebar';
-import MarkdownRenderer from './MarkdownRenderer';
-import UploadFileModal from './UploadFileModal';
-import { ScrollShadow } from '@heroui/react';
+import ChatInputBar from "./ChatInputBar";
+import ChatSidebar, {
+  type SidebarLibraryFile,
+  type SidebarSession,
+} from "./ChatSidebar";
+import MarkdownRenderer from "./MarkdownRenderer";
+import UploadFileModal from "./UploadFileModal";
+import { ScrollShadow } from "@heroui/react";
+import UploadLibrary from "./UploadLibrary";
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
 }
 
@@ -29,16 +40,11 @@ interface ChatSession {
   updatedAt: number;
 }
 
-interface UploadDocumentResponse {
-  document?: LibraryFile;
-  error?: string;
-}
-
-const LIBRARY_STORAGE_KEY = 'mbai.library.files.v2';
-const SESSIONS_STORAGE_KEY = 'mbai.chat.sessions.v1';
+const LIBRARY_STORAGE_KEY = "mbai.library.files.v2";
+const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1";
 
 const createId = () =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+  typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
@@ -53,10 +59,17 @@ const safeParse = <T,>(value: string | null, fallback: T): T => {
 };
 
 const getSessionTitle = (messages: Message[]) => {
-  const firstUser = messages.find((message) => message.role === 'user')?.content;
-  if (!firstUser) return 'Chat kosong';
+  const firstUser = messages.find(
+    (message) => message.role === "user",
+  )?.content;
+  if (!firstUser) return "Chat kosong";
 
-  return firstUser.replace(/@[^\s]+/g, '').trim().slice(0, 48) || 'Chat dengan file';
+  return (
+    firstUser
+      .replace(/@[^\s]+/g, "")
+      .trim()
+      .slice(0, 48) || "Chat dengan file"
+  );
 };
 
 function buildSidebarSessions(sessions: ChatSession[]): SidebarSession[] {
@@ -75,8 +88,10 @@ export default function Chatbot() {
   const chatbotInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const [activeMenu, setActiveMenu] = useState<'new' | 'history' | 'library'>('new');
-  const [input, setInput] = useState('');
+  const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">(
+    "new",
+  );
+  const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState(() => createId());
@@ -86,17 +101,20 @@ export default function Chatbot() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [streamingContent, setStreamingContent] = useState('');
+  const [streamingContent, setStreamingContent] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
 
-  const mentionStart = input.lastIndexOf('@');
-  const mentionQuery = mentionStart >= 0 ? input.slice(mentionStart + 1).toLowerCase() : '';
+  const mentionStart = input.lastIndexOf("@");
+  const mentionQuery =
+    mentionStart >= 0 ? input.slice(mentionStart + 1).toLowerCase() : "";
   const hasOpenMention = mentionStart >= 0 && !/\s/.test(mentionQuery);
 
   const mentionMatches = useMemo(
     () =>
       hasOpenMention
-        ? libraryFiles.filter((file) => file.name.toLowerCase().includes(mentionQuery)).slice(0, 6)
+        ? libraryFiles
+            .filter((file) => file.name.toLowerCase().includes(mentionQuery))
+            .slice(0, 6)
         : [],
     [hasOpenMention, libraryFiles, mentionQuery],
   );
@@ -106,11 +124,18 @@ export default function Chatbot() {
     [libraryFiles, selectedFileIds],
   );
 
-  const sidebarSessions = useMemo(() => buildSidebarSessions(sessions), [sessions]);
+  const sidebarSessions = useMemo(
+    () => buildSidebarSessions(sessions),
+    [sessions],
+  );
 
   useEffect(() => {
-    setLibraryFiles(safeParse<LibraryFile[]>(localStorage.getItem(LIBRARY_STORAGE_KEY), []));
-    setSessions(safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []));
+    setLibraryFiles(
+      safeParse<LibraryFile[]>(localStorage.getItem(LIBRARY_STORAGE_KEY), []),
+    );
+    setSessions(
+      safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []),
+    );
     setIsStorageReady(true);
   }, []);
 
@@ -125,7 +150,7 @@ export default function Chatbot() {
   }, [isStorageReady, sessions]);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingContent]);
 
   useEffect(() => {
@@ -137,10 +162,14 @@ export default function Chatbot() {
         id: currentSessionId,
         title: getSessionTitle(messages),
         messages,
-        createdAt: prev.find((session) => session.id === currentSessionId)?.createdAt ?? now,
+        createdAt:
+          prev.find((session) => session.id === currentSessionId)?.createdAt ??
+          now,
         updatedAt: now,
       };
-      const withoutCurrent = prev.filter((session) => session.id !== currentSessionId);
+      const withoutCurrent = prev.filter(
+        (session) => session.id !== currentSessionId,
+      );
 
       return [nextSession, ...withoutCurrent].slice(0, 30);
     });
@@ -159,20 +188,27 @@ export default function Chatbot() {
       const payload = await uploadMutation.mutateAsync(uploadFile);
 
       if (!payload.document) {
-        throw new Error(payload.error ?? 'Gagal upload PDF.');
+        throw new Error(payload.error ?? "Gagal upload PDF.");
       }
 
-      setLibraryFiles((prev) => [payload.document!, ...prev.filter((file) => file.id !== payload.document!.id)]);
-      setSelectedFileIds((prev) => (prev.includes(payload.document!.id) ? prev : [payload.document!.id, ...prev]));
+      setLibraryFiles((prev) => [
+        payload.document!,
+        ...prev.filter((file) => file.id !== payload.document!.id),
+      ]);
+      setSelectedFileIds((prev) =>
+        prev.includes(payload.document!.id)
+          ? prev
+          : [payload.document!.id, ...prev],
+      );
       setUploadFile(null);
       setIsUploadModalOpen(false);
-      setActiveMenu('library');
+      setActiveMenu("library");
     } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
-          content: `Gagal memproses PDF. Detail: ${error instanceof Error ? error.message : 'unknown error'}`,
+          role: "assistant",
+          content: `Gagal memproses PDF. Detail: ${error instanceof Error ? error.message : "unknown error"}`,
         },
       ]);
     } finally {
@@ -183,10 +219,10 @@ export default function Chatbot() {
   const handleNewChat = () => {
     setCurrentSessionId(createId());
     setMessages([]);
-    setInput('');
-    setStreamingContent('');
-    setSelectedFileIds([]); ``
-    setActiveMenu('new');
+    setInput("");
+    setStreamingContent("");
+    setSelectedFileIds([]);
+    setActiveMenu("new");
   };
 
   const handleLoadSession = (sessionId: string) => {
@@ -195,8 +231,8 @@ export default function Chatbot() {
 
     setCurrentSessionId(session.id);
     setMessages(session.messages);
-    setInput('');
-    setStreamingContent('');
+    setInput("");
+    setStreamingContent("");
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -206,27 +242,34 @@ export default function Chatbot() {
     try {
       await deleteMutation.mutateAsync(fileId);
     } catch (error) {
-      console.error('Failed to delete file from backend:', error);
+      console.error("Failed to delete file from backend:", error);
     }
   };
 
   const toggleFile = (fileId: string) => {
     setSelectedFileIds((prev) =>
-      prev.includes(fileId) ? prev.filter((id) => id !== fileId) : [...prev, fileId],
+      prev.includes(fileId)
+        ? prev.filter((id) => id !== fileId)
+        : [...prev, fileId],
     );
   };
 
   const chooseMentionFile = (file: SidebarLibraryFile) => {
     const beforeMention = input.slice(0, mentionStart);
     const afterQuery = input.slice(mentionStart + mentionQuery.length + 1);
-    setInput(`${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, ' '));
-    setSelectedFileIds((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
+    setInput(
+      `${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, " "),
+    );
+    setSelectedFileIds((prev) =>
+      prev.includes(file.id) ? prev : [...prev, file.id],
+    );
     requestAnimationFrame(() => chatbotInputRef.current?.focus());
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') handleSubmit();
-    if (event.key === 'Escape') setInput((value) => value.replace(/@[^\s]*$/, ''));
+    if (event.key === "Enter") handleSubmit();
+    if (event.key === "Escape")
+      setInput((value) => value.replace(/@[^\s]*$/, ""));
   };
   const chatMutation = useMutation({
     mutationFn: sendChatMessage,
@@ -243,22 +286,22 @@ export default function Chatbot() {
   const handleSubmit = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input.trim() };
+    const userMessage: Message = { role: "user", content: input.trim() };
     const updatedMessages = [...messages, userMessage];
 
     setMessages(updatedMessages);
     setIsLoading(true);
-    setStreamingContent('');
-    setInput('');
+    setStreamingContent("");
+    setInput("");
 
     try {
-      let finalResponse = '';
+      let finalResponse = "";
       await chatMutation.mutateAsync({
         prompt: userMessage.content,
         documentIds: selectedFileIds,
-        messages: updatedMessages.map(msg => ({
-          role: msg.role === 'user' ? 'user' : 'assistant',
-          content: msg.content
+        messages: updatedMessages.map((msg) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: msg.content,
         })),
         onChunk: (accumulatedText) => {
           finalResponse = accumulatedText;
@@ -266,14 +309,17 @@ export default function Chatbot() {
         },
       });
 
-      setMessages((prev) => [...prev, { role: 'assistant', content: finalResponse }]);
-      setStreamingContent('');
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: finalResponse },
+      ]);
+      setStreamingContent("");
     } catch (error) {
       setMessages((prev) => [
         ...prev,
         {
-          role: 'assistant',
-          content: `Gagal menghubungi API chat. Detail: ${error instanceof Error ? error.message : 'unknown error'}`,
+          role: "assistant",
+          content: `Gagal menghubungi API chat. Detail: ${error instanceof Error ? error.message : "unknown error"}`,
         },
       ]);
     } finally {
@@ -282,8 +328,8 @@ export default function Chatbot() {
   };
   return (
     <main
-      id='chatbot-wrapper'
-      className="relative h-full max-w-full overflow-x-hidden bg-white text-[#111111] lg:pl-[292px]"
+      id="chatbot-wrapper"
+      className="relative h-full max-w-full overflow-x-hidden bg-white text-black lg:pl-73"
       style={{ minHeight: 0 }}
     >
       <ChatSidebar
@@ -298,77 +344,93 @@ export default function Chatbot() {
         onToggleFile={toggleFile}
       />
 
-      <section className='mx-auto flex h-full w-full max-w-[900px] flex-col items-center justify-end gap-4 px-4 pb-36 pt-16 sm:px-6 lg:px-10 overflow-y-auto'>
-        <ScrollShadow className='w-full flex-1 space-y-3'>
-          {messages.length === 0 && !isLoading ? (
-            <div className='mx-auto mt-20 max-w-2xl text-center'>
-              <div className='mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline bg-surface-soft text-body'>
-                <SparkleIcon size={22} weight='fill' />
-              </div>
-              <p className='text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]'>
-                Tanya apapun ke mb.ai.
-              </p>
-              <p className='mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-body'>
-                Upload PDF, lalu ketik <span className='font-semibold text-[#111111]'>@</span> untuk memilih dokumen sebagai konteks RAG.
-              </p>
-            </div>
-          ) : (
-            <>
-              {messages.map((message, index) => (
-                <div key={`${message.role}-${index}`} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${message.role === 'user'
-                      ? 'bg-body text-white'
-                      : 'border border-outline bg-surface-soft text-body'
-                      }`}
-                  >
-                    {message.role === 'user' ? (
-                      <p className='whitespace-pre-wrap'>{message.content}</p>
-                    ) : (
-                      <div className='prose prose-sm max-w-none'>
-                        <MarkdownRenderer content={message.content} />
+      {activeMenu !== "library" ? (
+        <>
+          <section className="mx-auto flex h-full w-full max-w-[90%] flex-col items-center justify-end gap-4 px-4 pb-36 pt-16 sm:px-6 lg:px-10 overflow-y-auto">
+            <ScrollShadow className="w-full flex-1 space-y-3">
+              {messages.length === 0 && !isLoading ? (
+                <div className="mx-auto mt-20 max-w-2xl text-center">
+                  <div className="mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline bg-surface-soft text-body">
+                    <SparkleIcon size={22} weight="fill" />
+                  </div>
+                  <p className="text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]">
+                    Tanya apapun ke mb.ai.
+                  </p>
+                  <p className="mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-body">
+                    Upload PDF, lalu ketik{" "}
+                    <span className="font-semibold text-[#111111]">@</span>{" "}
+                    untuk memilih dokumen sebagai konteks RAG.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {messages.map((message, index) => (
+                    <div
+                      key={`${message.role}-${index}`}
+                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                    >
+                      <div
+                        className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${
+                          message.role === "user"
+                            ? "bg-body text-white"
+                            : "border border-outline bg-surface-soft text-body"
+                        }`}
+                      >
+                        {message.role === "user" ? (
+                          <p className="whitespace-pre-wrap">
+                            {message.content}
+                          </p>
+                        ) : (
+                          <div className="prose prose-sm max-w-none">
+                            <MarkdownRenderer content={message.content} />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-
-              {isLoading && streamingContent ? (
-                <div className='flex justify-start'>
-                  <div className='max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body'>
-                    <div className='prose prose-sm max-w-none'>
-                      <MarkdownRenderer content={streamingContent} />
                     </div>
-                  </div>
-                </div>
-              ) : null}
+                  ))}
 
-              {isLoading && !streamingContent ? (
-                <div className='flex justify-start'>
-                  <div className='rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body'>
-                    <span className='animate-pulse'>mb.ai sedang berpikir...</span>
-                  </div>
-                </div>
-              ) : null}
-            </>
-          )}
-          <div ref={messagesEndRef} />
-        </ScrollShadow>
-      </section>
+                  {isLoading && streamingContent ? (
+                    <div className="flex justify-start">
+                      <div className="max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
+                        <div className="prose prose-sm max-w-none">
+                          <MarkdownRenderer content={streamingContent} />
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
 
-      <ChatInputBar
-        input={input}
-        inputRef={chatbotInputRef}
-        isLoading={isLoading}
-        mentionMatches={mentionMatches}
-        selectedFiles={selectedFiles}
-        onChooseMentionFile={chooseMentionFile}
-        onInputChange={setInput}
-        onKeyDown={handleInputKeyDown}
-        onOpenUploadModal={() => setIsUploadModalOpen(true)}
-        onSubmit={handleSubmit}
-        onToggleFile={toggleFile}
-      />
+                  {isLoading && !streamingContent ? (
+                    <div className="flex justify-start">
+                      <div className="rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
+                        <span className="animate-pulse">
+                          mb.ai sedang berpikir...
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+                </>
+              )}
+              <div ref={messagesEndRef} />
+            </ScrollShadow>
+          </section>
+
+          <ChatInputBar
+            input={input}
+            inputRef={chatbotInputRef}
+            isLoading={isLoading}
+            mentionMatches={mentionMatches}
+            selectedFiles={selectedFiles}
+            onChooseMentionFile={chooseMentionFile}
+            onInputChange={setInput}
+            onKeyDown={handleInputKeyDown}
+            onOpenUploadModal={() => setIsUploadModalOpen(true)}
+            onSubmit={handleSubmit}
+            onToggleFile={toggleFile}
+          />
+        </>
+      ) : (
+        <UploadLibrary />
+      )}
 
       <UploadFileModal
         file={uploadFile}

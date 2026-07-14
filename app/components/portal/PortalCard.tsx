@@ -8,6 +8,7 @@ interface PortalCardProps {
   title: string;
   description: string;
   href: string;
+  icon?: string;
 }
 
 export default function PortalCard({
