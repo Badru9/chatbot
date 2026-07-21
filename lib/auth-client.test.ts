@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { authClient } from './auth-client.js';
+import { useSession, useLogin, useLogout } from './auth-client.js';
 
-test('Auth client should be configured correctly', () => {
-  assert.ok(authClient);
-  assert.strictEqual(typeof authClient.signIn, 'function');
-  assert.strictEqual(typeof authClient.signOut, 'function');
+test('Auth hooks exist and are functions', () => {
+  assert.strictEqual(typeof useSession, 'function');
+  assert.strictEqual(typeof useLogin, 'function');
+  assert.strictEqual(typeof useLogout, 'function');
 });

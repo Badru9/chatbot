@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { Button, Chip, Label } from '@heroui/react';
+import { Button, Chip, Label } from "@heroui/react";
 import {
   ChatCircleIcon,
   ClockCounterClockwiseIcon,
@@ -8,7 +8,7 @@ import {
   FilesIcon,
   PlusIcon,
   TrashIcon,
-} from '@phosphor-icons/react';
+} from "@phosphor-icons/react";
 
 export interface SidebarSession {
   id: string;
@@ -27,11 +27,11 @@ export interface SidebarLibraryFile {
 }
 
 interface ChatSidebarProps {
-  activeMenu: 'new' | 'history' | 'library';
+  activeMenu: "new" | "history" | "library";
   sessions: SidebarSession[];
   libraryFiles: SidebarLibraryFile[];
   selectedFileIds: string[];
-  onMenuChange: (menu: 'new' | 'history' | 'library') => void;
+  onMenuChange: (menu: "new" | "history" | "library") => void;
   onNewChat: () => void;
   onLoadSession: (sessionId: string) => void;
   onDeleteFile: (fileId: string) => void;
@@ -39,8 +39,8 @@ interface ChatSidebarProps {
 }
 
 const formatBytes = (bytes: number) => {
-  if (bytes === 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
+  if (bytes === 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
   const index = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
     units.length - 1,
@@ -50,11 +50,11 @@ const formatBytes = (bytes: number) => {
 };
 
 const formatDate = (timestamp: number) =>
-  new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
+  new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
   }).format(timestamp);
 
 export default function ChatSidebar({
@@ -69,94 +69,91 @@ export default function ChatSidebar({
   onToggleFile,
 }: ChatSidebarProps) {
   const navItems = [
-    { key: 'new' as const, label: 'Chat baru', icon: ChatCircleIcon },
+    { key: "new" as const, label: "Chat baru", icon: ChatCircleIcon },
     {
-      key: 'history' as const,
-      label: 'History chats',
+      key: "history" as const,
+      label: "History chats",
       icon: ClockCounterClockwiseIcon,
     },
-    { key: 'library' as const, label: 'Library', icon: FilesIcon },
+    { key: "library" as const, label: "Library", icon: FilesIcon },
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-20 hidden w-[292px] flex-col border-r border-[#e5e7eb] bg-white text-[#111111] lg:flex [font-family:'Cal_Sans','Inter',ui-sans-serif,system-ui,sans-serif]">
-      <div className='flex h-16 items-center justify-between border-b border-[#e5e7eb] px-5'>
+    <aside className="absolute inset-y-0 left-0 z-20 hidden w-[292px] flex-col border-r border-hairline bg-canvas text-ink lg:flex font-sans">
+      {/* <div className='flex h-16 items-center justify-between border-b border-hairline px-5'>
         <div>
           <p className='text-[18px] font-semibold leading-[1.4] tracking-[-0.3px]'>
             mb.ai
           </p>
-          <p className='text-[12px] leading-[1.35] text-[#898989]'>
+          <p className='text-[12px] leading-[1.35] text-muted-soft'>
             context workspace
           </p>
         </div>
-        <span className='rounded-full border border-[#e5e7eb] bg-[#f8f9fa] px-2.5 py-1 text-[12px] text-[#6b7280]'>
-          rag
-        </span>
-      </div>
+      </div> */}
 
-      <nav className='grid gap-1.5 border-b border-[#e5e7eb] p-3'>
+      <nav className="grid gap-1 border-b border-hairline p-3">
         {navItems.map(({ key, label, icon: Icon }) => {
           const isActive = activeMenu === key;
 
           return (
             <Button
               key={key}
-              variant='ghost'
-              className={`h-10 justify-start rounded-xl px-3 text-[14px] font-medium transition active:scale-[0.98] ${
+              variant="ghost"
+              className={`w-full h-10 justify-start rounded-lg px-3 text-[14px] font-medium transition duration-150 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-[0.98] ${
                 isActive
-                  ? 'bg-[#111111] text-white hover:bg-[#111111]'
-                  : 'text-[#374151] hover:bg-[#f8f9fa]'
+                  ? "bg-primary text-white hover:bg-primary shadow-sm"
+                  : "text-body hover:bg-hairline-soft"
               }`}
               onPress={() => {
                 onMenuChange(key);
-                if (key === 'new') onNewChat();
+                if (key === "new") onNewChat();
               }}
             >
-              <Icon size={17} weight={isActive ? 'fill' : 'regular'} />
+              <Icon size={17} weight={isActive ? "fill" : "regular"} />
               {label}
             </Button>
           );
         })}
       </nav>
 
-      <div className='min-h-0 flex-1 overflow-y-auto bg-[#f8f9fa] p-3'>
-        {activeMenu === 'new' ? (
-          <div className='rounded-xl border border-[#e5e7eb] bg-white p-4'>
-            <div className='mb-4 grid size-10 place-items-center rounded-lg bg-[#111111] text-white'>
-              <PlusIcon size={20} weight='bold' />
+      <div className="min-h-0 flex-1 overflow-y-auto bg-surface-soft p-3">
+        {activeMenu === "new" ? (
+          <div className="rounded-lg border border-hairline bg-canvas p-4 shadow-sm">
+            <div className="mb-4 grid size-10 place-items-center rounded-lg bg-primary text-white">
+              <PlusIcon size={20} weight="bold" />
             </div>
-            <p className='text-[16px] font-semibold leading-[1.4]'>
+            <p className="text-[15px] font-semibold leading-[1.4] text-ink">
               Chat kosong siap.
             </p>
-            <p className='mt-1.5 text-[14px] leading-[1.5] text-[#6b7280]'>
+            <p className="mt-1 text-[13px] leading-[1.5] text-muted">
               Upload PDF, ketik @, pilih konteks.
             </p>
           </div>
         ) : null}
 
-        {activeMenu === 'history' ? (
-          <div className='grid gap-2'>
+        {activeMenu === "history" ? (
+          <div className="grid gap-2">
             {sessions.length === 0 ? (
-              <p className='rounded-xl border border-[#e5e7eb] bg-white p-4 text-[14px] leading-[1.5] text-[#6b7280]'>
+              <p className="rounded-lg border border-hairline bg-canvas p-4 text-[13px] leading-[1.5] text-muted shadow-sm">
                 Belum ada history.
               </p>
             ) : (
               sessions.map((session) => (
                 <button
                   key={session.id}
-                  className='rounded-xl border border-[#e5e7eb] bg-white p-3 text-left transition hover:border-[#111111] active:scale-[0.99]'
+                  className="rounded-lg border border-hairline bg-canvas p-3 text-left transition duration-150 hover:border-primary hover:shadow-sm active:scale-[0.99] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   onClick={() => onLoadSession(session.id)}
-                  type='button'
+                  type="button"
                 >
-                  <div className='flex items-start justify-between gap-3'>
-                    <p className='line-clamp-2 text-[14px] font-semibold leading-[1.4] text-[#111111]'>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink">
                       {session.title}
                     </p>
-                    <span className='rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] text-[#6b7280]'>
+                    <span className="rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-body border border-hairline">
                       {session.messagesCount}
                     </span>
                   </div>
-                  <p className='mt-3 text-[12px] leading-[1.35] text-[#898989]'>
+                  <p className="mt-2.5 text-[11px] leading-[1.35] text-muted-soft">
                     {formatDate(session.updatedAt)}
                   </p>
                 </button>
@@ -165,19 +162,19 @@ export default function ChatSidebar({
           </div>
         ) : null}
 
-        {activeMenu === 'library' ? (
-          <div className='grid gap-2'>
-            <div className='rounded-xl border border-[#e5e7eb] bg-white p-3'>
-              <p className='text-[12px] font-medium uppercase tracking-[0.08em] text-[#898989]'>
+        {/* {activeMenu === "library" ? (
+          <div className="grid gap-2">
+            <div className="rounded-lg border border-hairline bg-canvas p-3 shadow-sm">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-soft">
                 Uploaded files
               </p>
-              <p className='mt-1 text-[22px] font-semibold tracking-[-0.3px]'>
+              <p className="mt-1 text-[20px] font-bold tracking-[-0.3px] text-ink">
                 {libraryFiles.length}
               </p>
             </div>
 
             {libraryFiles.length === 0 ? (
-              <p className='rounded-xl border border-[#e5e7eb] bg-white p-4 text-[14px] leading-[1.5] text-[#6b7280]'>
+              <p className="rounded-lg border border-hairline bg-canvas p-4 text-[13px] leading-[1.5] text-muted shadow-sm">
                 Library kosong. Upload PDF dari tombol +.
               </p>
             ) : (
@@ -187,43 +184,49 @@ export default function ChatSidebar({
                 return (
                   <div
                     key={file.id}
-                    className={`rounded-xl border bg-white p-3 transition ${
-                      isSelected ? 'border-[#111111]' : 'border-[#e5e7eb]'
+                    className={`rounded-lg border bg-canvas p-3 transition duration-150 ${
+                      isSelected
+                        ? "border-primary shadow-sm"
+                        : "border-hairline"
                     }`}
                   >
                     <button
-                      className='flex w-full items-start gap-3 text-left'
+                      className="flex w-full items-start gap-3 text-left outline-none"
                       onClick={() => onToggleFile(file.id)}
-                      type='button'
+                      type="button"
                     >
-                      <span className='grid size-10 shrink-0 place-items-center rounded-lg bg-[#f5f5f5] text-[#111111]'>
-                        <FilePdfIcon size={19} weight='fill' />
+                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-card text-ink border border-hairline">
+                        <FilePdfIcon size={18} weight="fill" />
                       </span>
-                      <span className='min-w-0 flex-1'>
-                        <Label className='line-clamp-2 text-[14px] font-semibold leading-[1.4] text-[#111111]'>
+                      <span className="min-w-0 flex-1">
+                        <Label className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink cursor-pointer">
                           {file.name}
                         </Label>
-                        <span className='mt-1 block text-[12px] leading-[1.35] text-[#6b7280]'>
-                          {formatBytes(file.size)} ·{' '}
+                        <span className="mt-1 block text-[11px] leading-[1.35] text-muted">
+                          {formatBytes(file.size)} ·{" "}
                           {formatDate(file.uploadedAt)}
-                          {typeof file.chunksCount === 'number' ? ` · ${file.chunksCount} chunks` : ''}
+                          {typeof file.chunksCount === "number"
+                            ? ` · ${file.chunksCount} chk`
+                            : ""}
                         </span>
                       </span>
                     </button>
-                    <div className='mt-3 flex items-center justify-between'>
-                      <Chip
-                        color={isSelected ? 'default' : 'default'}
-                        size='sm'
-                        variant='soft'
-                      >
-                        {isSelected ? 'aktif' : 'rag source'}
-                      </Chip>
+                    <div className="mt-3 flex items-center justify-between">
+                      {isSelected ? (
+                        <span className="inline-flex items-center rounded-full bg-success-badge-bg border border-success-badge-border px-2.5 py-0.5 text-[11px] font-semibold text-success-badge-text">
+                          aktif
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full bg-hairline-soft border border-hairline px-2.5 py-0.5 text-[11px] font-medium text-[#4b5563]">
+                          rag source
+                        </span>
+                      )}
                       <Button
                         isIconOnly
                         aria-label={`Hapus ${file.name}`}
-                        className='size-9 rounded-lg text-[#6b7280] hover:bg-[#f5f5f5] active:scale-95'
-                        size='sm'
-                        variant='ghost'
+                        className="size-8 rounded-lg text-muted hover:bg-hairline-soft hover:text-danger active:scale-95 transition-colors duration-150"
+                        size="sm"
+                        variant="ghost"
                         onPress={() => onDeleteFile(file.id)}
                       >
                         <TrashIcon size={14} />
@@ -234,7 +237,7 @@ export default function ChatSidebar({
               })
             )}
           </div>
-        ) : null}
+        ) : null} */}
       </div>
     </aside>
   );

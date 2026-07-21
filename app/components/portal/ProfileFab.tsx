@@ -1,26 +1,26 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Button,
-  Modal,
-  Dropdown
-} from '@heroui/react';
-import { User } from '@phosphor-icons/react';
-import { useSession, signOut } from '../../../lib/auth-client';
-import LoginForm from './LoginForm';
-import Link from 'next/link';
+import React, { useState } from "react";
+import { Button, Modal, Dropdown } from "@heroui/react";
+import { User } from "@phosphor-icons/react";
+import { useSession, useLogout } from "../../../lib/auth-client";
+import LoginForm from "./LoginForm";
+import Link from "next/link";
 
 export default function ProfileFab() {
-  const { data: session } = useSession();
+  const { user } = useSession();
+  const logoutMutation = useLogout();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut();
-    window.location.reload();
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        window.location.reload();
+      },
+    });
   };
 
-  if (!session) {
+  if (!user) {
     return (
       <>
         <div className="fixed bottom-6 left-6 z-40">
@@ -34,8 +34,8 @@ export default function ProfileFab() {
           </Button>
         </div>
 
-        <Modal.Backdrop 
-          isOpen={isLoginOpen} 
+        <Modal.Backdrop
+          isOpen={isLoginOpen}
           onOpenChange={setIsLoginOpen}
           variant="blur"
         >
@@ -52,10 +52,10 @@ export default function ProfileFab() {
     );
   }
 
-  const initial = session.user.name.charAt(0).toUpperCase();
+  const initial = user.name.charAt(0).toUpperCase();
 
   return (
-    <div className="fixed bottom-6 left-6 z-40">
+    <div className="">
       <Dropdown>
         <Button
           isIconOnly
@@ -64,32 +64,57 @@ export default function ProfileFab() {
         >
           {initial}
         </Button>
-        <Dropdown.Popover placement="top start" className="shadow">
+        <Dropdown.Popover placement="start bottom" className="shadow">
           <Dropdown.Menu
             onAction={(key) => {
-              if (key === 'logout') {
+              if (key === "logout") {
                 handleLogout();
               }
             }}
           >
             <Dropdown.Item id="profile" textValue="profile">
               <div className="flex flex-col gap-0.5">
-                <p className="font-semibold text-neutral-900 dark:text-white leading-tight">{session.user.name}</p>
-                <p className="text-xs text-neutral-500 capitalize">{session.user.role}</p>
+                <p className="font-semibold text-neutral-900 dark:text-white leading-tight">
+                  {user.name}
+                </p>
+                <p className="text-xs text-neutral-500 capitalize">
+                  {user.role}
+                </p>
               </div>
             </Dropdown.Item>
-            {session.user.role === 'admin' ? (
-              <Dropdown.Item id="admin" textValue="admin">
-                <Link href="/admin/users" className="w-full h-full block text-neutral-700 dark:text-neutral-300">
-                  Panel Admin
+            {user.role === "admin" && (
+              <Dropdown.Item id="admin-menus" textValue="admin-menus">
+                <Link
+                  href="/admin/menus"
+                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
+                >
+                  Kelola Menu Portal
                 </Link>
               </Dropdown.Item>
-            ) : (
-              <Dropdown.Item id="dummy-admin" textValue="dummy" className="hidden" />
             )}
-            <Dropdown.Item 
-              id="logout" 
-              textValue="logout" 
+            {user.role === "admin" && (
+              <Dropdown.Item id="admin-datasets" textValue="admin-datasets">
+                <Link
+                  href="/admin/datasets"
+                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
+                >
+                  Kelola Dataset AI
+                </Link>
+              </Dropdown.Item>
+            )}
+            {user.role === "admin" && (
+              <Dropdown.Item id="admin-users" textValue="admin-users">
+                <Link
+                  href="/admin/users"
+                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
+                >
+                  Kelola Akun User
+                </Link>
+              </Dropdown.Item>
+            )}
+            <Dropdown.Item
+              id="logout"
+              textValue="logout"
               className="text-red-600 dark:text-red-400"
             >
               Keluar

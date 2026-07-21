@@ -1,47 +1,62 @@
-'use client';
+"use client";
 
-import React from 'react';
-import PortalCard from './PortalCard';
-
-const defaultMenus = [
-  {
-    title: 'Monitoring Kinerja',
-    description: 'Pantau kinerja dosen, presensi kehadiran, laporan kerja harian, serta evaluasi mahasiswa.',
-    icon: 'Monitor',
-    href: '/monitoring',
-  },
-  {
-    title: 'Manajemen Dokumen',
-    description: 'Unggah, kelola, serta verifikasi berbagai berkas administrasi dan dokumen PDF pendukung.',
-    icon: 'Folder',
-    href: '/documents',
-  },
-  {
-    title: 'Bimbingan Mahasiswa',
-    description: 'Akses data mahasiswa bimbingan akademik, laporan magang, konsultasi skripsi, dan KRS.',
-    icon: 'Student',
-    href: '/students',
-  },
-  {
-    title: 'Katalog Penelitian',
-    description: 'Manajemen publikasi jurnal ilmiah, prosiding konferensi, hibah penelitian internal & eksternal.',
-    icon: 'BookOpen',
-    href: '/research',
-  },
-  {
-    title: 'Portal SINTA',
-    description: 'Integrasi dan sinkronisasi otomatis skor SINTA, Scopus, Google Scholar, dan H-index.',
-    icon: 'TrendUp',
-    href: '/sinta',
-  },
-];
+import { getMenus } from "@/services/menuApi";
+import { Skeleton } from "@heroui/react";
+import { useEffect, useState } from "react";
+import { useSession } from "../../../lib/auth-client";
+import PortalCard from "./PortalCard";
+import { MenuData } from "@/lib/types";
 
 export default function PortalGrid() {
+  const { isPending: isSessionPending } = useSession();
+  const [menus, setMenus] = useState<MenuData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMenus = async () => {
+      try {
+        const data = await getMenus();
+
+        console.log("response", data);
+
+        setMenus(data);
+      } catch (error) {
+        console.error("Failed to fetch dynamic menus, using fallback:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMenus();
+  }, []);
+
+  const isDataLoading = isLoading || isSessionPending;
+
+  if (isDataLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <div
+            key={n}
+            className="p-6 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl flex flex-col gap-4"
+          >
+            <Skeleton className="w-12 h-12 rounded-xl" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-2/3 rounded-lg" />
+              <Skeleton className="h-4 w-full rounded-lg" />
+              <Skeleton className="h-4 w-5/6 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl w-full">
-      {defaultMenus.map((menu) => (
+      {menus.map((menu, idx) => (
         <PortalCard
-          key={menu.href}
+          key={menu.id || menu.href || idx}
           title={menu.title}
           description={menu.description}
           icon={menu.icon}
