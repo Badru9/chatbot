@@ -1,8 +1,9 @@
 "use client";
 
-import React, { SyntheticEvent, useState } from "react";
+import React, { useState } from "react";
 import { Input, Button, Label, toast } from "@heroui/react";
-import { signIn } from "../../../lib/auth-client";
+import { useLogin } from "../../../lib/auth-client";
+import { LoginSchema } from "../../../lib/schemas/auth";
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -11,33 +12,34 @@ interface LoginFormProps {
 export default function LoginForm({ onSuccess }: LoginFormProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: SyntheticEvent) => {
+  const loginMutation = useLogin();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    signIn
-      .email({ email, password })
-      .then(({ error }) => {
-        if (error) {
-          toast(
-            error.message ||
-              "Login gagal. Periksa kembali email dan password Anda.",
-            {
-              variant: "danger",
-            },
-          );
-        } else {
-          onSuccess?.();
-        }
-      })
-      .catch(() => {
-        toast("Terjadi kesalahan jaringan.", {
-          variant: "danger",
-        });
-      })
-      .finally(() => setIsLoading(false));
+    const validation = LoginSchema.safeParse({ email, password });
+    if (!validation.success) {
+      toast(validation.error.issues[0]?.message || "Input tidak valid.", {
+        variant: "danger",
+      });
+      return;
+    }
+
+    loginMutation.mutate(
+      { email, password },
+      {
+        onSuccess: () => {
+          if (onSuccess) onSuccess();
+        },
+        onError: (err: any) => {
+          const message =
+            err.response?.data?.error ||
+            "Login gagal. Periksa kembali email dan password Anda.";
+          toast(message, { variant: "danger" });
+        },
+      },
+    );
   };
 
   return (
@@ -80,10 +82,10 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
       <Button
         type="submit"
-        isDisabled={isLoading}
+        isDisabled={loginMutation.isPending}
         className="w-full py-6 mt-2 font-medium text-white bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:text-neutral-950 rounded-xl transition"
       >
-        {isLoading ? "Memproses..." : "Masuk"}
+        {loginMutation.isPending ? "Memproses..." : "Masuk"}
       </Button>
     </form>
   );

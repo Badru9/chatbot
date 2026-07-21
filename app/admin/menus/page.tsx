@@ -170,7 +170,7 @@ export default function AdminMenusPage() {
     setIcon("Monitor");
     setHref("");
     setVisibleToRoles(["admin", "dosen"]);
-    setOrder(menus.length > 0 ? Math.max(...menus.map((m) => m.order)) + 1 : 1);
+    setOrder(menus.length > 0 ? Math.max(...menus.map((m) => m.order ?? 0)) + 1 : 1);
     setIsFormOpen(true);
   };
 
@@ -180,7 +180,7 @@ export default function AdminMenusPage() {
     setDescription(menu.description);
     setHref(menu.href);
     setVisibleToRoles(menu.visibleToRoles);
-    setOrder(menu.order);
+    setOrder(menu.order ?? 1);
     setIsFormOpen(true);
   };
 
@@ -206,7 +206,7 @@ export default function AdminMenusPage() {
       order,
     };
 
-    if (selectedMenu) {
+    if (selectedMenu && selectedMenu.id) {
       updateMutation.mutate(
         { id: selectedMenu.id, values: payload },
         { onSuccess: () => setIsFormOpen(false) },
@@ -217,7 +217,7 @@ export default function AdminMenusPage() {
   };
 
   const handleDelete = () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !deleteTarget.id) return;
     deleteMutation.mutate(deleteTarget.id, {
       onSuccess: () => setIsDeleteOpen(false),
     });
@@ -241,10 +241,14 @@ export default function AdminMenusPage() {
     // Optimistic update
     queryClient.setQueryData(["menus"], updated);
 
+    const id1 = updated[index].id;
+    const id2 = updated[targetIndex].id;
+    if (!id1 || !id2) return;
+
     reorderMutation.mutate(
       [
-        { id: updated[index].id, order: updated[index].order },
-        { id: updated[targetIndex].id, order: updated[targetIndex].order },
+        { id: id1, order: updated[index].order ?? 0 },
+        { id: id2, order: updated[targetIndex].order ?? 0 },
       ],
       {
         onError: () => queryClient.invalidateQueries({ queryKey: ["menus"] }),
