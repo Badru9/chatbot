@@ -55,8 +55,8 @@ import UploadFileModal from "./UploadFileModal";
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) return "0 B";
+const formatBytes = (bytes?: number) => {
+  if (bytes === undefined || bytes === null || bytes === 0) return "—";
   const units = ["B", "KB", "MB", "GB"];
   const index = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
@@ -261,6 +261,7 @@ function PDFViewerModal({
 
 function FileCard({
   file,
+  hasLocalPreview,
   onDelete,
   onPreview,
   isDeleting,
@@ -276,7 +277,12 @@ function FileCard({
       <button
         type="button"
         onClick={onPreview}
-        className="flex h-40 items-center justify-center rounded-t-xl bg-surface-soft transition-colors duration-150 hover:bg-primary/5"
+        disabled={!hasLocalPreview}
+        title={hasLocalPreview ? "Pratinjau PDF" : "Pratinjau lokal tidak tersedia (diunggah dari perangkat lain)"}
+        className={`flex h-40 items-center justify-center rounded-t-xl transition-colors duration-150 ${hasLocalPreview
+            ? "bg-surface-soft hover:bg-primary/5 cursor-pointer"
+            : "bg-surface-soft/50 opacity-60 cursor-not-allowed"
+          }`}
         aria-label={`Pratinjau ${file.name}`}
       >
         <div className="grid size-14 place-items-center rounded-2xl bg-red-50 text-red-500 transition-transform duration-200 group-hover:scale-105">
@@ -315,23 +321,10 @@ function FileCard({
           <span className="inline-flex items-center rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-muted">
             RAG source
           </span>
-        )}
-
-        <div className="flex items-center gap-0.5">
           <Button
             isIconOnly
             size="sm"
-            variant="ghost"
-            onPress={onPreview}
-            className="size-8 rounded-lg text-muted hover:bg-hairline-soft hover:text-ink active:scale-95"
-            aria-label={`Pratinjau ${file.name}`}
-          >
-            <EyeIcon size={15} />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="ghost"
+            variant="danger"
             onPress={onDelete}
             isDisabled={isDeleting}
             className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"

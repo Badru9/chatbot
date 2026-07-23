@@ -42,6 +42,47 @@ interface ChatSession {
   updatedAt: number;
 }
 
+const LIBRARY_STORAGE_KEY = "mbai.library.files.v2";
+const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1";
+const BLOBS_DB_NAME = "mbai.pdfBlobs";
+const BLOBS_STORE_NAME = "blobs";
+
+function openBlobsDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BLOBS_DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(BLOBS_STORE_NAME)) {
+        db.createObjectStore(BLOBS_STORE_NAME, { keyPath: "id" });
+      }
+    };
+  });
+}
+
+async function saveBlob(file: { id: string }, blob: Blob): Promise<void> {
+  const db = await openBlobsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
+    const store = tx.objectStore(BLOBS_STORE_NAME);
+    const request = store.put({ id: file.id, blob });
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+async function deleteBlob(fileId: string): Promise<void> {
+  const db = await openBlobsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
+    const store = tx.objectStore(BLOBS_STORE_NAME);
+    const request = store.delete(fileId);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
@@ -269,7 +310,14 @@ export default function Chatbot() {
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
 
     try {
+      // 1. Delete dari backend
       await deleteMutation.mutateAsync(fileId);
+
+      // 2. Delete dari IndexedDB
+      await deleteBlob(fileId);
+
+      // 3. Refresh list
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     } catch (error) {
       console.error("Failed to delete file from backend:", error);
     }

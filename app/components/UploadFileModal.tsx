@@ -44,10 +44,6 @@ export default function UploadFileModal({
           <Modal.CloseTrigger />
           <Modal.Header>
             <Modal.Heading>Upload PDF</Modal.Heading>
-            <p className="text-sm leading-5 text-muted">
-              PDF akan diproses menjadi chunks dan embedding, lalu disimpan di
-              SingleStore.
-            </p>
           </Modal.Header>
           <Modal.Body>
             <div className="flex flex-col gap-2">

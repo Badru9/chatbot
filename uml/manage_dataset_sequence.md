@@ -1,110 +1,68 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Mengelola Dataset
+## Sequence Diagram untuk Mengelola Dataset Institusi (Admin Dashboard `/admin/datasets`)
 
 ```plantuml
 @startuml
-title Sequence Diagram Mengelola Dataset Institusi
+title Sequence Diagram Mengelola Dataset Institusi (Admin Dashboard)
 
 autonumber
 skinparam shadowing false
 
 actor "Admin / USI" as Admin
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authorization Service" as Auth
-database "File Storage" as Storage
-database "PostgreSQL dan pgvector" as DB
-control "Dataset Processor" as Processor
-control "BGE-M3" as Embedding
-control "Audit Log Service" as Log
+boundary "Dashboard Admin Datasets\n(/admin/datasets)" as UI
+control "Express Backend API\n(/api/documents)" as API
+control "Auth Middleware" as Auth
+control "PDF Processor" as Processor
+control "Ollama Embedding" as Embedding
+database "PostgreSQL & pgvector\n(Tabel vectors)" as DB
 
-Admin -> Web : Membuka pengelolaan dataset
-Web -> API : Meminta daftar dataset
-API -> Auth : Validasi session dan role ADMIN
-Auth --> API : Hak akses valid
-API -> DB : Ambil dataset institusi
-DB --> API : Daftar dataset dan status
-API --> Web : Data dataset
-Web --> Admin : Menampilkan daftar dataset
+Admin -> UI : Membuka halaman /admin/datasets
+UI -> API : GET /api/documents
+API -> Auth : Memvalidasi session & role ADMIN
+Auth --> API : Hak akses ADMIN valid
+API -> DB : Query groupBy documentId seluruh sistem di tabel vectors
+DB --> API : Daftar seluruh dokumen & total chunk
+API --> UI : JSON List dokumen institusi
+UI -> UI : Hitung agregat statistik:\n- Total Dokumen\n- Total Vector Chunks
+UI --> Admin : Menampilkan ringkasan statistik & daftar dataset
 
-alt Menambahkan dataset PDF
+alt Menambahkan PDF Dataset Institusi Global
 
-    Admin -> Web : Memilih file PDF
-    Web -> API : Mengunggah PDF institusi
-    API -> Storage : Menyimpan file
-    Storage --> API : Lokasi file
-    API -> DB : Simpan Document\nscope INSTITUTIONAL\nstatus PROCESSING
-    API -> Processor : Mulai pemrosesan PDF
+    Admin -> UI : Pilih file PDF institusi & Upload
+    UI -> API : POST /api/documents (Multipart FormData file)
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses valid
 
-    Processor -> Storage : Membaca PDF
-    Storage --> Processor : File PDF
-    Processor -> Processor : Ekstraksi teks dan chunking
-
-    loop Setiap chunk
-        Processor -> Embedding : Membuat embedding
-        Embedding --> Processor : Vector embedding
-        Processor -> DB : Simpan chunk dan embedding
+    API -> Processor : ingestPdfBuffer(fileBuffer, fileName, adminUserId)
+    Processor -> Processor : Ekstraksi teks & chunking
+    loop Setiap chunk teks
+        Processor -> Embedding : Generate vector embedding (bge-m3 / Ollama)
+        Embedding --> Processor : Vector (1024 dimension)
+        Processor -> DB : Simpan PdfChunk ke tabel vectors
     end
 
-else Menambahkan data tanya jawab
+    DB --> Processor : Dataset tersimpan
+    Processor --> API : Pemrosesan selesai
+    API --> UI : HTTP 201 Created
+    UI -> UI : Refetch via React Query & hitung ulang statistik
+    UI --> Admin : Menampilkan status sukses & statistik diperbarui
 
-    Admin -> Web : Mengisi pertanyaan dan jawaban
-    Web -> API : Mengirim data tanya jawab
-    API -> DB : Simpan InstitutionalQA
-    API -> Processor : Proses teks tanya jawab
-    Processor -> Embedding : Membuat embedding
-    Embedding --> Processor : Vector embedding
-    Processor -> DB : Simpan embedding dataset
+else Menghapus Dataset Institusi / User
 
-else Memperbarui dataset
-
-    Admin -> Web : Mengubah atau mengganti dataset
-    Web -> API : Mengirim data terbaru
-    API -> DB : Perbarui metadata dan\nstatus PROCESSING
-    API -> Processor : Memproses ulang dataset
-
-else Mengaktifkan atau menonaktifkan dataset
-
-    Admin -> Web : Mengubah status dataset
-    Web -> API : Mengirim isActive terbaru
-    API -> DB : Perbarui isActive
-
-else Memproses ulang dataset
-
-    Admin -> Web : Memilih proses ulang
-    Web -> API : Meminta reprocessing
-    API -> DB : Ubah status menjadi PROCESSING
-    API -> Processor : Jalankan pemrosesan ulang
-
-else Menghapus dataset
-
-    Admin -> Web : Memilih hapus dataset
-    Web --> Admin : Menampilkan konfirmasi
-    Admin -> Web : Mengonfirmasi penghapusan
-    Web -> API : Permintaan hapus dataset
-    API -> DB : Hapus dataset dan chunk
-    API -> Storage : Hapus file jika tersedia
+    Admin -> UI : Klik Hapus Dokumen
+    UI --> Admin : Menampilkan konfirmasi penghapusan
+    Admin -> UI : Konfirmasi Hapus
+    UI -> API : DELETE /api/documents/:id
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses valid (Bypass user check)
+    API -> DB : Hapus seluruh chunk dari tabel vectors WHERE documentId = id
+    DB --> API : Chunk berhasil dihapus
+    API --> UI : HTTP 200 OK { ok: true }
+    UI -> UI : Refetch via React Query & perbarui statistik
+    UI --> Admin : Menampilkan konfirmasi penghapusan sukses
 
 end
-
-alt Pemrosesan berhasil
-
-    Processor -> DB : Ubah status menjadi COMPLETED
-    Processor -> Log : Catat pemrosesan berhasil
-
-else Pemrosesan gagal
-
-    Processor -> DB : Ubah status menjadi FAILED
-    Processor -> DB : Simpan errorMessage
-    Processor -> Log : Catat kegagalan pemrosesan
-
-end
-
-API -> Log : Catat aktivitas pengelolaan dataset
-Log --> API : Audit log tersimpan
-API --> Web : Status operasi
-Web --> Admin : Menampilkan status atau pesan kesalahan
 
 @enduml
 ```
