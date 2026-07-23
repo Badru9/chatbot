@@ -9,9 +9,10 @@ import {
   useRef,
   useState,
 } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { sendChatMessage } from "../../services/chatService";
 import { uploadDocument, deleteDocument } from "../../services/documentService";
+import { axiosInstance } from "../../services/axiosInstance";
 
 import ChatInputBar from "./ChatInputBar";
 import ChatSidebar, {
@@ -42,6 +43,44 @@ interface ChatSession {
 
 const LIBRARY_STORAGE_KEY = "mbai.library.files.v2";
 const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1";
+const BLOBS_DB_NAME = "mbai.pdfBlobs";
+const BLOBS_STORE_NAME = "blobs";
+
+function openBlobsDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(BLOBS_DB_NAME, 1);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+    request.onupgradeneeded = (event) => {
+      const db = (event.target as IDBOpenDBRequest).result;
+      if (!db.objectStoreNames.contains(BLOBS_STORE_NAME)) {
+        db.createObjectStore(BLOBS_STORE_NAME, { keyPath: "id" });
+      }
+    };
+  });
+}
+
+async function saveBlob(file: { id: string }, blob: Blob): Promise<void> {
+  const db = await openBlobsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
+    const store = tx.objectStore(BLOBS_STORE_NAME);
+    const request = store.put({ id: file.id, blob });
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+async function deleteBlob(fileId: string): Promise<void> {
+  const db = await openBlobsDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
+    const store = tx.objectStore(BLOBS_STORE_NAME);
+    const request = store.delete(fileId);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
 
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -95,7 +134,23 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState(() => createId());
-  const [libraryFiles, setLibraryFiles] = useState<LibraryFile[]>([]);
+  const queryClient = useQueryClient();
+
+  const { data: libraryFiles = [], isLoading: isLibraryFetching } = useQuery<LibraryFile[]>({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<any[]>("/api/documents");
+      return data.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        size: doc.size,
+        type: doc.type || "application/pdf",
+        uploadedAt: doc.uploadedAt ? new Date(doc.uploadedAt).getTime() : Date.now(),
+        chunksCount: doc.chunkCount,
+      }));
+    },
+  });
+
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
@@ -130,19 +185,11 @@ export default function Chatbot() {
   );
 
   useEffect(() => {
-    setLibraryFiles(
-      safeParse<LibraryFile[]>(localStorage.getItem(LIBRARY_STORAGE_KEY), []),
-    );
     setSessions(
       safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []),
     );
     setIsStorageReady(true);
   }, []);
-
-  useEffect(() => {
-    if (!isStorageReady) return;
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(libraryFiles));
-  }, [isStorageReady, libraryFiles]);
 
   useEffect(() => {
     if (!isStorageReady) return;
@@ -191,10 +238,12 @@ export default function Chatbot() {
         throw new Error(payload.error ?? "Gagal upload PDF.");
       }
 
-      setLibraryFiles((prev) => [
-        payload.document!,
-        ...prev.filter((file) => file.id !== payload.document!.id),
-      ]);
+      // Save blob to IndexedDB
+      await saveBlob({ id: payload.document!.id }, uploadFile);
+
+      // Invalidate queries to refresh lists
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
+
       setSelectedFileIds((prev) =>
         prev.includes(payload.document!.id)
           ? prev
@@ -236,11 +285,17 @@ export default function Chatbot() {
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    setLibraryFiles((prev) => prev.filter((file) => file.id !== fileId));
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
 
     try {
+      // 1. Delete dari backend
       await deleteMutation.mutateAsync(fileId);
+
+      // 2. Delete dari IndexedDB
+      await deleteBlob(fileId);
+
+      // 3. Refresh list
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     } catch (error) {
       console.error("Failed to delete file from backend:", error);
     }

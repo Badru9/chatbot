@@ -15,6 +15,9 @@ import {
   XIcon,
   SpinnerIcon,
 } from "@phosphor-icons/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { uploadDocument, deleteDocument, type UploadDocumentResponse } from "../../services/documentService";
+import { axiosInstance } from "../../services/axiosInstance";
 
 // Lazy-load PDF components with SSR disabled to avoid DOMMatrix issue
 const PdfDocument = dynamic(
@@ -138,8 +141,8 @@ function loadLibraryFiles(): LibraryFile[] {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-const formatBytes = (bytes: number) => {
-  if (bytes === 0) return "0 B";
+const formatBytes = (bytes?: number) => {
+  if (bytes === undefined || bytes === null || bytes === 0) return "—";
   const units = ["B", "KB", "MB", "GB"];
   const index = Math.min(
     Math.floor(Math.log(bytes) / Math.log(1024)),
@@ -148,12 +151,20 @@ const formatBytes = (bytes: number) => {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 };
 
-const formatDate = (timestamp: number) =>
-  new Intl.DateTimeFormat("id-ID", {
+const formatDate = (timestamp: number | string) => {
+  const ms = typeof timestamp === "number" ? timestamp : new Date(timestamp).getTime();
+  return new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(timestamp);
+  }).format(ms);
+};
+
+const getTimestamp = (val: string | number | null | undefined): number => {
+  if (!val) return Date.now();
+  if (typeof val === "number") return val;
+  return new Date(val).getTime();
+};
 
 const PDF_ZOOM_STEPS = [400, 520, 640, 760, 880] as const;
 
@@ -359,10 +370,12 @@ function PDFViewerModal({
 
 function FileCard({
   file,
+  hasLocalPreview,
   onDelete,
   onPreview,
 }: {
   file: LibraryFile;
+  hasLocalPreview: boolean;
   onDelete: () => void;
   onPreview: () => void;
 }) {
@@ -372,7 +385,12 @@ function FileCard({
       <button
         type="button"
         onClick={onPreview}
-        className="flex h-40 items-center justify-center rounded-t-xl bg-surface-soft transition-colors duration-150 hover:bg-primary/5"
+        disabled={!hasLocalPreview}
+        title={hasLocalPreview ? "Pratinjau PDF" : "Pratinjau lokal tidak tersedia (diunggah dari perangkat lain)"}
+        className={`flex h-40 items-center justify-center rounded-t-xl transition-colors duration-150 ${hasLocalPreview
+            ? "bg-surface-soft hover:bg-primary/5 cursor-pointer"
+            : "bg-surface-soft/50 opacity-60 cursor-not-allowed"
+          }`}
         aria-label={`Pratinjau ${file.name}`}
       >
         <div className="grid size-14 place-items-center rounded-2xl bg-red-50 text-red-500 transition-transform duration-200 group-hover:scale-105">
@@ -394,44 +412,34 @@ function FileCard({
           <span>{formatBytes(file.size)}</span>
           <span className="text-muted-soft/40">&middot;</span>
           <span>{formatDate(file.uploadedAt)}</span>
-          {typeof file.chunksCount === "number" && (
-            <>
-              <span className="text-muted-soft/40">&middot;</span>
-              <span>{file.chunksCount} chunks</span>
-            </>
-          )}
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-between border-t border-hairline px-4 py-2.5">
-        {typeof file.chunksCount === "number" && file.chunksCount > 0 ? (
-          <span className="inline-flex items-center rounded-full bg-success-badge-bg px-2 py-0.5 text-[11px] font-semibold text-success-badge-text">
-            Ter-indexed
+      <div className="flex items-center justify-end border-t border-hairline px-4 py-2.5">
+        <div className="flex items-center gap-1">
+          <span title={hasLocalPreview ? "Pratinjau PDF" : "Pratinjau lokal tidak tersedia (diunggah dari perangkat lain)"}>
+            <Button
+              isIconOnly
+              size="sm"
+              variant="tertiary"
+              onPress={onPreview}
+              isDisabled={!hasLocalPreview}
+              className={`size-8 rounded-lg active:scale-95 ${hasLocalPreview
+                  ? "hover:bg-hairline-soft hover:text-ink"
+                  : "opacity-40 cursor-not-allowed"
+                }`}
+              aria-label={`Pratinjau ${file.name}`}
+            >
+              <EyeIcon size={15} />
+            </Button>
           </span>
-        ) : (
-          <span className="inline-flex items-center rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-muted">
-            RAG source
-          </span>
-        )}
-
-        <div className="flex items-center gap-0.5">
           <Button
             isIconOnly
             size="sm"
-            variant="ghost"
-            onPress={onPreview}
-            className="size-8 rounded-lg text-muted hover:bg-hairline-soft hover:text-ink active:scale-95"
-            aria-label={`Pratinjau ${file.name}`}
-          >
-            <EyeIcon size={15} />
-          </Button>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="ghost"
+            variant="danger"
             onPress={onDelete}
-            className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"
+            className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95"
             aria-label={`Hapus ${file.name}`}
           >
             <TrashIcon size={15} />
@@ -447,9 +455,23 @@ function FileCard({
 /* ------------------------------------------------------------------ */
 
 export default function UploadLibrary() {
-  const [libraryFiles, setLibraryFiles] = useState<LibraryFile[]>(() =>
-    loadLibraryFiles(),
-  );
+  const queryClient = useQueryClient();
+
+  const { data: libraryFiles = [], isLoading: isFetching } = useQuery<LibraryFile[]>({
+    queryKey: ["documents"],
+    queryFn: async () => {
+      const { data } = await axiosInstance.get<LibraryFile[]>("/api/documents");
+      return data;
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: uploadDocument,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+  });
 
   // Upload modal state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -459,9 +481,30 @@ export default function UploadLibrary() {
   // Preview state
   const [previewFile, setPreviewFile] = useState<LibraryFile | null>(null);
 
-  // Sync to localStorage on changes
+  // Status pratinjau lokal
+  const [localBlobs, setLocalBlobs] = useState<Record<string, boolean>>({});
+
+  // Cek ketersediaan file asli di IndexedDB lokal secara berkala/saat data berubah
   useEffect(() => {
-    saveLibraryFiles(libraryFiles);
+    if (!libraryFiles || libraryFiles.length === 0) {
+      setLocalBlobs({});
+      return;
+    }
+
+    const checkBlobs = async () => {
+      const statusMap: Record<string, boolean> = {};
+      for (const file of libraryFiles) {
+        try {
+          const blob = await getBlob(file.id);
+          statusMap[file.id] = !!blob;
+        } catch {
+          statusMap[file.id] = false;
+        }
+      }
+      setLocalBlobs(statusMap);
+    };
+
+    checkBlobs();
   }, [libraryFiles]);
 
   // Handlers
@@ -481,20 +524,26 @@ export default function UploadLibrary() {
     setIsUploading(true);
 
     try {
-      // Create file metadata (same as Chatbot)
+      // 1. Upload ke backend (proses chunk & embed)
+      const payload = (await uploadMutation.mutateAsync(uploadFile)) as UploadDocumentResponse;
+
+      if (!payload.document) {
+        throw new Error(payload.error ?? "Gagal upload PDF ke backend.");
+      }
+
+      // 2. Simpan blob asli ke IndexedDB menggunakan ID hasil respon backend
       const newFile: LibraryFile = {
-        id: createId(),
-        name: uploadFile.name,
-        size: uploadFile.size,
-        type: uploadFile.type,
-        uploadedAt: Date.now(),
+        id: payload.document!.id,
+        name: payload.document!.name,
+        size: payload.document!.size,
+        type: payload.document!.type,
+        uploadedAt: getTimestamp(payload.document!.uploadedAt),
       };
 
-      // Save blob to IndexedDB
       await saveBlob(newFile, uploadFile);
 
-      // Update localStorage
-      setLibraryFiles((prev) => [newFile, ...prev]);
+      // 3. Refresh list dengan menginvalidasi cache React Query
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
 
       setUploadFile(null);
       setIsUploadModalOpen(false);
@@ -506,14 +555,17 @@ export default function UploadLibrary() {
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    // Remove from localStorage
-    setLibraryFiles((prev) => prev.filter((file) => file.id !== fileId));
-
-    // Remove blob from IndexedDB
     try {
+      // 1. Hapus dari backend
+      await deleteMutation.mutateAsync(fileId);
+
+      // 2. Hapus dari IndexedDB lokal
       await deleteBlob(fileId);
+
+      // 3. Refresh list
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     } catch (error) {
-      console.error("Failed to delete blob:", error);
+      console.error("Failed to delete file:", error);
     }
   };
 
@@ -531,13 +583,13 @@ export default function UploadLibrary() {
               : `${libraryFiles.length} file PDF`}
           </p>
         </div>
-        {/* <Button
+        <Button
           onPress={() => setIsUploadModalOpen(true)}
           className="h-10 rounded-xl bg-[#111111] px-4 text-[13px] font-semibold text-white hover:bg-[#222] active:scale-[0.97]"
         >
           <PlusIcon size={16} weight="bold" />
           Upload PDF
-        </Button> */}
+        </Button>
       </div>
 
       {/* Content */}
@@ -554,13 +606,7 @@ export default function UploadLibrary() {
               Upload file PDF untuk membuat knowledge base yang bisa digunakan
               sebagai konteks RAG di chat.
             </p>
-            <Button
-              onPress={() => setIsUploadModalOpen(true)}
-              className="mt-6 h-10 rounded-xl bg-[#111111] px-5 text-[13px] font-semibold text-white hover:bg-[#222] active:scale-[0.97]"
-            >
-              <PlusIcon size={16} weight="bold" />
-              Upload PDF
-            </Button>
+
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -568,6 +614,7 @@ export default function UploadLibrary() {
               <FileCard
                 key={file.id}
                 file={file}
+                hasLocalPreview={!!localBlobs[file.id]}
                 onDelete={() => handleDeleteFile(file.id)}
                 onPreview={() => setPreviewFile(file)}
               />
