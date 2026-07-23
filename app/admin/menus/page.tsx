@@ -170,7 +170,9 @@ export default function AdminMenusPage() {
     setIcon("Monitor");
     setHref("");
     setVisibleToRoles(["admin", "dosen"]);
-    setOrder(menus.length > 0 ? Math.max(...menus.map((m) => m.order ?? 0)) + 1 : 1);
+    setOrder(
+      menus.length > 0 ? Math.max(...menus.map((m) => m.order ?? 0)) + 1 : 1,
+    );
     setIsFormOpen(true);
   };
 
@@ -411,7 +413,7 @@ export default function AdminMenusPage() {
       </div>
 
       <Modal isOpen={isFormOpen} onOpenChange={setIsFormOpen}>
-        <Modal.Backdrop variant="blur">
+        <Modal.Backdrop>
           <Modal.Container size="lg">
             <Modal.Dialog className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-6 shadow-2xl outline-none">
               <Modal.Header>

@@ -45,3 +45,18 @@ export const fallbackMenus: MenuData[] = [
     visibleToRoles: ["admin", "dosen"],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/*  React Query — Centralized Query Keys                               */
+/* ------------------------------------------------------------------ */
+
+export const QUERY_KEYS = {
+  documents: ["documents"] as const,
+} as const;
+
+export const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1" as const;
+
+export const CONTENT_TYPE = {
+  multipart: "multipart/form-data",
+  application: "application/json",
+} as const;

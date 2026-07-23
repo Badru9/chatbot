@@ -25,44 +25,37 @@ import {
 } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { uploadDocument, deleteDocument } from "@/services/documentService";
+import {
+  fetchDocuments,
+  uploadDocument,
+  deleteDocument,
+  type DocumentData,
+} from "@/services/documentService";
 import { axiosInstance } from "@/services/axiosInstance";
-
-interface DocumentData {
-  id: string;
-  name: string;
-  description?: string;
-  chunkCount: number;
-  uploadedAt: string | null;
-}
-
-const fetchDocuments = async (): Promise<DocumentData[]> => {
-  const { data } = await axiosInstance.get<DocumentData[]>("/api/documents");
-  return data;
-};
+import { QUERY_KEYS } from "@/constants";
 
 export default function AdminDatasetsPage() {
   const queryClient = useQueryClient();
 
   const { data: documents = [], isLoading } = useQuery<DocumentData[]>({
-    queryKey: ["admin-documents"],
+    queryKey: QUERY_KEYS.documents,
     queryFn: fetchDocuments,
   });
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadDocument(file),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-documents"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDocument(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-documents"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
   });
 
   const manualCreateMutation = useMutation({
     mutationFn: (payload: { name: string; description: string; source: string }) =>
       axiosInstance.post("/api/documents/manual", payload).then((r) => r.data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin-documents"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
   });
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);

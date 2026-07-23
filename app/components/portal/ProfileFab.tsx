@@ -23,22 +23,21 @@ export default function ProfileFab() {
   if (!user) {
     return (
       <>
-        <div className="fixed bottom-6 left-6 z-40">
+        <div className="hover:scale-105 transition active:scale-95">
           <Button
             isIconOnly
             onClick={() => setIsLoginOpen(true)}
             className="w-14 h-14 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-full shadow-lg flex items-center justify-center transition"
             aria-label="Profil"
           >
-            <User size={24} className="text-neutral-700 dark:text-neutral-300" />
+            <User
+              size={24}
+              className="text-neutral-700 dark:text-neutral-300"
+            />
           </Button>
         </div>
 
-        <Modal.Backdrop
-          isOpen={isLoginOpen}
-          onOpenChange={setIsLoginOpen}
-          variant="blur"
-        >
+        <Modal.Backdrop isOpen={isLoginOpen} onOpenChange={setIsLoginOpen}>
           <Modal.Container placement="center" size="sm">
             <Modal.Dialog className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-4">
               <Modal.CloseTrigger />
