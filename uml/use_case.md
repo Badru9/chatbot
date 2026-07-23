@@ -2,7 +2,7 @@
 
 ```plantuml
 @startuml
-title Use Case Diagram Portal Dosen dengan Chatbot Personal
+title Use Case Diagram Portal Dosen dengan Asisten Virtual AI (mb.ai)
 
 left to right direction
 scale 0.85
@@ -14,39 +14,41 @@ skinparam actorStyle awesome
 actor Dosen
 actor "Admin / USI" as Admin
 
-rectangle "Portal Dosen dengan Chatbot Personal" {
+rectangle "Portal Dosen & Asisten Virtual AI (mb.ai)" {
 
-    package "Portal Umum" {
-        usecase "Melihat Daftar\nPlatform" as UC01
-        usecase "Membuka Tautan\nPlatform" as UC02
-        usecase "Login" as UC03
-        usecase "Logout" as UC04
+    package "Portal & Autentikasi" {
+        usecase "Melihat Daftar\nMenu Portal" as UC01
+        usecase "Membuka Tautan\nLayanan Eksternal" as UC02
+        usecase "Login Akun" as UC03
+        usecase "Logout Akun" as UC04
+        usecase "Melihat Profil" as UC05
     }
 
-    package "Fitur Dosen" {
-        usecase "Mengelola Profil" as UC05
-
-        usecase "Mengelola Dokumen\nPribadi" as UC06
-        usecase "Melihat Daftar dan\nStatus Dokumen" as UC061
-        usecase "Mengunggah\nDokumen PDF" as UC062
-        usecase "Mengunggah Ulang\nVersi Dokumen" as UC063
-
-        usecase "Menggunakan\nChatbot Personal" as UC07
-        usecase "Memilih Dokumen\nSumber" as UC071
-        usecase "Mengirim Pertanyaan" as UC072
-        usecase "Melihat Jawaban dan\nNama Dokumen Sumber" as UC073
-
-        usecase "Mengelola Riwayat\nPercakapan" as UC08
+    package "Fitur Asisten Virtual AI (Chatbot)" {
+        usecase "Membuka Asisten AI\nvia AiFab" as UC06
+        usecase "Mengirim Pertanyaan Chat" as UC07
+        usecase "Menggunakan Mention Dokumen (@)" as UC071
+        usecase "Menerima Jawaban\nStreaming Real-Time" as UC072
+        usecase "Mengelola Riwayat\nChat (localStorage)" as UC08
     }
 
-    package "Fitur Admin / USI" {
-        usecase "Mengakses\nPanel Admin" as UC09
-        usecase "Mengelola\nAkun Dosen" as UC10
-        usecase "Mereset Password\nDosen" as UC101
-        usecase "Mengelola\nMenu Portal" as UC11
-        usecase "Mengelola Dataset\nInstitusi" as UC12
-        usecase "Melihat Metadata\nDokumen Dosen" as UC13
-        usecase "Melihat Audit Log" as UC14
+    package "Fitur Library Dokumen (RAG)" {
+        usecase "Melihat Daftar Dokumen\nPribadi" as UC09
+        usecase "Mengunggah Dokumen PDF" as UC091
+        usecase "Menghapus Dokumen PDF" as UC092
+        usecase "Melihat Pratinjau PDF\n(IndexedDB & react-pdf)" as UC093
+    }
+
+    package "Fitur Panel Admin" {
+        usecase "Mengakses Panel Admin" as UC10
+        usecase "Mengelola Dataset AI\n(/admin/datasets)" as UC11
+        usecase "Melihat Statistik Vector Chunks" as UC111
+        usecase "Mengunggah PDF Global" as UC112
+        usecase "Menghapus Dokumen Global" as UC113
+        usecase "Mengelola Menu Portal\n(/admin/menus)" as UC12
+        usecase "Mengatur Urutan Menu" as UC121
+        usecase "Mengelola Akun Dosen\n(/admin/users)" as UC13
+        usecase "Mereset Password Dosen" as UC131
     }
 }
 
@@ -58,41 +60,50 @@ Dosen --> UC05
 Dosen --> UC06
 Dosen --> UC07
 Dosen --> UC08
+Dosen --> UC09
 
 Admin --> UC01
 Admin --> UC02
 Admin --> UC03
 Admin --> UC04
-Admin --> UC09
 Admin --> UC10
 Admin --> UC11
 Admin --> UC12
 Admin --> UC13
-Admin --> UC14
 
-UC06 ..> UC061 : <<include>>
-UC06 ..> UC062 : <<include>>
-UC063 ..> UC06 : <<extend>>
-
-UC07 ..> UC071 : <<include>>
+UC07 ..> UC071 : <<extend>>
 UC07 ..> UC072 : <<include>>
-UC07 ..> UC073 : <<include>>
 
-UC10 ..> UC101 : <<include>>
+UC09 ..> UC091 : <<include>>
+UC09 ..> UC092 : <<include>>
+UC09 ..> UC093 : <<extend>>
+
+UC11 ..> UC111 : <<include>>
+UC11 ..> UC112 : <<include>>
+UC11 ..> UC113 : <<include>>
+
+UC12 ..> UC121 : <<extend>>
+UC13 ..> UC131 : <<extend>>
 
 note bottom of UC01
-Dapat diakses oleh dosen
-tanpa melakukan login.
+Dapat diakses publik tanpa login.
+Layanan eksternal: AISNET, E-Learning,
+Bimbingan, Portal SINTA.
 end note
 
-note bottom of UC05
-Prakondisi:
-Dosen telah login.
+note bottom of UC071
+Pengguna mengetik @ di input chat
+untuk memilih dokumen RAG spesifik.
 end note
 
-note bottom of UC13
-Admin hanya dapat melihat metadata,
-bukan isi dokumen pribadi dosen.
+note bottom of UC093
+File PDF asli disimpan di IndexedDB browser
+untuk rendering cepat offline/local preview.
+end note
+
+note bottom of UC11
+Admin mengelola seluruh dokumen institusi
+dan melihat statistik pgvector.
 end note
 
 @enduml

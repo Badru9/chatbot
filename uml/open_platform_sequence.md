@@ -1,31 +1,33 @@
 # Sequence Diagram
 
-## Sequence Diagram ketika Membuka Platform
+## Sequence Diagram ketika Membuka Platform Layanan Akademik
 
 ```plantuml
 @startuml
-title Sequence Diagram Melihat dan Membuka Platform
+title Sequence Diagram Melihat & Membuka Platform Layanan Akademik
 
 autonumber
 skinparam shadowing false
 
-actor Dosen
-boundary "Portal Web" as Web
-control "Backend API" as API
-database "PostgreSQL" as DB
-participant "Platform Eksternal" as External
+actor Pengguna
+boundary "Portal Grid UI\n(Next.js Client)" as UI
+control "Express Backend API\n(/api/menus)" as API
+database "PostgreSQL\n(Tabel portal_menu)" as DB
+participant "Layanan Eksternal Kampus\n(AISNET / E-Learning / SINTA / dll)" as External
 
-Dosen -> Web : Membuka portal
-Web -> API : Meminta daftar menu portal
-API -> DB : Ambil menu dengan isActive = true
-DB --> API : Daftar menu berdasarkan order
-API --> Web : Judul, deskripsi, dan URL
-Web --> Dosen : Menampilkan daftar platform
+Pengguna -> UI : Membuka halaman utama portal
+UI -> API : GET /api/menus
+API -> DB : Ambil seluruh menu portal (ORDER BY order ASC)
+DB --> API : Daftar PortalMenu
+API --> UI : JSON List Menu Portal
+UI -> UI : Render PortalGrid & PortalCard
 
-Dosen -> Web : Memilih salah satu platform
-Web -> Web : Memvalidasi URL menu
-Web -> External : Membuka URL pada tab baru
-External --> Dosen : Menampilkan platform eksternal
+UI --> Pengguna : Menampilkan grid platform akademik:\n- AISNET ITG\n- E-Learning ITG\n- Bimbingan Mahasiswa\n- Portal SINTA\n- Monitoring Kinerja
+
+Pengguna -> UI : Klik salah satu PortalCard
+UI -> UI : Validasi URL (href)
+UI -> External : Membuka URL pada tab baru (window.open '_blank')
+External --> Pengguna : Menampilkan antarmuka layanan eksternal
 
 @enduml
 ```
