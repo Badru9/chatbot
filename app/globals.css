@@ -20,19 +20,19 @@
   --color-foreground: var(--foreground);
   --font-lexend: var(--font-lexend);
 
-  /* Cal.com Brand Colors from DESIGN.md */
-  --color-primary: #111111;
-  --color-primary-active: #242424;
-  --color-ink: #111111;
-  --color-body: #374151;
-  --color-muted: #6b7280;
-  --color-muted-soft: #898989;
-  --color-hairline: #e5e7eb;
-  --color-hairline-soft: #f3f4f6;
+  /* Academic Institution Theme Colors */
+  --color-primary: #2563eb;
+  --color-primary-active: #1d4ed8;
+  --color-ink: #0f172a;
+  --color-body: #334155;
+  --color-muted: #64748b;
+  --color-muted-soft: #94a3b8;
+  --color-hairline: #e2e8f0;
+  --color-hairline-soft: #f1f5f9;
   --color-canvas: #ffffff;
-  --color-surface-soft: #f8f9fa;
-  --color-surface-card: #f5f5f5;
-  --color-surface-strong: #e5e7eb;
+  --color-surface-soft: #f8fafc;
+  --color-surface-card: #f1f5f9;
+  --color-surface-strong: #cbd5e1;
 
   /* Badges & Feedback States */
   --color-success-badge-bg: #ecfdf5;

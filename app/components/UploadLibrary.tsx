@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@heroui/react";
 import {
@@ -15,6 +15,7 @@ import {
   XIcon,
   SpinnerIcon,
 } from "@phosphor-icons/react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // Lazy-load PDF components with SSR disabled to avoid DOMMatrix issue
 const PdfDocument = dynamic(
@@ -40,99 +41,15 @@ const PdfPage = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 
-import type { SidebarLibraryFile } from "./ChatSidebar";
+import { QUERY_KEYS } from "@/constants";
+import {
+  fetchDocuments,
+  uploadDocument,
+  deleteDocument,
+  downloadDocumentBlob,
+  type DocumentData,
+} from "@/services/documentService";
 import UploadFileModal from "./UploadFileModal";
-
-/* ------------------------------------------------------------------ */
-/*  Storage Constants                                                  */
-/* ------------------------------------------------------------------ */
-
-const LIBRARY_STORAGE_KEY = "mbai.library.files.v2";
-const BLOBS_DB_NAME = "mbai.pdfBlobs";
-const BLOBS_STORE_NAME = "blobs";
-
-/* ------------------------------------------------------------------ */
-/*  Types                                                              */
-/* ------------------------------------------------------------------ */
-
-interface LibraryFile extends SidebarLibraryFile {
-  chunksCount?: number;
-}
-
-/* ------------------------------------------------------------------ */
-/*  IndexedDB for PDF Blobs                                            */
-/* ------------------------------------------------------------------ */
-
-function openBlobsDB(): Promise<IDBDatabase> {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(BLOBS_DB_NAME, 1);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result);
-    request.onupgradeneeded = (event) => {
-      const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(BLOBS_STORE_NAME)) {
-        db.createObjectStore(BLOBS_STORE_NAME, { keyPath: "id" });
-      }
-    };
-  });
-}
-
-async function saveBlob(file: LibraryFile, blob: Blob): Promise<void> {
-  const db = await openBlobsDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
-    const store = tx.objectStore(BLOBS_STORE_NAME);
-    const request = store.put({ id: file.id, blob });
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
-
-async function getBlob(fileId: string): Promise<Blob | null> {
-  const db = await openBlobsDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(BLOBS_STORE_NAME, "readonly");
-    const store = tx.objectStore(BLOBS_STORE_NAME);
-    const request = store.get(fileId);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve(request.result?.blob ?? null);
-  });
-}
-
-async function deleteBlob(fileId: string): Promise<void> {
-  const db = await openBlobsDB();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(BLOBS_STORE_NAME, "readwrite");
-    const store = tx.objectStore(BLOBS_STORE_NAME);
-    const request = store.delete(fileId);
-    request.onerror = () => reject(request.error);
-    request.onsuccess = () => resolve();
-  });
-}
-
-/* ------------------------------------------------------------------ */
-/*  LocalStorage Helpers (same as Chatbot)                             */
-/* ------------------------------------------------------------------ */
-
-const safeParse = <T,>(value: string | null, fallback: T): T => {
-  if (!value) return fallback;
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-};
-
-function saveLibraryFiles(files: LibraryFile[]): void {
-  localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(files));
-}
-
-function loadLibraryFiles(): LibraryFile[] {
-  return safeParse<LibraryFile[]>(
-    localStorage.getItem(LIBRARY_STORAGE_KEY),
-    [],
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
@@ -148,19 +65,16 @@ const formatBytes = (bytes: number) => {
   return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 };
 
-const formatDate = (timestamp: number) =>
-  new Intl.DateTimeFormat("id-ID", {
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return "—";
+  return new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(timestamp);
+  }).format(new Date(dateStr));
+};
 
 const PDF_ZOOM_STEPS = [400, 520, 640, 760, 880] as const;
-
-const createId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
 /* ------------------------------------------------------------------ */
 /*  PDF Viewer Modal                                                   */
@@ -180,33 +94,19 @@ function PDFViewerModal({
   const [numPages, setNumPages] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoomIndex, setZoomIndex] = useState(1);
-  const [blob, setBlob] = useState<Blob | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen || !fileId) {
-      // Valid cleanup for modal - fileId changed, reset state
-      setBlob(null);
-      setLoading(true);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    getBlob(fileId)
-      .then((b) => {
-        if (b) {
-          setBlob(b);
-        } else {
-          setError("File PDF tidak ditemukan di storage lokal.");
-        }
-      })
-      .catch(() => {
-        setError("Gagal memuat file PDF.");
-      })
-      .finally(() => setLoading(false));
-  }, [isOpen, fileId]);
+  // Fetch PDF blob from backend via useQuery
+  const {
+    data: blob,
+    isLoading: loading,
+    error,
+  } = useQuery({
+    queryKey: [...QUERY_KEYS.documents, "blob", fileId],
+    queryFn: () => downloadDocumentBlob(fileId!),
+    enabled: isOpen && !!fileId,
+    staleTime: 5 * 60 * 1000, // Cache blob for 5 minutes
+    retry: 1,
+  });
 
   if (!isOpen) return null;
 
@@ -312,7 +212,9 @@ function PDFViewerModal({
           </div>
         ) : error ? (
           <div className="flex h-full items-center justify-center">
-            <span className="text-[14px] text-red-400">{error}</span>
+            <span className="text-[14px] text-red-400">
+              Gagal memuat file PDF.
+            </span>
           </div>
         ) : blob ? (
           <div className="mx-auto flex justify-center py-6">
@@ -361,10 +263,12 @@ function FileCard({
   file,
   onDelete,
   onPreview,
+  isDeleting,
 }: {
-  file: LibraryFile;
+  file: DocumentData;
   onDelete: () => void;
   onPreview: () => void;
+  isDeleting: boolean;
 }) {
   return (
     <div className="group relative flex flex-col rounded-xl border border-hairline bg-canvas shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md">
@@ -391,13 +295,11 @@ function FileCard({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.35] text-muted-soft">
-          <span>{formatBytes(file.size)}</span>
-          <span className="text-muted-soft/40">&middot;</span>
           <span>{formatDate(file.uploadedAt)}</span>
-          {typeof file.chunksCount === "number" && (
+          {typeof file.chunkCount === "number" && (
             <>
               <span className="text-muted-soft/40">&middot;</span>
-              <span>{file.chunksCount} chunks</span>
+              <span>{file.chunkCount} chunks</span>
             </>
           )}
         </div>
@@ -405,7 +307,7 @@ function FileCard({
 
       {/* Actions */}
       <div className="flex items-center justify-between border-t border-hairline px-4 py-2.5">
-        {typeof file.chunksCount === "number" && file.chunksCount > 0 ? (
+        {typeof file.chunkCount === "number" && file.chunkCount > 0 ? (
           <span className="inline-flex items-center rounded-full bg-success-badge-bg px-2 py-0.5 text-[11px] font-semibold text-success-badge-text">
             Ter-indexed
           </span>
@@ -431,6 +333,7 @@ function FileCard({
             size="sm"
             variant="ghost"
             onPress={onDelete}
+            isDisabled={isDeleting}
             className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"
             aria-label={`Hapus ${file.name}`}
           >
@@ -447,22 +350,37 @@ function FileCard({
 /* ------------------------------------------------------------------ */
 
 export default function UploadLibrary() {
-  const [libraryFiles, setLibraryFiles] = useState<LibraryFile[]>(() =>
-    loadLibraryFiles(),
-  );
+  const queryClient = useQueryClient();
 
-  // Upload modal state
+  // Fetch documents from API
+  const { data: documents = [], isLoading } = useQuery<DocumentData[]>({
+    queryKey: QUERY_KEYS.documents,
+    queryFn: fetchDocuments,
+  });
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: (file: File) => uploadDocument(file),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
+    onError: (error) => {
+      console.log("error ketika upload", error);
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDocument(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
+  });
+
+  // Upload modal UI state
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
 
-  // Preview state
-  const [previewFile, setPreviewFile] = useState<LibraryFile | null>(null);
-
-  // Sync to localStorage on changes
-  useEffect(() => {
-    saveLibraryFiles(libraryFiles);
-  }, [libraryFiles]);
+  // Preview UI state
+  const [previewFile, setPreviewFile] = useState<DocumentData | null>(null);
 
   // Handlers
   const handleUploadFileChange = (
@@ -476,44 +394,14 @@ export default function UploadLibrary() {
   };
 
   const handleUploadSubmit = async () => {
-    if (!uploadFile || isUploading) return;
-
-    setIsUploading(true);
+    if (!uploadFile || uploadMutation.isPending) return;
 
     try {
-      // Create file metadata (same as Chatbot)
-      const newFile: LibraryFile = {
-        id: createId(),
-        name: uploadFile.name,
-        size: uploadFile.size,
-        type: uploadFile.type,
-        uploadedAt: Date.now(),
-      };
-
-      // Save blob to IndexedDB
-      await saveBlob(newFile, uploadFile);
-
-      // Update localStorage
-      setLibraryFiles((prev) => [newFile, ...prev]);
-
+      await uploadMutation.mutateAsync(uploadFile);
       setUploadFile(null);
       setIsUploadModalOpen(false);
     } catch (error) {
       console.error("Upload failed:", error);
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleDeleteFile = async (fileId: string) => {
-    // Remove from localStorage
-    setLibraryFiles((prev) => prev.filter((file) => file.id !== fileId));
-
-    // Remove blob from IndexedDB
-    try {
-      await deleteBlob(fileId);
-    } catch (error) {
-      console.error("Failed to delete blob:", error);
     }
   };
 
@@ -526,23 +414,30 @@ export default function UploadLibrary() {
             Library
           </h1>
           <p className="mt-0.5 text-[13px] leading-[1.4] text-muted-soft">
-            {libraryFiles.length === 0
-              ? "Belum ada file"
-              : `${libraryFiles.length} file PDF`}
+            {isLoading
+              ? "Memuat..."
+              : documents.length === 0
+                ? "Belum ada file"
+                : `${documents.length} file PDF`}
           </p>
         </div>
-        {/* <Button
+        <Button
           onPress={() => setIsUploadModalOpen(true)}
-          className="h-10 rounded-xl bg-[#111111] px-4 text-[13px] font-semibold text-white hover:bg-[#222] active:scale-[0.97]"
+          className="mt-6 h-10 rounded-xl bg-primary px-5 text-[13px] font-semibold text-white hover:bg-primary-active active:scale-[0.97]"
         >
           <PlusIcon size={16} weight="bold" />
           Upload PDF
-        </Button> */}
+        </Button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto bg-surface-soft px-6 py-6 sm:px-8 lg:px-10">
-        {libraryFiles.length === 0 ? (
+        {isLoading ? (
+          <div className="mx-auto mt-24 flex flex-col items-center gap-3">
+            <SpinnerIcon className="animate-spin text-muted" size={24} />
+            <p className="text-[14px] text-muted-soft">Memuat library...</p>
+          </div>
+        ) : documents.length === 0 ? (
           <div className="mx-auto mt-24 max-w-sm text-center">
             <div className="mx-auto mb-5 grid size-14 place-items-center rounded-2xl bg-canvas text-muted-soft shadow-sm ring-1 ring-hairline">
               <FilePdfIcon size={26} weight="fill" />
@@ -554,22 +449,19 @@ export default function UploadLibrary() {
               Upload file PDF untuk membuat knowledge base yang bisa digunakan
               sebagai konteks RAG di chat.
             </p>
-            <Button
-              onPress={() => setIsUploadModalOpen(true)}
-              className="mt-6 h-10 rounded-xl bg-[#111111] px-5 text-[13px] font-semibold text-white hover:bg-[#222] active:scale-[0.97]"
-            >
-              <PlusIcon size={16} weight="bold" />
-              Upload PDF
-            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {libraryFiles.map((file) => (
+            {documents.map((file) => (
               <FileCard
                 key={file.id}
                 file={file}
-                onDelete={() => handleDeleteFile(file.id)}
+                onDelete={() => deleteMutation.mutate(file.id)}
                 onPreview={() => setPreviewFile(file)}
+                isDeleting={
+                  deleteMutation.isPending &&
+                  deleteMutation.variables === file.id
+                }
               />
             ))}
           </div>
@@ -588,7 +480,7 @@ export default function UploadLibrary() {
       <UploadFileModal
         file={uploadFile}
         isOpen={isUploadModalOpen}
-        isUploading={isUploading}
+        isUploading={uploadMutation.isPending}
         onCancel={handleUploadCancel}
         onFileChange={handleUploadFileChange}
         onOpenChange={setIsUploadModalOpen}

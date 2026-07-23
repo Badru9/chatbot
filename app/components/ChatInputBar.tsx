@@ -81,9 +81,9 @@ export default function ChatInputBar({
         </div>
       ) : null}
 
-      <div className='mx-auto flex w-full max-w-[900px] items-center gap-2 rounded-2xl border border-[#e5e7eb] bg-surface-soft p-2'>
+      <div className='mx-auto flex w-full max-w-[900px] items-center gap-2 rounded-2xl border border-hairline bg-surface-soft p-2'>
         <Dropdown>
-          <Button isIconOnly aria-label='Tambah lampiran' className='size-10 rounded-xl bg-white text-[#111111] ring-1 ring-[#e5e7eb] active:scale-95' variant='ghost'>
+          <Button isIconOnly aria-label='Tambah lampiran' className='size-10 rounded-xl bg-white text-primary ring-1 ring-hairline active:scale-95' variant='ghost'>
             <PlusIcon weight='bold' size={20} />
           </Button>
           <Dropdown.Popover placement='right bottom' className='shadow'>
@@ -113,7 +113,7 @@ export default function ChatInputBar({
           onChange={(event) => onInputChange(event.target.value)}
           onKeyDown={onKeyDown}
         />
-        <Button isDisabled={isLoading} isIconOnly className='size-10 rounded-xl bg-[#111111] text-white active:scale-95' variant='ghost' onPress={onSubmit}>
+        <Button isDisabled={isLoading} isIconOnly className='size-10 rounded-xl bg-primary hover:bg-primary-active text-white active:scale-95' variant='primary' onPress={onSubmit}>
           <PaperPlaneRightIcon size={16} weight='bold' className='text-white' />
         </Button>
       </div>

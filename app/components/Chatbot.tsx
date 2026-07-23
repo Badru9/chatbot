@@ -9,9 +9,15 @@ import {
   useRef,
   useState,
 } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendChatMessage } from "../../services/chatService";
-import { uploadDocument, deleteDocument } from "../../services/documentService";
+import {
+  fetchDocuments,
+  uploadDocument,
+  deleteDocument,
+  type DocumentData,
+} from "../../services/documentService";
+import { QUERY_KEYS, SESSIONS_STORAGE_KEY } from "@/constants";
 
 import ChatInputBar from "./ChatInputBar";
 import ChatSidebar, {
@@ -28,10 +34,6 @@ interface Message {
   content: string;
 }
 
-interface LibraryFile extends SidebarLibraryFile {
-  chunksCount?: number;
-}
-
 interface ChatSession {
   id: string;
   title: string;
@@ -39,9 +41,6 @@ interface ChatSession {
   createdAt: number;
   updatedAt: number;
 }
-
-const LIBRARY_STORAGE_KEY = "mbai.library.files.v2";
-const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1";
 
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -84,9 +83,26 @@ function buildSidebarSessions(sessions: ChatSession[]): SidebarSession[] {
     }));
 }
 
+/**
+ * Map API DocumentData to SidebarLibraryFile shape for sidebar/input bar.
+ */
+function toSidebarFile(doc: DocumentData): SidebarLibraryFile {
+  return {
+    id: doc.id,
+    name: doc.name,
+    size: 0, // Size not returned by current API
+    type: "application/pdf",
+    uploadedAt: doc.uploadedAt
+      ? new Date(doc.uploadedAt).getTime()
+      : Date.now(),
+    chunksCount: doc.chunkCount,
+  };
+}
+
 export default function Chatbot() {
   const chatbotInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const queryClient = useQueryClient();
 
   const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">(
     "new",
@@ -95,14 +111,24 @@ export default function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState(() => createId());
-  const [libraryFiles, setLibraryFiles] = useState<LibraryFile[]>([]);
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
+
+  // Fetch library files from API (replaces localStorage)
+  const { data: documentsRaw = [] } = useQuery<DocumentData[]>({
+    queryKey: QUERY_KEYS.documents,
+    queryFn: fetchDocuments,
+  });
+
+  // Map to SidebarLibraryFile for sidebar/input bar compatibility
+  const libraryFiles = useMemo(
+    () => documentsRaw.map(toSidebarFile),
+    [documentsRaw],
+  );
 
   const mentionStart = input.lastIndexOf("@");
   const mentionQuery =
@@ -129,20 +155,13 @@ export default function Chatbot() {
     [sessions],
   );
 
+  // Sessions: still use localStorage
   useEffect(() => {
-    setLibraryFiles(
-      safeParse<LibraryFile[]>(localStorage.getItem(LIBRARY_STORAGE_KEY), []),
-    );
     setSessions(
       safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []),
     );
     setIsStorageReady(true);
   }, []);
-
-  useEffect(() => {
-    if (!isStorageReady) return;
-    localStorage.setItem(LIBRARY_STORAGE_KEY, JSON.stringify(libraryFiles));
-  }, [isStorageReady, libraryFiles]);
 
   useEffect(() => {
     if (!isStorageReady) return;
@@ -179,10 +198,32 @@ export default function Chatbot() {
     setUploadFile(event.target.files?.[0] ?? null);
   };
 
-  const saveUploadFile = async () => {
-    if (!uploadFile || isUploading) return;
+  const chatMutation = useMutation({
+    mutationFn: sendChatMessage,
+  });
 
-    setIsUploading(true);
+  const uploadMutation = useMutation({
+    mutationFn: uploadDocument,
+    onSuccess: (payload) => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents });
+      if (payload.document) {
+        setSelectedFileIds((prev) =>
+          prev.includes(payload.document!.id)
+            ? prev
+            : [payload.document!.id, ...prev],
+        );
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDocument,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
+  });
+
+  const saveUploadFile = async () => {
+    if (!uploadFile || uploadMutation.isPending) return;
 
     try {
       const payload = await uploadMutation.mutateAsync(uploadFile);
@@ -191,15 +232,6 @@ export default function Chatbot() {
         throw new Error(payload.error ?? "Gagal upload PDF.");
       }
 
-      setLibraryFiles((prev) => [
-        payload.document!,
-        ...prev.filter((file) => file.id !== payload.document!.id),
-      ]);
-      setSelectedFileIds((prev) =>
-        prev.includes(payload.document!.id)
-          ? prev
-          : [payload.document!.id, ...prev],
-      );
       setUploadFile(null);
       setIsUploadModalOpen(false);
       setActiveMenu("library");
@@ -211,8 +243,6 @@ export default function Chatbot() {
           content: `Gagal memproses PDF. Detail: ${error instanceof Error ? error.message : "unknown error"}`,
         },
       ]);
-    } finally {
-      setIsUploading(false);
     }
   };
 
@@ -236,7 +266,6 @@ export default function Chatbot() {
   };
 
   const handleDeleteFile = async (fileId: string) => {
-    setLibraryFiles((prev) => prev.filter((file) => file.id !== fileId));
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
 
     try {
@@ -271,17 +300,6 @@ export default function Chatbot() {
     if (event.key === "Escape")
       setInput((value) => value.replace(/@[^\s]*$/, ""));
   };
-  const chatMutation = useMutation({
-    mutationFn: sendChatMessage,
-  });
-
-  const uploadMutation = useMutation({
-    mutationFn: uploadDocument,
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteDocument,
-  });
 
   const handleSubmit = async () => {
     if (!input.trim() || isLoading) return;
@@ -358,7 +376,7 @@ export default function Chatbot() {
                   </p>
                   <p className="mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-body">
                     Upload PDF, lalu ketik{" "}
-                    <span className="font-semibold text-[#111111]">@</span>{" "}
+                    <span className="font-semibold text-primary">@</span>{" "}
                     untuk memilih dokumen sebagai konteks RAG.
                   </p>
                 </div>
@@ -435,7 +453,7 @@ export default function Chatbot() {
       <UploadFileModal
         file={uploadFile}
         isOpen={isUploadModalOpen}
-        isUploading={isUploading}
+        isUploading={uploadMutation.isPending}
         onCancel={() => setUploadFile(null)}
         onFileChange={handleUploadFileChange}
         onOpenChange={setIsUploadModalOpen}
