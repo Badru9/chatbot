@@ -282,7 +282,7 @@ export default function AdminMenusPage() {
               </Button>
             </Link>
             <div>
-              <p className="text-xs text-neutral-400">Portal / Admin</p>
+              <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Portal / Admin</p>
               <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
                 Kelola Menu Portal
               </h1>
@@ -290,14 +290,14 @@ export default function AdminMenusPage() {
           </div>
           <Button
             onClick={handleOpenAdd}
-            className="bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 font-bold flex items-center gap-2 cursor-pointer shadow-md rounded-xl px-4 py-2 text-sm"
+            className="bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100 font-bold flex items-center gap-2 cursor-pointer shadow-xs active:scale-[0.98] transition-transform rounded-xl px-4 py-2 text-sm"
           >
             <Plus size={18} weight="bold" />
             Tambah Menu
           </Button>
         </div>
 
-        <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-4 shadow-sm">
+        <div className="border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-4 shadow-xs">
           <Table className="w-full">
             <Table.ScrollContainer>
               <Table.Content aria-label="Tabel pengelolaan menu portal">
@@ -314,7 +314,7 @@ export default function AdminMenusPage() {
                   {menus.length === 0 ? (
                     <Table.Row>
                       <Table.Cell colSpan={6}>
-                        <span className="text-sm text-neutral-500">
+                        <span className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">
                           Tidak ada menu portal.
                         </span>
                       </Table.Cell>
@@ -351,16 +351,16 @@ export default function AdminMenusPage() {
                         </Table.Cell>
                         <Table.Cell>
                           <div>
-                            <div className="font-semibold text-neutral-800 dark:text-neutral-100">
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                               {menu.title}
                             </div>
-                            <div className="text-xs text-neutral-400 font-mono mt-0.5">
+                            <div className="text-xs text-neutral-600 dark:text-neutral-400 font-mono mt-0.5">
                               {menu.href}
                             </div>
                           </div>
                         </Table.Cell>
                         <Table.Cell>
-                          <div className="text-sm text-neutral-500 dark:text-neutral-400 max-w-xs truncate">
+                          <div className="text-sm text-neutral-600 dark:text-neutral-400 max-w-xs truncate font-medium">
                             {menu.description}
                           </div>
                         </Table.Cell>

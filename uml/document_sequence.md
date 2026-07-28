@@ -1,106 +1,85 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Mengelola dan Memproses Dokumen
+## Sequence Diagram untuk Mengelola & Memproses Dokumen (Library RAG)
 
 ```plantuml
 @startuml
-title Sequence Diagram Mengunggah dan Memproses Dokumen
+title Sequence Diagram Mengunggah, Memproses & Pratinjau Dokumen PDF
 
 autonumber
 skinparam shadowing false
 
 actor Dosen
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authorization Service" as Auth
-database "File Storage" as Storage
-database "PostgreSQL" as DB
-control "Document Processor" as Processor
-control "BGE-M3" as Embedding
-control "Audit Log Service" as Log
+boundary "Halaman Documents\n(Next.js Client)" as UI
+control "Express Backend API\n(/api/documents)" as API
+control "Auth Middleware" as Auth
+control "PDF Processor & Chunker" as Processor
+control "Ollama Embedding" as Embedding
+database "PostgreSQL & pgvector\n(Tabel vectors)" as DB
+database "IndexedDB Browser\n(LocalPdfBlob)" as IndexedDB
 
-Dosen -> Web : Membuka halaman dokumen
-Web -> API : Meminta daftar dokumen pribadi
-API -> Auth : Validasi session dosen
-Auth --> API : Identitas dosen valid
-API -> DB : Ambil dokumen berdasarkan ownerId
-DB --> API : Daftar dokumen pribadi
-API --> Web : Daftar dokumen dan status
-Web --> Dosen : Menampilkan daftar dokumen
+Dosen -> UI : Membuka halaman Library Dokumen (/documents)
+UI -> API : GET /api/documents
+API -> Auth : Memvalidasi session
+Auth --> API : Session valid & userId dosen
+API -> DB : Query groupBy documentId di tabel vectors\nWHERE metadata->>'userId' = userId
+DB --> API : Daftar dokumen & total chunk
+API --> UI : JSON List dokumen
+UI --> Dosen : Tampilkan daftar dokumen
 
-Dosen -> Web : Memilih PDF untuk diunggah
-Web -> Web : Validasi awal ekstensi PDF
+alt Mengunggah Dokumen PDF Baru
 
-alt Format bukan PDF
+    Dosen -> UI : Pilih file PDF & klik Upload
+    UI -> API : POST /api/documents (Multipart FormData file)
+    API -> Auth : Validasi session
+    Auth --> API : Session valid & userId dosen
+    API -> API : Validasi file buffer & MIME type (application/pdf)
 
-    Web --> Dosen : Format file tidak didukung
+    API -> Processor : ingestPdfBuffer(fileBuffer, fileName, userId)
+    Processor -> Processor : Ekstraksi teks (pdf-parse)
+    Processor -> Processor : Pemotongan teks menjadi chunk (chunker)
 
-else Format PDF
-
-    Web -> API : Mengirim file PDF dan identitas dokumen
-    API -> Auth : Validasi session dan role DOSEN
-    Auth --> API : Hak akses valid
-    API -> API : Validasi MIME type dan isi file
-
-    alt File tidak valid atau rusak
-
-        API --> Web : Pemrosesan ditolak
-        Web --> Dosen : Menampilkan pesan kesalahan
-
-    else File valid
-
-        alt Dokumen baru
-
-            API -> Storage : Menyimpan file PDF
-            Storage --> API : Lokasi file
-            API -> DB : Simpan metadata\nstatus PROCESSING
-
-        else Unggah ulang versi terbaru
-
-            API -> Storage : Menyimpan versi PDF terbaru
-            Storage --> API : Lokasi file terbaru
-            API -> DB : Tambah versi dokumen
-            API -> DB : Ubah status menjadi PROCESSING
-            API -> DB : Hapus chunk versi sebelumnya
-        end
-
-        DB --> API : Metadata dokumen tersimpan
-        API --> Web : Pemrosesan dokumen dimulai
-        Web --> Dosen : Menampilkan status PROCESSING
-
-        API -> Processor : Memulai pemrosesan dokumen
-        Processor -> Storage : Membaca file PDF
-        Storage --> Processor : File PDF
-        Processor -> Processor : Ekstraksi teks
-        Processor -> Processor : Pembagian teks menjadi chunk
-
-        loop Setiap chunk
-
-            Processor -> Embedding : Membuat embedding chunk
-            Embedding --> Processor : Vector embedding
-            Processor -> DB : Simpan PdfChunk dan embedding
-
-        end
-
-        alt Seluruh proses berhasil
-
-            Processor -> DB : Ubah status menjadi COMPLETED
-            Processor -> Log : Catat pemrosesan berhasil
-
-        else Pemrosesan gagal
-
-            Processor -> DB : Ubah status menjadi FAILED
-            Processor -> DB : Simpan errorMessage
-            Processor -> Log : Catat kegagalan pemrosesan
-        end
-
-        Dosen -> Web : Memuat ulang status dokumen
-        Web -> API : Meminta status dokumen
-        API -> DB : Ambil status dan errorMessage
-        DB --> API : Status terbaru
-        API --> Web : Status pemrosesan
-        Web --> Dosen : Menampilkan status atau pesan kesalahan
+    loop Untuk setiap chunk teks
+        Processor -> Embedding : Generate vector embedding (bge-m3 / Ollama)
+        Embedding --> Processor : Vector (1024 dimension)
+        Processor -> DB : Simpan PdfChunk ke tabel vectors\n(metadata: { userId })
     end
+
+    DB --> Processor : Chunk tersimpan
+    Processor --> API : Pemrosesan selesai
+    API --> UI : HTTP 201 Created
+
+    UI -> IndexedDB : Simpan File PDF Blob ke LocalPdfBlob
+    IndexedDB --> UI : Blob tersimpan
+    UI -> UI : Invalidate & Refetch via React Query
+    UI --> Dosen : Tampilkan status sukses & dokumen baru
+
+else Pratinjau PDF Interaktif (PDF Preview)
+
+    Dosen -> UI : Klik Pratinjau Dokumen
+    UI -> IndexedDB : Ambil Blob PDF berdasarkan documentId
+
+    alt File Blob ditemukan di IndexedDB
+        IndexedDB --> UI : File PDF Blob
+        UI -> UI : Render PDFPreviewModal (react-pdf)
+    else File Blob tidak ditemukan (Akses dari perangkat lain)
+        IndexedDB --> UI : null
+        UI --> Dosen : Tampilkan pesan fallback pratinjau tidak tersedia lokal
+    end
+
+else Menghapus Dokumen PDF
+
+    Dosen -> UI : Klik Hapus Dokumen
+    UI -> API : DELETE /api/documents/:id
+    API -> Auth : Memvalidasi session
+    Auth --> API : Session valid & userId dosen
+    API -> DB : Memeriksa kepemilikan dokumen (metadata.userId)
+    API -> DB : Hapus seluruh chunk dari tabel vectors WHERE documentId = id
+    DB --> API : Chunk berhasil dihapus
+    API --> UI : HTTP 200 OK { ok: true }
+    UI -> IndexedDB : Hapus Blob dari LocalPdfBlob
+    UI -> UI : Invalidate & Refetch via React Query
+    UI --> Dosen : Perbarui daftar dokumen
 
 end
 

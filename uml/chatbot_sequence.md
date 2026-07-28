@@ -1,91 +1,60 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Chatbot
+## Sequence Diagram untuk Chatbot Personal Berbasis RAG-LLM
 
 ```plantuml
 @startuml
-title Sequence Diagram Chatbot Personal Berbasis RAG-LLM
+title Sequence Diagram Chatbot Personal Berbasis RAG-LLM (mb.ai)
 
 autonumber
 skinparam shadowing false
 
 actor Dosen
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authorization Service" as Auth
-database "PostgreSQL dan pgvector" as DB
-control "RAG Service" as RAG
-control "BGE-M3" as Embedding
-control "Ollama - Qwen 3.5" as LLM
+boundary "AiAssistantModal\n(Next.js Client)" as UI
+control "Express Backend API\n(/api/chat)" as API
+control "Auth Middleware" as Auth
+database "PostgreSQL & pgvector\n(Tabel vectors)" as DB
+control "RAG Retriever Service" as Retriever
+control "Ollama API\n(qwen3.5)" as LLM
+database "Browser Storage\n(localStorage)" as LocalStorage
 
-Dosen -> Web : Membuka halaman chatbot
-Web -> API : Meminta daftar dokumen
-API -> Auth : Validasi session dosen
-Auth --> API : Identitas dosen valid
-API -> DB : Ambil dokumen COMPLETED\nmilik dosen
-DB --> API : Daftar dokumen
-API --> Web : Daftar dokumen yang dapat dipilih
-Web --> Dosen : Menampilkan pilihan dokumen
+Dosen -> UI : Klik AiFab di pojok kanan bawah
+UI -> LocalStorage : Muat riwayat percakapan
+LocalStorage --> UI : Daftar sesi percakapan
 
-Dosen -> Web : Memilih dokumen dan\nmenulis pertanyaan
-Web -> API : conversationId,\ndocumentIds, pertanyaan
-API -> Auth : Validasi session
-Auth --> API : userId dosen
+Dosen -> UI : Ketik pertanyaan (Opsional: ketik @ untuk mention dokumen)
+Dosen -> UI : Klik tombol Kirim
+UI -> LocalStorage : Buat / perbarui sesi percakapan
 
-API -> DB : Validasi documentIds\nberdasarkan ownerId
-DB --> API : Hasil validasi kepemilikan
+UI -> API : POST /api/chat\n{ prompt, documentIds, messages }
+API -> Auth : Memvalidasi session token
+Auth --> API : Session valid & userId dosen
 
-alt Terdapat dokumen yang bukan milik dosen
+alt Terdapat documentIds (Mention dokumen @)
 
-    API --> Web : Akses dokumen ditolak
-    Web --> Dosen : Menampilkan pesan kesalahan
+    API -> Retriever : retrievePdfContext({ prompt, documentIds, userId })
+    Retriever -> DB : Query vector similarity di tabel vectors\nWHERE metadata->>'userId' = userId\nAND documentId IN (documentIds)
+    DB --> Retriever : Chunk teks relevan & metadata dokumen
+    Retriever --> API : Context string dokumen
 
-else Seluruh dokumen valid
+else Tidak ada documentIds (Chat Umum)
 
-    API -> DB : Simpan pesan dosen
-    API -> DB : Ambil riwayat percakapan
-    DB --> API : Riwayat percakapan
-    API -> RAG : Pertanyaan, riwayat,\nuserId, dan documentIds
-
-    RAG -> RAG : Mengidentifikasi jenis pertanyaan
-    RAG -> Embedding : Membuat embedding pertanyaan
-    Embedding --> RAG : Query embedding
-
-    alt Pertanyaan personal atau mata kuliah
-
-        RAG -> DB : Pencarian vektor dengan\nfilter ownerId dan documentIds
-        DB --> RAG : Chunk relevan dan nama dokumen
-
-    else Pertanyaan kebijakan institusi
-
-        RAG -> DB : Pencarian dataset institusi aktif
-        DB --> RAG : Chunk atau data tanya jawab
-    end
-
-    alt Konteks relevan ditemukan
-
-        RAG -> RAG : Menyusun prompt dari\nkonteks dan riwayat
-        RAG -> LLM : Prompt berbasis dokumen
-        LLM --> RAG : Jawaban berdasarkan konteks
-        RAG -> DB : Simpan jawaban\nisGeneralAnswer = false
-        RAG -> DB : Simpan MessageSource
-        DB --> RAG : Jawaban tersimpan
-        RAG --> API : Jawaban dan nama dokumen
-        API --> Web : Jawaban dan sumber
-        Web --> Dosen : Menampilkan jawaban dan sumber
-
-    else Konteks relevan tidak ditemukan
-
-        RAG -> LLM : Meminta jawaban umum
-        LLM --> RAG : Jawaban umum
-        RAG -> DB : Simpan jawaban\nisGeneralAnswer = true
-        DB --> RAG : Jawaban tersimpan
-        RAG --> API : Jawaban umum dan peringatan
-        API --> Web : Jawaban umum dan peringatan
-        Web --> Dosen : Menampilkan peringatan bahwa\njawaban tidak berasal dari dokumen
-    end
+    API -> API : Context string kosong
 
 end
+
+API -> API : Susun RAG System Prompt + PDF Context + User Prompt
+API -> LLM : POST /api/chat\n{ model: "qwen3.5", messages, stream: true }
+
+LLM --> API : HTTP Chunked Stream (JSON Lines)
+
+loop Selama stream berlangsung
+    API --> UI : Stream text/plain chunk
+    UI -> UI : Render balasan AI secara real-time
+end
+
+UI -> LocalStorage : Simpan pesan akhir ke localStorage
+UI --> Dosen : Menampilkan balasan lengkap AI
 
 @enduml
 ```

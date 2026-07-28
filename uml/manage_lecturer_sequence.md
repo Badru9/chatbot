@@ -1,6 +1,6 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Mengelola Akun Dosen
+## Sequence Diagram untuk Mengelola Akun Dosen (`/admin/users`)
 
 ```plantuml
 @startuml
@@ -10,77 +10,63 @@ autonumber
 skinparam shadowing false
 
 actor "Admin / USI" as Admin
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authentication Service" as Auth
-database "PostgreSQL" as DB
-control "Audit Log Service" as Log
+boundary "Dashboard Admin Users\n(/admin/users)" as UI
+control "Express Backend API\n(/api/users)" as API
+control "Auth Service (Better-Auth)" as Auth
+database "PostgreSQL\n(Tabel user & account)" as DB
 
-Admin -> Web : Membuka pengelolaan akun
-Web -> API : Meminta daftar akun dosen
-API -> Auth : Validasi session dan role ADMIN
-Auth --> API : Hak akses valid
-API -> DB : Ambil akun dengan role DOSEN
-DB --> API : Daftar akun dosen
-API --> Web : Daftar akun
-Web --> Admin : Menampilkan daftar akun
+Admin -> UI : Membuka pengelolaan akun dosen
+UI -> API : GET /api/users
+API -> Auth : Memvalidasi session & role ADMIN
+Auth --> API : Hak akses ADMIN valid
+API -> DB : Ambil seluruh User dengan role = 'dosen'
+DB --> API : List User dosen
+API --> UI : JSON List akun dosen
+UI --> Admin : Menampilkan daftar akun dosen
 
-alt Menambahkan akun dosen
+alt Menambahkan Akun Dosen Baru
 
-    Admin -> Web : Mengisi NIDN/NIP, nama,\nprogram studi, email,\ndan password sementara
-    Web -> API : Mengirim data akun
-    API -> DB : Memeriksa keunikan email\ndan NIDN/NIP
+    Admin -> UI : Mengisi nama, email, dan password sementara
+    UI -> API : POST /api/users
+    API -> Auth : Memvalidasi role ADMIN
+    API -> DB : Memeriksa keunikan email di tabel user
     DB --> API : Hasil validasi
 
-    alt Email atau NIDN/NIP telah digunakan
-
-        API --> Web : Data akun telah terdaftar
-        Web --> Admin : Menampilkan pesan kesalahan
-
-    else Data tersedia
-
-        API -> Auth : Membuat password hash
+    alt Email sudah terdaftar
+        API --> UI : HTTP 400 Email sudah digunakan
+        UI --> Admin : Menampilkan pesan kesalahan
+    else Email tersedia
+        API -> Auth : Hash password sementara
         Auth --> API : Password hash
-        API -> DB : Simpan User role DOSEN
-        API -> DB : Simpan Account
-        DB --> API : Akun berhasil dibuat
-        API -> Log : Catat CREATE_USER
-        API --> Web : Akun berhasil ditambahkan
-        Web --> Admin : Menampilkan konfirmasi
+        API -> DB : Simpan User (role: 'dosen') & Account
+        DB --> API : User berhasil dibuat
+        API --> UI : HTTP 201 Created
+        UI --> Admin : Menampilkan konfirmasi akun berhasil dibuat
     end
 
-else Mengaktifkan akun
+else Mengubah Status Akun (Aktif / Nonaktif)
 
-    Admin -> Web : Memilih aktifkan akun
-    Web -> API : userId dan isActive = true
-    API -> DB : Perbarui status akun
-    API -> Log : Catat ACTIVATE_USER
-    API --> Web : Akun berhasil diaktifkan
-    Web --> Admin : Menampilkan konfirmasi
+    Admin -> UI : Toggle status akun dosen
+    UI -> API : PUT /api/users/:id/status\n{ emailVerified: boolean }
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Perbarui status User di database
+    DB --> API : Status berhasil diperbarui
+    API --> UI : HTTP 200 OK
+    UI --> Admin : Menampilkan konfirmasi status diperbarui
 
-else Menonaktifkan akun
+else Menghapus Akun Dosen
 
-    Admin -> Web : Memilih nonaktifkan akun
-    Web -> API : userId dan isActive = false
-    API -> DB : Perbarui status akun
-    API -> DB : Hapus session aktif dosen
-    API -> Log : Catat DEACTIVATE_USER
-    API --> Web : Akun berhasil dinonaktifkan
-    Web --> Admin : Menampilkan konfirmasi
-
-else Menghapus akun
-
-    Admin -> Web : Memilih hapus akun
-    Web --> Admin : Menampilkan konfirmasi
-    Admin -> Web : Mengonfirmasi penghapusan
-    Web -> API : Permintaan hapus akun
-    API -> DB : Memeriksa relasi akun
-    DB --> API : Informasi relasi akun
-    API -> Log : Simpan audit sebelum penghapusan
-    API -> DB : Hapus akun dan session terkait
+    Admin -> UI : Memilih hapus akun
+    UI --> Admin : Menampilkan konfirmasi penghapusan
+    Admin -> UI : Mengonfirmasi penghapusan
+    UI -> API : DELETE /api/users/:id
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Hapus User, Session, & Account (Cascade Delete)
     DB --> API : Akun berhasil dihapus
-    API --> Web : Penghapusan berhasil
-    Web --> Admin : Menampilkan konfirmasi
+    API --> UI : HTTP 200 OK
+    UI --> Admin : Menampilkan konfirmasi akun terhapus
 
 end
 

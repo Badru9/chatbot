@@ -1,74 +1,51 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Login
+## Sequence Diagram untuk Login & Autentikasi
 
 ```plantuml
 @startuml
-title Sequence Diagram Login
+title Sequence Diagram Login & Autentikasi Session
 
 autonumber
 skinparam shadowing false
-skinparam sequence {
-ParticipantBackgroundColor White
-ParticipantBorderColor Black
-ActorBackgroundColor White
-ActorBorderColor Black
-LifeLineBorderColor Black
-ArrowColor Black
-}
 
 actor "Dosen atau Admin" as User
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authentication Service" as Auth
-database "PostgreSQL" as DB
-control "Audit Log Service" as Log
+boundary "LoginForm & Portal\n(Next.js Client)" as UI
+control "Express Backend API\n(/api/auth)" as API
+control "Auth Service (Better-Auth)" as Auth
+database "PostgreSQL\n(Tabel user, account, session)" as DB
 
-User -> Web : Membuka halaman login
-Web --> User : Menampilkan form login
+User -> UI : Membuka form login
+UI --> User : Menampilkan LoginForm (email & password)
 
-User -> Web : Memasukkan email dan password
-Web -> API : Mengirim kredensial
-API -> Auth : Memvalidasi kredensial
-Auth -> DB : Mencari User dan Account\nberdasarkan email
-DB --> Auth : Data akun, password hash,\nrole, dan status akun
+User -> UI : Memasukkan email dan password & submit
+UI -> API : POST /api/auth/sign-in
+API -> Auth : Memvalidasi kredensial pengguna
+Auth -> DB : Cari User & Account berdasarkan email
+DB --> Auth : Record User, Account, & Password Hash
 
-alt Akun tidak ditemukan
+alt Email atau Password Salah / Tidak Ditemukan
 
-    Auth --> API : Login gagal
-    API -> Log : Catat percobaan login gagal
-    Log --> API : Log tersimpan
-    API --> Web : Email atau password tidak sesuai
-    Web --> User : Menampilkan pesan kesalahan
+    Auth --> API : Autentikasi Gagal
+    API --> UI : HTTP 401 Unauthorized { error: "Kredensial tidak valid" }
+    UI --> User : Menampilkan pesan kesalahan login
 
-else Akun tidak aktif
+else Autentikasi Berhasil
 
-    Auth --> API : Akun dinonaktifkan
-    API -> Log : Catat akses akun tidak aktif
-    API --> Web : Akun sedang tidak aktif
-    Web --> User : Menampilkan pesan akun tidak aktif
+    Auth -> DB : Buat Session baru (token, expiresAt, ipAddress, userAgent)
+    DB --> Auth : Record Session tersimpan
+    Auth --> API : Session & User object (dengan role: "dosen" | "admin")
+    API --> UI : HTTP 200 OK (Session Token & User Profile)
 
-else Password tidak sesuai
-
-    Auth --> API : Login gagal
-    API -> Log : Catat percobaan login gagal
-    API --> Web : Email atau password tidak sesuai
-    Web --> User : Menampilkan pesan kesalahan
-
-else Login berhasil
-
-    Auth -> DB : Membuat session pengguna
-    DB --> Auth : Session berhasil dibuat
-    Auth --> API : Session dan role pengguna
-    API -> Log : Catat login berhasil
-    Log --> API : Log tersimpan
+    UI -> UI : Update state autentikasi pengguna
+    UI -> UI : Render ProfileFab (Avatar & Logout)
 
     alt Role DOSEN
-        API --> Web : Session dosen
-        Web --> User : Menampilkan halaman dosen
+        UI -> UI : Render AiFab (Tombol Floating Asisten AI)
+        UI --> User : Menampilkan portal dosen lengkap dengan AiFab
     else Role ADMIN
-        API --> Web : Session admin
-        Web --> User : Menampilkan portal dan panel admin
+        UI -> UI : Render AiFab & Akses Menu Admin (/admin/*)
+        UI --> User : Menampilkan portal admin dengan akses dashboard
     end
 
 end

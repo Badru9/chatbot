@@ -1,0 +1,45 @@
+====================================================================
+TEMPLATE PANDUAN PENGISIAN DATASET MANUAL UNTUK AI
+====================================================================
+
+[INFORMASI UMUM DATASET]
+Judul Dataset        : Pedoman & Data Dosen Akademik 2026
+Tujuan Penggunaan AI : Rujukan resmi AI dalam menjawab pertanyaan seputar bimbingan skripsi, data dosen, dan prosedur akademik.
+Sumber / Catatan     : Fakultas Teknik Universitas - Tahun 2026
+
+--------------------------------------------------------------------
+OPSI A: FORMAT DATA TERSTRUKTUR (JSON)
+Gunakan format JSON di bawah ini jika data berupa entitas seperti daftar dosen, mata kuliah, atau program studi.
+--------------------------------------------------------------------
+[
+  {
+    "nama": "Dr. Eko Prasetyo, M.T.",
+    "nidn": "0415088201",
+    "prodi": "Teknik Informatika",
+    "status": "Aktif",
+    "jabatan_fungsional": "Lektor Kepala",
+    "bidang_keahlian": ["Cyber Security", "Network Engineering"],
+    "tujuan_penggunaan": "Referensi bimbingan skripsi dan konsultasi bidang keamanan jaringan.",
+    "kontak": "eko.prasetyo@univ.ac.id"
+  }
+]
+
+--------------------------------------------------------------------
+OPSI B: FORMAT PEDOMAN / NARASI (MARKDOWN)
+Gunakan format Markdown di bawah ini jika data berupa pedoman, peraturan, alur prosedur, atau FAQ.
+--------------------------------------------------------------------
+# Pedoman Penulisan dan Pengajuan Skripsi 2026
+
+## 1. Syarat Pengajuan Judul Skripsi
+- Mahasiswa aktif semester 7.
+- Telah menempuh minimal 110 SKS dengan IPK Kumulatif minimal 3.00.
+- Lulus mata kuliah Metode Penelitian dengan nilai minimal B.
+
+## 2. Alur Pendaftaran
+1. Konsultasi topik dengan Dosen Wali.
+2. Mengisi formulir pengajuan di portal akademik.
+3. Verifikasi oleh Koordinator Skripsi dalam 3 hari kerja.
+
+## 3. Pertanyaan Umum (FAQ)
+- Berapa lama masa berlaku SK Pembimbing?
+  Masa berlaku SK Pembimbing adalah 6 bulan (1 semester) dan dapat diperpanjang 1 kali.

@@ -2,7 +2,7 @@
 
 ```plantuml
 @startuml
-title Activity Diagram Portal Dosen dengan Chatbot Personal
+title Activity Diagram Portal Dosen dengan Asisten Virtual AI (mb.ai)
 
 scale 0.80
 skinparam shadowing false
@@ -11,87 +11,106 @@ skinparam activityFontSize 11
 
 |Sistem|
 start
-:Menampilkan portal;
-:Menampilkan daftar platform;
+:Menampilkan portal utama;
+:Memuat daftar menu portal dari API (/api/menus);
 
-if (Jenis akses?) then (Portal umum)
+if (Jenis Pengguna?) then (Tamu / Tanpa Login)
 
-    |Dosen|
-    :Melihat daftar platform;
-    :Memilih platform;
-
-    |Sistem|
-    :Membuka tautan eksternal\npada tab baru;
-
-else (Fitur sistem)
+    |Pengguna|
+    :Melihat daftar platform akademik (AISNET, E-Learning, dll);
+    :Klik salah satu menu platform;
 
     |Sistem|
-    :Menampilkan halaman login;
+    :Membuka tautan eksternal pada tab baru;
 
-    if (Login sebagai?) then (Dosen)
-
-        |Dosen|
-        :Memasukkan email dan password;
-
-    else (Admin)
-
-        |Admin / USI|
-        :Memasukkan email dan password;
-
-    endif
+else (Pengguna Terautentikasi)
 
     |Sistem|
-    :Memvalidasi kredensial,\nstatus akun, dan role;
+    :Menampilkan form login;
 
-    if (Login valid?) then (Tidak)
+    |Pengguna|
+    :Memasukkan email dan password;
 
-        :Menampilkan pesan login gagal;
+    |Sistem|
+    :Memvalidasi kredensial (Better-Auth);
+
+    if (Kredensial Valid?) then (Tidak)
+
+        :Menampilkan pesan kesalahan;
 
     else (Ya)
 
-        :Membuat session;
-        :Mencatat aktivitas login;
+        :Membuat session pengguna;
+        :Menampilkan ProfileFab dan AiFab;
 
-        if (Role pengguna?) then (Dosen)
+        if (Role Pengguna?) then (Dosen)
 
             |Dosen|
-            :Memilih fitur dosen;
+            if (Pilihan Aktivitas?) then (Asisten Virtual AI)
 
-            if (Fitur yang dipilih?) then (Profil)
-
-                :Melihat atau mengubah profil;
+                :Klik AiFab di pojok kanan bawah;
 
                 |Sistem|
-                :Memvalidasi dan menyimpan profil;
-
-            elseif (Dokumen)
+                :Membuka AiAssistantModal;
+                :Memuat riwayat chat dari localStorage;
 
                 |Dosen|
-                :Melihat daftar dokumen;
-                :Mengunggah PDF baru\natau versi terbaru;
+                :Ketik pesan (Opsional ketik @ untuk mention dokumen);
+                :Kirim pertanyaan;
 
                 |Sistem|
-                :Memvalidasi dan memproses PDF;
-                :Menampilkan status pemrosesan;
+                :Kirim POST /api/chat ke Express Backend;
+                :Ambil konteks RAG dari pgvector (tabel vectors);
+                :Susun prompt berbasis dokumen & riwayat;
+                :Streaming jawaban real-time dari Ollama (qwen3.5);
+                :Tampilkan teks jawaban secara streaming;
+                :Simpan riwayat percakapan ke localStorage;
 
-            elseif (Chatbot)
+            elseif (Library Dokumen RAG)
 
                 |Dosen|
-                :Memilih dokumen sumber;
-                :Mengirim pertanyaan;
+                :Membuka halaman dokumen (/documents);
 
-                |Sistem|
-                :Mengambil konteks dari dokumen;
-                :Menghasilkan jawaban chatbot;
-                :Menampilkan jawaban dan sumber;
+                if (Aksi Dokumen?) then (Upload PDF Baru)
 
-            else (Riwayat)
+                    :Pilih file PDF;
+
+                    |Sistem|
+                    :Kirim POST /api/documents;
+                    :Ekstraksi teks (pdf-parse) & chunking;
+                    :Hitung embedding (bge-m3 / Ollama);
+                    :Simpan PdfChunk ke PostgreSQL (pgvector);
+                    :Simpan File PDF Blob ke IndexedDB browser;
+                    :Perbarui daftar dokumen via React Query;
+
+                elseif (Pratinjau PDF)
+
+                    |Dosen|
+                    :Klik tombol preview dokumen;
+
+                    |Sistem|
+                    :Ambil PDF Blob dari IndexedDB;
+                    :Tampilkan PDF Preview Modal (react-pdf);
+
+                else (Hapus Dokumen)
+
+                    |Dosen|
+                    :Klik hapus dokumen;
+
+                    |Sistem|
+                    :Kirim DELETE /api/documents/:id;
+                    :Hapus vector chunks dari PostgreSQL;
+                    :Perbarui UI;
+
+                endif
+
+            else (Akses Layanan Akademik)
 
                 |Dosen|
-                :Melihat dan mengelola\nriwayat percakapan;
+                :Pilih layanan di PortalGrid;
 
                 |Sistem|
-                :Menyimpan perubahan riwayat;
+                :Membuka portal layanan terkait;
 
             endif
 
@@ -101,51 +120,35 @@ else (Fitur sistem)
         else (Admin)
 
             |Admin / USI|
-            :Membuka panel admin;
-            :Memilih fitur admin;
+            if (Panel Admin?) then (Dashboard Dataset /admin/datasets)
 
-            if (Fitur yang dipilih?) then (Akun)
-
-                :Mengelola akun dosen;
+                :Buka halaman dataset;
 
                 |Sistem|
-                :Menyimpan perubahan akun;
-                :Mencatat audit log;
-
-            elseif (Menu)
+                :Tampilkan ringkasan statistik (Total Dokumen & Vector Chunks);
 
                 |Admin / USI|
-                :Mengelola menu portal;
+                :Upload PDF institusi global atau Hapus dokumen;
 
                 |Sistem|
-                :Menyimpan perubahan menu;
-                :Mencatat audit log;
+                :Proses ingestion PDF global atau Hapus chunk dari pgvector;
 
-            elseif (Dataset)
+            elseif (Kelola Menu Portal /admin/menus)
 
                 |Admin / USI|
-                :Mengelola dataset institusi;
+                :Tambah, Edit, Hapus, atau Reorder menu portal;
 
                 |Sistem|
-                :Memproses dataset;
-                :Menyimpan status pemrosesan;
-                :Mencatat audit log;
+                :Kirim PUT/POST/DELETE ke /api/menus;
+                :Perbarui urutan dan data menu di database;
 
-            elseif (Metadata)
+            else (Kelola Akun Dosen /admin/users)
 
                 |Admin / USI|
-                :Melihat metadata\ndokumen dosen;
+                :Kelola akun dosen atau Reset password;
 
                 |Sistem|
-                :Menampilkan metadata tanpa\nisi dokumen pribadi;
-
-            else (Audit Log)
-
-                |Admin / USI|
-                :Melihat audit log;
-
-                |Sistem|
-                :Menampilkan aktivitas sistem;
+                :Perbarui data User dan Account di database;
 
             endif
 
@@ -155,7 +158,7 @@ else (Fitur sistem)
         endif
 
         |Sistem|
-        :Mengakhiri session;
+        :Menghapus session;
 
     endif
 

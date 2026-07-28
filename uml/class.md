@@ -2,267 +2,151 @@
 
 ```plantuml
 @startuml
-title Class Diagram Portal Dosen dengan Chatbot Personal
+title Class Diagram System Portal Dosen & Asisten Virtual AI (mb.ai)
 
-class User {
-    +id : String
-    +nidnNip : String
-    +name : String
-    +email : String
-    +programStudi : String
-    +role : UserRole
-    +isActive : Boolean
-    +emailVerified : Boolean
-    +createdAt : DateTime
-    +updatedAt : DateTime
+package "Backend Models (Prisma ORM & PostgreSQL)" {
 
-    +login()
-    +logout()
-    +updateProfile()
+    class User {
+        +id : String [PK]
+        +name : String
+        +email : String [Unique]
+        +emailVerified : Boolean
+        +password : String
+        +image : String
+        +role : String
+        +createdAt : DateTime
+        +updatedAt : DateTime
+    }
+
+    class Session {
+        +id : String [PK]
+        +token : String [Unique]
+        +userId : String [FK]
+        +expiresAt : DateTime
+        +ipAddress : String
+        +userAgent : String
+        +createdAt : DateTime
+        +updatedAt : DateTime
+        +isExpired() : Boolean
+    }
+
+    class Account {
+        +id : String [PK]
+        +userId : String [FK]
+        +accountId : String
+        +providerId : String
+        +accessToken : String
+        +refreshToken : String
+        +password : String
+        +createdAt : DateTime
+        +updatedAt : DateTime
+    }
+
+    class PdfChunk << (T,#FFAAAA) vectors >> {
+        +id : Int [PK, AutoIncrement]
+        +documentId : String
+        +documentName : String
+        +documentHash : String
+        +pageNumber : Int
+        +chunkIndex : Int
+        +chunkText : String
+        +tokenCount : Int
+        +embedding : Vector1024
+        +metadata : Json
+        +createdAt : DateTime
+    }
+
+    class PortalMenu << (T,#FFAAAA) portal_menu >> {
+        +id : String [PK]
+        +title : String
+        +description : String
+        +icon : String
+        +href : String
+        +order : Int
+        +visibleToRoles : String[]
+        +createdBy : String
+        +createdAt : DateTime
+        +updatedAt : DateTime
+    }
 }
 
-enum UserRole {
-    ADMIN
-    DOSEN
+package "Frontend Client State (Browser Storage)" {
+
+    class ChatHistory << (S,#AAFFAA) localStorage >> {
+        +id : String
+        +title : String
+        +createdAt : DateTime
+        +updatedAt : DateTime
+        +messages : ChatMessage[]
+        +saveToLocalStorage()
+        +loadFromLocalStorage()
+    }
+
+    class ChatMessage {
+        +id : String
+        +role : String
+        +content : String
+        +documentIds : String[]
+        +timestamp : DateTime
+    }
+
+    class LocalPdfBlob << (S,#AAFFAA) IndexedDB >> {
+        +documentId : String [Key]
+        +fileName : String
+        +fileBlob : Blob
+        +mimeType : String
+        +createdAt : DateTime
+        +saveToIndexedDB()
+        +getFromIndexedDB()
+    }
 }
 
-class Account {
-    +id : String
-    +userId : String
-    +accountId : String
-    +providerId : String
-    -password : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
+package "Backend Services & Controllers" {
 
-    +updatePassword()
+    class ChatService {
+        +retrievePdfContext(prompt: String, documentIds: String[], userId: String) : String
+        +streamOllamaChat(prompt: String, documentIds: String[], messages: Array) : Stream
+    }
+
+    class DocumentService {
+        +ingestPdfBuffer(buffer: Buffer, fileName: String, size: Number, mimeType: String, userId: String) : Document
+        +listDocuments(userId: String, isUserAdmin: Boolean) : Document[]
+        +deleteDocumentChunks(documentId: String, userId: String) : Boolean
+    }
+
+    class MenuService {
+        +getMenus() : PortalMenu[]
+        +createMenu(data: Object) : PortalMenu
+        +updateMenu(id: String, data: Object) : PortalMenu
+        +deleteMenu(id: String) : Boolean
+        +reorderMenus(reorders: Array) : Boolean
+    }
 }
 
-class Session {
-    +id : String
-    +userId : String
-    +token : String
-    +expiresAt : DateTime
-    +ipAddress : String
-    +userAgent : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
+User "1" -- "0..n" Session : memilik
+User "1" -- "0..n" Account : memiliki
+User "1" -- "0..n" PdfChunk : mengunggah (via metadata.userId)
+User "1" -- "0..n" PortalMenu : mengelola (createdBy)
 
-    +isExpired()
-    +revoke()
-}
+ChatHistory "1" *-- "0..n" ChatMessage : berisi
 
-class PortalMenu {
-    +id : String
-    +title : String
-    +description : String
-    +href : String
-    +order : Integer
-    +isActive : Boolean
-    +createdBy : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
+DocumentService ..> PdfChunk : mengelola & melakukan vector search
+ChatService ..> PdfChunk : mengambil konteks RAG
+MenuService ..> PortalMenu : mengelola CRUD & order
 
-    +create()
-    +update()
-    +changeOrder()
-    +toggleStatus()
-    +delete()
-}
-
-class Document {
-    +id : String
-    +ownerId : String
-    +createdBy : String
-    +title : String
-    +fileName : String
-    +filePath : String
-    +fileHash : String
-    +mimeType : String
-    +fileSize : Integer
-    +scope : DocumentScope
-    +status : ProcessingStatus
-    +version : Integer
-    +isActive : Boolean
-    +errorMessage : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
-
-    +upload()
-    +uploadNewVersion()
-    +updateStatus()
-    +toggleStatus()
-}
-
-enum DocumentScope {
-    PERSONAL
-    INSTITUTIONAL
-}
-
-enum ProcessingStatus {
-    PENDING
-    PROCESSING
-    COMPLETED
-    FAILED
-}
-
-class PdfChunk {
-    +id : Integer
-    +documentId : String
-    +pageNumber : Integer
-    +chunkIndex : Integer
-    +chunkText : Text
-    +tokenCount : Integer
-    +embedding : Vector
-    +metadata : Json
-    +createdAt : DateTime
-}
-
-class InstitutionalQA {
-    +id : String
-    +question : Text
-    +answer : Text
-    +embedding : Vector
-    +isActive : Boolean
-    +createdBy : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
-
-    +create()
-    +update()
-    +toggleStatus()
-    +delete()
-}
-
-class Conversation {
-    +id : String
-    +userId : String
-    +title : String
-    +createdAt : DateTime
-    +updatedAt : DateTime
-
-    +create()
-    +generateTitle()
-    +rename()
-    +delete()
-}
-
-class Message {
-    +id : String
-    +conversationId : String
-    +role : MessageRole
-    +content : Text
-    +isGeneralAnswer : Boolean
-    +deletedAt : DateTime
-    +createdAt : DateTime
-
-    +copy()
-    +regenerate()
-    +deleteMessage()
-}
-
-enum MessageRole {
-    USER
-    ASSISTANT
-    SYSTEM
-}
-
-class MessageDocumentSelection {
-    +id : String
-    +messageId : String
-    +documentId : String
-    +createdAt : DateTime
-}
-
-class MessageSource {
-    +id : String
-    +messageId : String
-    +documentId : String
-    +createdAt : DateTime
-}
-
-class AuditLog {
-    +id : String
-    +actorId : String
-    +action : String
-    +entityType : String
-    +entityId : String
-    +ipAddress : String
-    +userAgent : String
-    +metadata : Json
-    +createdAt : DateTime
-}
-
-class ChatbotService {
-    +classifyQuestion()
-    +loadConversationContext()
-    +retrievePersonalDocuments()
-    +retrieveInstitutionalDataset()
-    +generateDocumentAnswer()
-    +generateGeneralAnswer()
-}
-
-class DocumentProcessingService {
-    +validatePdf()
-    +extractText()
-    +splitChunks()
-    +generateEmbedding()
-    +processDocument()
-    +reprocessDocument()
-}
-
-User --> UserRole : memiliki role
-
-User "1" -- "1" Account : memiliki
-User "1" -- "0..n" Session : memiliki
-User "1" -- "0..n" PortalMenu : mengelola
-User "1" -- "0..n" Document : mengunggah
-User "1" -- "0..n" InstitutionalQA : mengelola
-User "1" -- "0..n" Conversation : membuat
-User "1" -- "0..n" AuditLog : melakukan
-
-Document --> DocumentScope : memiliki scope
-Document --> ProcessingStatus : memiliki status
-Document "1" -- "0..n" PdfChunk : terdiri dari
-
-Conversation "1" -- "1..n" Message : terdiri dari
-Message --> MessageRole : memiliki role
-
-Message "1" -- "0..n" MessageDocumentSelection : memilih
-Document "1" -- "0..n" MessageDocumentSelection : dipilih
-
-Message "1" -- "0..n" MessageSource : memiliki sumber
-Document "1" -- "0..n" MessageSource : menjadi sumber
-
-DocumentProcessingService ..> Document : memproses
-DocumentProcessingService ..> PdfChunk : menghasilkan
-DocumentProcessingService ..> InstitutionalQA : memproses
-
-ChatbotService ..> Conversation : membaca konteks
-ChatbotService ..> Message : menghasilkan jawaban
-ChatbotService ..> PdfChunk : mengambil informasi
-ChatbotService ..> InstitutionalQA : mengambil informasi
-ChatbotService ..> MessageSource : mencatat sumber
-
-note right of User
-Admin dan dosen direpresentasikan
-oleh satu class User.
-
-Hak akses dibedakan berdasarkan
-atribut role.
+note right of PdfChunk
+Tabel 'vectors' di PostgreSQL menggunakan extension pgvector (vector 1024).
+Setiap chunk menyimpan metadata userId milik pengunggah.
 end note
 
-note right of Document
-Dokumen PERSONAL dimiliki dosen.
-
-Dokumen INSTITUTIONAL dikelola
-oleh Admin atau USI.
+note right of LocalPdfBlob
+IndexedDB browser menyimpan blob PDF asli
+secara lokal untuk pratinjau instan via react-pdf.
 end note
 
-note right of Message
-isGeneralAnswer bernilai true
-jika jawaban tidak berasal
-dari dokumen.
+note right of ChatHistory
+Chatbot menyimpan hingga 30 sesi riwayat
+percakapan langsung di localStorage browser pengguna.
 end note
 
 @enduml

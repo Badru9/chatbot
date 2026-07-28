@@ -1,0 +1,40 @@
+[
+  {
+    "nama": "Dr. Eko Prasetyo, M.T.",
+    "nidn": "0415088201",
+    "prodi": "Teknik Informatika",
+    "status": "Aktif",
+    "jabatan_fungsional": "Lektor Kepala",
+    "bidang_keahlian": [
+      "Cyber Security",
+      "Network Engineering",
+      "Artificial Intelligence"
+    ],
+    "tujuan_penggunaan": "Referensi data dosen untuk bimbingan skripsi, penguji sidang, dan konsultasi keahlian akademik.",
+    "kontak": "eko.prasetyo@univ.ac.id",
+    "mata_kuliah": [
+      "Keamanan Informasi",
+      "Jaringan Komputer",
+      "Kecerdasan Buatan"
+    ]
+  },
+  {
+    "nama": "Dr. Rina Widyastuti, M.Kom.",
+    "nidn": "0422108503",
+    "prodi": "Teknik Informatika",
+    "status": "Aktif",
+    "jabatan_fungsional": "Lektor",
+    "bidang_keahlian": [
+      "Data Mining",
+      "Machine Learning",
+      "Big Data Analytics"
+    ],
+    "tujuan_penggunaan": "Referensi data dosen untuk topik penelitian sains data dan bimbingan tugas akhir.",
+    "kontak": "rina.widyastuti@univ.ac.id",
+    "mata_kuliah": [
+      "Penambangan Data",
+      "Pembelajaran Mesin",
+      "Statistika Terapan"
+    ]
+  }
+]

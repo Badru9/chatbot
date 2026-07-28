@@ -1,0 +1,20 @@
+=== TEMPLATE DATASET MANUAL (FORMAT TEXT/RINGKASAN) ===
+
+[INFORMASI DATASET]
+Judul Dataset : Ringkasan Kebijakan MBKM & Magang Industri 2026
+Tujuan Penggunaan AI : Memberikan jawaban cepat mengenai alur magang, konversi SKS, dan mitra kerja sama universitas.
+Sumber / Catatan : Dokumen Resmi LP3M Universitas - Januari 2026
+
+[RINGKASAN KONTEN]
+1. Ketentuan Konversi SKS:
+   - Magang industri 6 bulan setara dengan konversi maksimal 20 SKS.
+   - Bobot nilai ditentukan oleh evaluasi supervisor industri (60%) dan dosen pembimbing lapangan (40%).
+
+2. Persyaratan Peserta Magang:
+   - Mahasiswa aktif semester 5 atau 6.
+   - Memiliki Rekomendasi dari Ketua Program Studi.
+   - IPK minimal 2.75.
+
+3. Kontak Layanan MBKM:
+   - Email: mbkm@univ.ac.id
+   - Ruang Layanan: Gedung Rektorat Lantai 2, Ruang 204

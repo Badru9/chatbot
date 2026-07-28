@@ -1,6 +1,6 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Mengelola Menu Portal
+## Sequence Diagram untuk Mengelola Menu Portal (`/admin/menus`)
 
 ```plantuml
 @startuml
@@ -10,69 +10,73 @@ autonumber
 skinparam shadowing false
 
 actor "Admin / USI" as Admin
-boundary "Portal Web" as Web
-control "Backend API" as API
-control "Authorization Service" as Auth
-database "PostgreSQL" as DB
-control "Audit Log Service" as Log
+boundary "Dashboard Admin Menus\n(/admin/menus)" as UI
+control "Express Backend API\n(/api/menus)" as API
+control "Auth Middleware" as Auth
+database "PostgreSQL\n(Tabel portal_menu)" as DB
 
-Admin -> Web : Membuka panel admin
-Admin -> Web : Memilih pengelolaan menu
-Web -> API : Meminta daftar seluruh menu
-API -> Auth : Validasi session dan role ADMIN
-Auth --> API : Hak akses valid
-API -> DB : Ambil seluruh menu portal
-DB --> API : Daftar menu
-API --> Web : Daftar menu portal
-Web --> Admin : Menampilkan pengelolaan menu
+Admin -> UI : Membuka pengelolaan menu portal
+UI -> API : GET /api/menus
+API -> DB : Ambil seluruh PortalMenu ORDER BY order ASC
 
-alt Menambahkan menu
-
-    Admin -> Web : Mengisi judul, deskripsi,\nURL, dan urutan
-    Web -> API : Mengirim data menu baru
-    API -> DB : Simpan PortalMenu
-    DB --> API : Menu berhasil ditambahkan
-    API -> Log : Catat CREATE_PORTAL_MENU
-
-else Mengubah menu
-
-    Admin -> Web : Mengubah data menu
-    Web -> API : Mengirim perubahan
-    API -> DB : Perbarui PortalMenu
-    DB --> API : Menu berhasil diperbarui
-    API -> Log : Catat UPDATE_PORTAL_MENU
-
-else Mengatur urutan menu
-
-    Admin -> Web : Mengubah posisi menu
-    Web -> API : Mengirim urutan terbaru
-    API -> DB : Perbarui field order
-    DB --> API : Urutan berhasil diperbarui
-    API -> Log : Catat REORDER_PORTAL_MENU
-
-else Mengaktifkan atau menonaktifkan menu
-
-    Admin -> Web : Mengubah status menu
-    Web -> API : Mengirim isActive terbaru
-    API -> DB : Perbarui status menu
-    DB --> API : Status berhasil diperbarui
-    API -> Log : Catat TOGGLE_PORTAL_MENU
-
-else Menghapus menu
-
-    Admin -> Web : Memilih hapus menu
-    Web --> Admin : Menampilkan konfirmasi
-    Admin -> Web : Mengonfirmasi penghapusan
-    Web -> API : Permintaan hapus menu
-    API -> DB : Hapus PortalMenu
-    DB --> API : Menu berhasil dihapus
-    API -> Log : Catat DELETE_PORTAL_MENU
-
+alt Database Belum Memiliki Menu (Initial Seed)
+    DB --> API : List Kosong []
+    API -> DB : Seed 5 menu default (AISNET, E-Learning, Bimbingan, SINTA, dll)
+    API -> DB : Re-fetch PortalMenu
 end
 
-Log --> API : Audit log tersimpan
-API --> Web : Operasi berhasil
-Web --> Admin : Menampilkan hasil operasi
+DB --> API : List PortalMenu
+API --> UI : JSON List Menu
+UI --> Admin : Menampilkan daftar menu portal
+
+alt Menambahkan Menu Baru
+
+    Admin -> UI : Isi form (title, description, icon, href, visibleToRoles)
+    UI -> API : POST /api/menus
+    API -> Auth : Memvalidasi session & role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Simpan record baru ke tabel portal_menu
+    DB --> API : Record PortalMenu berhasil dibuat
+    API --> UI : HTTP 201 Created
+    UI -> UI : Refetch daftar menu
+    UI --> Admin : Tampilkan konfirmasi menu ditambahkan
+
+else Memperbarui Data Menu
+
+    Admin -> UI : Edit data menu & Klik Simpan
+    UI -> API : PUT /api/menus/:id
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Update record di tabel portal_menu
+    DB --> API : Record berhasil diperbarui
+    API --> UI : HTTP 200 OK (Updated Menu)
+    UI --> Admin : Tampilkan konfirmasi update
+
+else Memperbarui Urutan Menu (Drag & Drop Reorder)
+
+    Admin -> UI : Ubah urutan posisi menu & Klik Simpan Urutan
+    UI -> API : PUT /api/menus/reorder\n{ reorders: [{id, order}, ...] }
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Jalankan prisma.$transaction untuk batch update order
+    DB --> API : Batch update selesai
+    API --> UI : HTTP 200 OK { message: "Urutan menu berhasil diperbarui." }
+    UI --> Admin : Tampilkan konfirmasi urutan diperbarui
+
+else Menghapus Menu
+
+    Admin -> UI : Klik Hapus Menu
+    UI --> Admin : Konfirmasi Hapus
+    Admin -> UI : Konfirmasi
+    UI -> API : DELETE /api/menus/:id
+    API -> Auth : Memvalidasi role ADMIN
+    Auth --> API : Hak akses ADMIN valid
+    API -> DB : Delete record dari tabel portal_menu
+    DB --> API : Record terhapus
+    API --> UI : HTTP 200 OK { message: "Menu berhasil dihapus." }
+    UI --> Admin : Tampilkan konfirmasi penghapusan
+
+end
 
 @enduml
 ```
