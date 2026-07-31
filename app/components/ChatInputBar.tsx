@@ -12,12 +12,14 @@ interface ChatInputBarProps {
   mentionMatches: SidebarLibraryFile[];
   selectedFiles: SidebarLibraryFile[];
   inputRef: RefObject<HTMLInputElement | null>;
+  activeTool: "jadwal" | null;
   onChooseMentionFile: (file: SidebarLibraryFile) => void;
   onInputChange: (value: string) => void;
   onKeyDown: (event: KeyboardEvent<HTMLInputElement>) => void;
   onOpenUploadModal: () => void;
   onSubmit: () => void;
   onToggleFile: (fileId: string) => void;
+  onToggleTool: (tool: "jadwal" | null) => void;
 }
 
 const formatBytes = (bytes: number) => {
@@ -34,15 +36,35 @@ export default function ChatInputBar({
   isLoading,
   mentionMatches,
   selectedFiles,
+  activeTool,
   onChooseMentionFile,
   onInputChange,
   onKeyDown,
   onOpenUploadModal,
   onSubmit,
   onToggleFile,
+  onToggleTool,
 }: ChatInputBarProps) {
   return (
-    <div className='absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-3 border-t border-[#e5e7eb] bg-white/95 px-4 py-3 backdrop-blur-xl backdrop-saturate-150 sm:px-6 lg:left-[292px] lg:px-10'>
+    <div className={`absolute bottom-0 left-0 right-0 z-30 flex flex-col gap-3 border-t border-[#e5e7eb] bg-white/95 px-4 py-3 backdrop-blur-xl backdrop-saturate-150 sm:px-6 lg:left-[292px] lg:px-10 ${
+      activeTool === "jadwal" ? "lg:right-[400px]" : ""
+    }`}>
+      {/* Selector Tools */}
+      <div className="flex items-center gap-2 px-1 border-b border-neutral-100 dark:border-neutral-800 pb-2">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">Tools:</span>
+        <button
+          onClick={() => onToggleTool(activeTool === "jadwal" ? null : "jadwal")}
+          className={`px-3 py-1 text-xs rounded-full border transition-all duration-200 flex items-center gap-1.5 font-medium cursor-pointer ${
+            activeTool === "jadwal"
+              ? "bg-neutral-900 text-white border-neutral-900 dark:bg-white dark:text-neutral-950 dark:border-white shadow-xs"
+              : "bg-neutral-50 text-neutral-600 border-[#e5e7eb] hover:bg-neutral-100 dark:bg-neutral-800 dark:text-neutral-300 dark:border-neutral-700"
+          }`}
+          type="button"
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${activeTool === "jadwal" ? "bg-emerald-400" : "bg-neutral-300 dark:bg-neutral-600"}`}></span>
+          Jadwal Mengajar
+        </button>
+      </div>
       {selectedFiles.length > 0 ? (
         <div className='flex flex-wrap gap-2 px-1'>
           {selectedFiles.map((file) => (

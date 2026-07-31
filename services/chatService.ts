@@ -9,6 +9,7 @@ export interface ChatRequestParams {
   prompt: string;
   documentIds: string[];
   messages: Message[];
+  activeTools?: string[];
   onChunk: (text: string) => void;
 }
 
@@ -16,11 +17,12 @@ export async function sendChatMessage({
   prompt,
   documentIds,
   messages,
+  activeTools,
   onChunk,
 }: ChatRequestParams): Promise<string> {
   const response = await axiosInstance.post(
     "/api/chat",
-    { prompt, documentIds, messages },
+    { prompt, documentIds, messages, activeTools },
     {
       onDownloadProgress: (progressEvent) => {
         const xhr = progressEvent.event?.target as XMLHttpRequest;
