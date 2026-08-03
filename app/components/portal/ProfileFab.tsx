@@ -40,7 +40,7 @@ export default function ProfileFab() {
         <Modal.Backdrop isOpen={isLoginOpen} onOpenChange={setIsLoginOpen}>
           <Modal.Container placement="center" size="sm">
             <Modal.Dialog className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-4">
-              <Modal.CloseTrigger />
+              {/* <Modal.CloseTrigger /> */}
               <Modal.Body className="p-0">
                 <LoginForm onSuccess={() => setIsLoginOpen(false)} />
               </Modal.Body>

@@ -27,8 +27,8 @@ export default function AiAssistantModal({
     >
       <Modal.Backdrop>
         <Modal.Container size={!user ? "md" : "cover"} placement="center">
-          <Modal.Dialog className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 flex flex-col outline-none relative overflow-hidden">
-            <Modal.CloseTrigger />
+          <Modal.Dialog className="border border-neutral-100 dark:border-neutral-800 flex flex-col outline-none relative overflow-hidden">
+            {/* <Modal.CloseTrigger /> */}
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden relative">

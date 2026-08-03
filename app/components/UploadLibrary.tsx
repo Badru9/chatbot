@@ -14,6 +14,8 @@ import {
   ArrowsInIcon,
   XIcon,
   SpinnerIcon,
+  MagnifyingGlassMinusIcon,
+  MagnifyingGlassPlusIcon,
 } from "@phosphor-icons/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -141,7 +143,7 @@ function PDFViewerModal({
             className="size-9 rounded-lg text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Perkecil"
           >
-            <ArrowsInIcon size={16} weight="bold" />
+            <MagnifyingGlassMinusIcon size={16} weight="bold" />
           </Button>
           <span className="min-w-12 text-center text-[12px] font-medium tabular-nums text-white/50">
             {loading ? "..." : `${Math.round((pdfWidth / 612) * 100)}%`}
@@ -156,7 +158,7 @@ function PDFViewerModal({
             className="size-9 rounded-lg text-white/70 hover:bg-white/10 hover:text-white"
             aria-label="Perbesar"
           >
-            <ArrowsOutIcon size={16} weight="bold" />
+            <MagnifyingGlassPlusIcon size={16} weight="bold" />
           </Button>
 
           <div className="mx-2 h-5 w-px bg-white/10" />
@@ -408,7 +410,7 @@ export default function UploadLibrary() {
   return (
     <section className="flex h-full flex-col overflow-hidden">
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-hairline bg-canvas px-6 py-4 sm:px-8 lg:px-10">
+      <div className="flex shrink-0 items-center justify-between border-b border-hairline px-6 py-4 sm:px-8 lg:px-10">
         <div>
           <h1 className="text-[20px] font-bold tracking-[-0.3px] text-ink">
             Library
