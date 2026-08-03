@@ -12,19 +12,21 @@ export default function DocumentsPage() {
       <div className="w-full max-w-3xl flex flex-col gap-6 mt-8">
         <div className="flex items-center gap-4">
           <Link href="/">
-            <Button isIconOnly variant="ghost" className="rounded-full">
+            <Button isIconOnly variant="ghost" className="rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition">
               <ArrowLeft size={20} />
             </Button>
           </Link>
           <div>
-            <p className="text-xs text-neutral-400">Portal / Fitur</p>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Manajemen Dokumen</h1>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">Portal / Fitur</p>
+            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">Manajemen Dokumen</h1>
           </div>
         </div>
-        <div className="p-12 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl flex flex-col items-center justify-center gap-4 text-center">
-          <Folder size={48} className="text-neutral-300 dark:text-neutral-700" />
-          <h2 className="text-xl font-bold text-neutral-900 dark:text-white">Fitur Manajemen Dokumen Sedang Dikembangkan</h2>
-          <p className="text-neutral-400 max-w-sm text-sm">
+        <div className="p-12 border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl flex flex-col items-center justify-center gap-4 text-center shadow-xs">
+          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center border border-neutral-200/60 dark:border-neutral-700/60 text-neutral-900 dark:text-white">
+            <Folder size={32} weight="duotone" />
+          </div>
+          <h2 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">Fitur Manajemen Dokumen Sedang Dikembangkan</h2>
+          <p className="text-neutral-600 dark:text-neutral-400 max-w-md text-sm leading-relaxed font-normal">
             Halaman ini nantinya akan digunakan untuk mengunggah, mengelompokkan, dan memproses dokumen PDF untuk diumpankan ke AI model.
           </p>
         </div>

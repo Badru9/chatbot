@@ -27,16 +27,8 @@ export default function AiAssistantModal({
     >
       <Modal.Backdrop>
         <Modal.Container size={!user ? "md" : "cover"} placement="center">
-          <Modal.Dialog className="bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 rounded-2xl flex flex-col outline-none relative overflow-hidden shadow-2xl">
-            <Button
-              onClick={onClose}
-              isIconOnly
-              variant="ghost"
-              className="absolute top-4 right-4 z-50"
-              aria-label="Tutup asisten"
-            >
-              <XIcon size={18} />
-            </Button>
+          <Modal.Dialog className="border border-neutral-100 dark:border-neutral-800 flex flex-col outline-none relative overflow-hidden">
+            {/* <Modal.CloseTrigger /> */}
 
             {/* Content Area */}
             <div className="flex-1 overflow-hidden relative">
@@ -48,7 +40,7 @@ export default function AiAssistantModal({
                   </span>
                 </div>
               ) : !user ? (
-                <div className="flex items-center justify-center h-full p-8">
+                <div className="flex items-center justify-center h-full">
                   <LoginForm onSuccess={onClose} />
                 </div>
               ) : (

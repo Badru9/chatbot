@@ -70,11 +70,6 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
   const navItems = [
     { key: "new" as const, label: "Chat baru", icon: ChatCircleIcon },
-    {
-      key: "history" as const,
-      label: "History chats",
-      icon: ClockCounterClockwiseIcon,
-    },
     { key: "library" as const, label: "Library", icon: FilesIcon },
   ];
 
@@ -118,20 +113,6 @@ export default function ChatSidebar({
 
       <div className="min-h-0 flex-1 overflow-y-auto bg-surface-soft p-3">
         {activeMenu === "new" ? (
-          <div className="rounded-lg border border-hairline bg-canvas p-4 shadow-sm">
-            <div className="mb-4 grid size-10 place-items-center rounded-lg bg-primary text-white">
-              <PlusIcon size={20} weight="bold" />
-            </div>
-            <p className="text-[15px] font-semibold leading-[1.4] text-ink">
-              Chat kosong siap.
-            </p>
-            <p className="mt-1 text-[13px] leading-[1.5] text-muted">
-              Upload PDF, ketik @, pilih konteks.
-            </p>
-          </div>
-        ) : null}
-
-        {activeMenu === "history" ? (
           <div className="grid gap-2">
             {sessions.length === 0 ? (
               <p className="rounded-lg border border-hairline bg-canvas p-4 text-[13px] leading-[1.5] text-muted shadow-sm">

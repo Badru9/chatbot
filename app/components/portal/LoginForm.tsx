@@ -45,7 +45,7 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-fit p-6 bg-white dark:bg-neutral-900 flex flex-col gap-4"
+      className="w-full max-w-fit p-6 flex flex-col gap-4"
     >
       <div className="flex flex-col gap-1 mb-2">
         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">

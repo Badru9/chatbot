@@ -28,6 +28,7 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import UploadFileModal from "./UploadFileModal";
 import { ScrollShadow } from "@heroui/react";
 import UploadLibrary from "./UploadLibrary";
+import SchedulePanel from "./portal/SchedulePanel";
 
 interface Message {
   role: "user" | "assistant";
@@ -148,6 +149,7 @@ export default function Chatbot() {
   const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">(
     "new",
   );
+  const [activeTool, setActiveTool] = useState<"jadwal" | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -369,6 +371,7 @@ export default function Chatbot() {
           role: msg.role === "user" ? "user" : "assistant",
           content: msg.content,
         })),
+        activeTools: activeTool ? [activeTool] : [],
         onChunk: (accumulatedText) => {
           finalResponse = accumulatedText;
           setStreamingContent(accumulatedText);
@@ -380,6 +383,10 @@ export default function Chatbot() {
         { role: "assistant", content: finalResponse },
       ]);
       setStreamingContent("");
+
+      if (activeTool === "jadwal") {
+        queryClient.invalidateQueries({ queryKey: ["schedules"] });
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -395,7 +402,7 @@ export default function Chatbot() {
   return (
     <main
       id="chatbot-wrapper"
-      className="relative h-full max-w-full overflow-x-hidden bg-white text-black lg:pl-73"
+      className="relative h-full max-w-full overflow-x-hidden text-black lg:pl-73"
       style={{ minHeight: 0 }}
     >
       <ChatSidebar
@@ -411,89 +418,98 @@ export default function Chatbot() {
       />
 
       {activeMenu !== "library" ? (
-        <>
-          <section className="mx-auto flex h-full w-full max-w-[90%] flex-col items-center justify-end gap-4 px-4 pb-36 pt-16 sm:px-6 lg:px-10 overflow-y-auto">
-            <ScrollShadow className="w-full flex-1 space-y-3">
-              {messages.length === 0 && !isLoading ? (
-                <div className="mx-auto mt-20 max-w-2xl text-center">
-                  <div className="mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline bg-surface-soft text-body">
-                    <SparkleIcon size={22} weight="fill" />
-                  </div>
-                  <p className="text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]">
-                    Tanya apapun ke mb.ai.
-                  </p>
-                  <p className="mx-auto mt-4 max-w-xl text-[16px] font-normal leading-[1.6] text-body">
-                    Upload PDF, lalu ketik{" "}
-                    <span className="font-semibold text-primary">@</span>{" "}
-                    untuk memilih dokumen sebagai konteks RAG.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {messages.map((message, index) => (
-                    <div
-                      key={`${message.role}-${index}`}
-                      className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                    >
-                      <div
-                        className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${
-                          message.role === "user"
-                            ? "bg-body text-white"
-                            : "border border-outline bg-surface-soft text-body"
-                        }`}
-                      >
-                        {message.role === "user" ? (
-                          <p className="whitespace-pre-wrap">
-                            {message.content}
-                          </p>
-                        ) : (
-                          <div className="prose prose-sm max-w-none">
-                            <MarkdownRenderer content={message.content} />
-                          </div>
-                        )}
-                      </div>
+        <div className="flex h-full w-full relative">
+          {/* Kolom Chat (Kiri) */}
+          <div className="flex-1 flex flex-col h-full min-w-0 relative">
+            <section className={`mx-auto flex h-full w-full max-w-[90%] flex-col items-center justify-end gap-4 px-4 pt-16 sm:px-6 lg:px-10 overflow-y-auto ${
+              activeTool === "jadwal" ? "pb-48" : "pb-36"
+            }`}>
+              <ScrollShadow className="w-full flex-1 space-y-3">
+                {messages.length === 0 && !isLoading ? (
+                  <div className="mx-auto mt-20 max-w-2xl text-center">
+                    <div className="mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline text-body">
+                      <SparkleIcon size={22} weight="fill" />
                     </div>
-                  ))}
-
-                  {isLoading && streamingContent ? (
-                    <div className="flex justify-start">
-                      <div className="max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
-                        <div className="prose prose-sm max-w-none">
-                          <MarkdownRenderer content={streamingContent} />
+                    <p className="text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]">
+                      Tanya apapun ke mb.ai.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message, index) => (
+                      <div
+                        key={`${message.role}-${index}`}
+                        className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${
+                            message.role === "user"
+                              ? "bg-body text-white"
+                              : "border border-outline bg-surface-soft text-body"
+                          }`}
+                        >
+                          {message.role === "user" ? (
+                            <p className="whitespace-pre-wrap">
+                              {message.content}
+                            </p>
+                          ) : (
+                            <div className="prose prose-sm max-w-none">
+                              <MarkdownRenderer content={message.content} />
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ) : null}
+                    ))}
 
-                  {isLoading && !streamingContent ? (
-                    <div className="flex justify-start">
-                      <div className="rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
-                        <span className="animate-pulse">
-                          mb.ai sedang berpikir...
-                        </span>
+                    {isLoading && streamingContent ? (
+                      <div className="flex justify-start">
+                        <div className="max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
+                          <div className="prose prose-sm max-w-none">
+                            <MarkdownRenderer content={streamingContent} />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ) : null}
-                </>
-              )}
-              <div ref={messagesEndRef} />
-            </ScrollShadow>
-          </section>
+                    ) : null}
 
-          <ChatInputBar
-            input={input}
-            inputRef={chatbotInputRef}
-            isLoading={isLoading}
-            mentionMatches={mentionMatches}
-            selectedFiles={selectedFiles}
-            onChooseMentionFile={chooseMentionFile}
-            onInputChange={setInput}
-            onKeyDown={handleInputKeyDown}
-            onOpenUploadModal={() => setIsUploadModalOpen(true)}
-            onSubmit={handleSubmit}
-            onToggleFile={toggleFile}
-          />
-        </>
+                    {isLoading && !streamingContent ? (
+                      <div className="flex justify-start">
+                        <div className="rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
+                          <span className="animate-pulse">
+                            mb.ai sedang berpikir...
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
+                  </>
+                )}
+                <div ref={messagesEndRef} />
+              </ScrollShadow>
+            </section>
+
+            <ChatInputBar
+              input={input}
+              inputRef={chatbotInputRef}
+              isLoading={isLoading}
+              mentionMatches={mentionMatches}
+              selectedFiles={selectedFiles}
+              activeTool={activeTool}
+              onChooseMentionFile={chooseMentionFile}
+              onInputChange={setInput}
+              onKeyDown={handleInputKeyDown}
+              onOpenUploadModal={() => setIsUploadModalOpen(true)}
+              onSubmit={handleSubmit}
+              onToggleFile={toggleFile}
+              onToggleTool={(tool) => setActiveTool(tool)}
+            />
+          </div>
+
+          {/* Kolom Panel Jadwal (Kanan) */}
+          {activeTool === "jadwal" && (
+            <div className="w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col animate-in fade-in slide-in-from-right-5 duration-200">
+              <SchedulePanel />
+            </div>
+          )}
+        </div>
       ) : (
         <UploadLibrary />
       )}

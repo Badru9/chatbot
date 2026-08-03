@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Input, Label, Modal } from "@heroui/react";
+import { Button, Input, Label, Modal, Spinner } from "@heroui/react";
 import type { ChangeEvent } from "react";
 
 interface UploadFileModalProps {
@@ -41,7 +41,6 @@ export default function UploadFileModal({
     >
       <Modal.Container placement="center" size="sm">
         <Modal.Dialog>
-          <Modal.CloseTrigger />
           <Modal.Header>
             <Modal.Heading>Upload PDF</Modal.Heading>
           </Modal.Header>
@@ -73,7 +72,7 @@ export default function UploadFileModal({
               Batal
             </Button>
             <Button isDisabled={!file || isUploading} onPress={onSubmit}>
-              {isUploading ? "Memproses..." : "Tambahkan"}
+              {isUploading ? <Spinner color="current" /> : "Tambahkan"}
             </Button>
           </Modal.Footer>
         </Modal.Dialog>
