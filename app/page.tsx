@@ -12,10 +12,11 @@ export default function App() {
           PORTAL LAYANAN AKADEMIK
         </div>
         <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-neutral-900 dark:text-white tracking-tight leading-tight">
-          Selamat datang di mb.ai
+          Selesaikan Administrasi Akademik Lebih Cepat
         </h1>
-        <p className="text-neutral-600 dark:text-neutral-400 text-base sm:text-lg max-w-xl leading-relaxed font-normal">
-          Portal Layanan Akademik & Asisten Personal AI Dosen Universitas.
+        <p className="text-neutral-600 dark:text-neutral-300 text-base sm:text-lg max-w-xl leading-relaxed font-normal">
+          Kelola perwalian, upload dokumen BKD, dan tanya jawab regulasi kampus.
+          Semua dalam satu portal cerdas.
         </p>
       </div>
       <PortalGrid />

@@ -22,11 +22,14 @@ export default function PortalCard({
   const IconComponent =
     icon && (Icons as any)[icon] ? (Icons as any)[icon] : null;
 
+  // ponytail: external links only get target="_blank"
+  const isExternal = href.startsWith("http");
+
   return (
     <Link
       href={href}
       className="group block focus:outline-none"
-      target="_blank"
+      {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
     >
       {/* Outer Shell (Double Bezel Architecture) */}
       <div className="h-full p-1.5 rounded-3xl bg-neutral-200/60 dark:bg-neutral-800/40 border border-neutral-200/90 dark:border-neutral-800/80 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-300 shadow-xs hover:shadow-md">
@@ -57,7 +60,7 @@ export default function PortalCard({
             <h3 className="font-bold text-neutral-900 dark:text-white text-lg tracking-tight mb-1.5 transition-colors group-hover:text-neutral-950 dark:group-hover:text-white">
               {title}
             </h3>
-            <p className="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 leading-relaxed font-normal">
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 line-clamp-2 leading-relaxed font-normal">
               {description}
             </p>
           </div>
