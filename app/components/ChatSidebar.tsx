@@ -8,6 +8,7 @@ import {
   FilesIcon,
   PlusIcon,
   TrashIcon,
+  XIcon,
 } from "@phosphor-icons/react";
 
 export interface SidebarSession {
@@ -31,6 +32,8 @@ interface ChatSidebarProps {
   sessions: SidebarSession[];
   libraryFiles: SidebarLibraryFile[];
   selectedFileIds: string[];
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
   onMenuChange: (menu: "new" | "history" | "library") => void;
   onNewChat: () => void;
   onLoadSession: (sessionId: string) => void;
@@ -62,6 +65,8 @@ export default function ChatSidebar({
   sessions,
   libraryFiles,
   selectedFileIds,
+  isMobileOpen = false,
+  onMobileClose,
   onMenuChange,
   onNewChat,
   onLoadSession,
@@ -73,18 +78,20 @@ export default function ChatSidebar({
     { key: "library" as const, label: "Library", icon: FilesIcon },
   ];
 
-  return (
-    <aside className="absolute inset-y-0 left-0 z-20 hidden w-[292px] flex-col border-r border-hairline bg-canvas text-ink lg:flex font-sans">
-      {/* <div className='flex h-16 items-center justify-between border-b border-hairline px-5'>
-        <div>
-          <p className='text-[18px] font-semibold leading-[1.4] tracking-[-0.3px]'>
-            mb.ai
-          </p>
-          <p className='text-[12px] leading-[1.35] text-muted-soft'>
-            context workspace
-          </p>
-        </div>
-      </div> */}
+  const sidebarContent = (
+    <div className="flex h-full w-full flex-col font-sans">
+      {/* Mobile Top Close Header */}
+      <div className="flex items-center justify-between border-b border-hairline p-4 lg:hidden">
+        <span className="text-sm font-bold text-ink">Menu Navigation</span>
+        <button
+          onClick={onMobileClose}
+          className="p-1 text-muted hover:text-ink rounded-lg cursor-pointer"
+          type="button"
+          aria-label="Tutup Menu"
+        >
+          <XIcon size={20} />
+        </button>
+      </div>
 
       <nav className="grid gap-1 border-b border-hairline p-3">
         {navItems.map(({ key, label, icon: Icon }) => {
@@ -102,6 +109,7 @@ export default function ChatSidebar({
               onPress={() => {
                 onMenuChange(key);
                 if (key === "new") onNewChat();
+                if (onMobileClose) onMobileClose();
               }}
             >
               <Icon size={17} weight={isActive ? "fill" : "regular"} />
@@ -122,15 +130,18 @@ export default function ChatSidebar({
               sessions.map((session) => (
                 <button
                   key={session.id}
-                  className="rounded-lg border border-hairline bg-canvas p-3 text-left transition duration-150 hover:border-primary hover:shadow-sm active:scale-[0.99] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  onClick={() => onLoadSession(session.id)}
+                  className="rounded-lg border border-hairline bg-canvas p-3 text-left transition duration-150 hover:border-primary hover:shadow-sm active:scale-[0.99] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                  onClick={() => {
+                    onLoadSession(session.id);
+                    if (onMobileClose) onMobileClose();
+                  }}
                   type="button"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink">
                       {session.title}
                     </p>
-                    <span className="rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-body border border-hairline">
+                    <span className="rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-body border border-hairline shrink-0">
                       {session.messagesCount}
                     </span>
                   </div>
@@ -142,84 +153,29 @@ export default function ChatSidebar({
             )}
           </div>
         ) : null}
-
-        {/* {activeMenu === "library" ? (
-          <div className="grid gap-2">
-            <div className="rounded-lg border border-hairline bg-canvas p-3 shadow-sm">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-soft">
-                Uploaded files
-              </p>
-              <p className="mt-1 text-[20px] font-bold tracking-[-0.3px] text-ink">
-                {libraryFiles.length}
-              </p>
-            </div>
-
-            {libraryFiles.length === 0 ? (
-              <p className="rounded-lg border border-hairline bg-canvas p-4 text-[13px] leading-[1.5] text-muted shadow-sm">
-                Library kosong. Upload PDF dari tombol +.
-              </p>
-            ) : (
-              libraryFiles.map((file) => {
-                const isSelected = selectedFileIds.includes(file.id);
-
-                return (
-                  <div
-                    key={file.id}
-                    className={`rounded-lg border bg-canvas p-3 transition duration-150 ${
-                      isSelected
-                        ? "border-primary shadow-sm"
-                        : "border-hairline"
-                    }`}
-                  >
-                    <button
-                      className="flex w-full items-start gap-3 text-left outline-none"
-                      onClick={() => onToggleFile(file.id)}
-                      type="button"
-                    >
-                      <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-surface-card text-ink border border-hairline">
-                        <FilePdfIcon size={18} weight="fill" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <Label className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink cursor-pointer">
-                          {file.name}
-                        </Label>
-                        <span className="mt-1 block text-[11px] leading-[1.35] text-muted">
-                          {formatBytes(file.size)} ·{" "}
-                          {formatDate(file.uploadedAt)}
-                          {typeof file.chunksCount === "number"
-                            ? ` · ${file.chunksCount} chk`
-                            : ""}
-                        </span>
-                      </span>
-                    </button>
-                    <div className="mt-3 flex items-center justify-between">
-                      {isSelected ? (
-                        <span className="inline-flex items-center rounded-full bg-success-badge-bg border border-success-badge-border px-2.5 py-0.5 text-[11px] font-semibold text-success-badge-text">
-                          aktif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-full bg-hairline-soft border border-hairline px-2.5 py-0.5 text-[11px] font-medium text-[#4b5563]">
-                          rag source
-                        </span>
-                      )}
-                      <Button
-                        isIconOnly
-                        aria-label={`Hapus ${file.name}`}
-                        className="size-8 rounded-lg text-muted hover:bg-hairline-soft hover:text-danger active:scale-95 transition-colors duration-150"
-                        size="sm"
-                        variant="ghost"
-                        onPress={() => onDeleteFile(file.id)}
-                      >
-                        <TrashIcon size={14} />
-                      </Button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        ) : null} */}
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Mobile Backdrop & Drawer */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 flex lg:hidden">
+          <div
+            className="fixed inset-0 bg-neutral-900/50 backdrop-blur-xs transition-opacity"
+            onClick={onMobileClose}
+          />
+          <aside className="relative z-50 flex w-[280px] max-w-[80vw] flex-col border-r border-hairline bg-canvas text-ink shadow-2xl animate-in slide-in-from-left duration-200">
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop Fixed Sidebar */}
+      <aside className="absolute inset-y-0 left-0 z-20 hidden w-[292px] flex-col border-r border-hairline bg-canvas text-ink lg:flex font-sans">
+        {sidebarContent}
+      </aside>
+    </>
   );
 }

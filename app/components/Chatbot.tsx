@@ -1,6 +1,6 @@
 "use client";
 
-import { SparkleIcon } from "@phosphor-icons/react";
+import { ListIcon, SparkleIcon } from "@phosphor-icons/react";
 import {
   type ChangeEvent,
   type KeyboardEvent,
@@ -157,6 +157,7 @@ export default function Chatbot() {
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
@@ -399,17 +400,46 @@ export default function Chatbot() {
       setIsLoading(false);
     }
   };
+
   return (
     <main
       id="chatbot-wrapper"
-      className="relative h-full max-w-full overflow-x-hidden text-black lg:pl-73"
+      className="relative h-full max-w-full overflow-x-hidden text-black lg:pl-73 flex flex-col"
       style={{ minHeight: 0 }}
     >
+      {/* Mobile Header */}
+      <div className="flex h-12 items-center justify-between border-b border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/90 px-4 backdrop-blur-md lg:hidden shrink-0 z-20">
+        <button
+          onClick={() => setIsMobileSidebarOpen(true)}
+          className="flex items-center gap-2 rounded-lg p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer text-xs font-semibold"
+          type="button"
+        >
+          <ListIcon size={20} />
+          <span>Menu</span>
+        </button>
+        <span className="font-bold text-sm text-neutral-900 dark:text-white">
+          mb.ai
+        </span>
+        {activeTool === "jadwal" ? (
+          <button
+            onClick={() => setActiveTool(null)}
+            className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-full px-2.5 py-0.5 cursor-pointer"
+            type="button"
+          >
+            Jadwal
+          </button>
+        ) : (
+          <div className="w-12" />
+        )}
+      </div>
+
       <ChatSidebar
         activeMenu={activeMenu}
         libraryFiles={libraryFiles}
         selectedFileIds={selectedFileIds}
         sessions={sidebarSessions}
+        isMobileOpen={isMobileSidebarOpen}
+        onMobileClose={() => setIsMobileSidebarOpen(false)}
         onDeleteFile={handleDeleteFile}
         onLoadSession={handleLoadSession}
         onMenuChange={setActiveMenu}
@@ -418,19 +448,17 @@ export default function Chatbot() {
       />
 
       {activeMenu !== "library" ? (
-        <div className="flex h-full w-full relative">
+        <div className="flex flex-1 h-full w-full relative overflow-hidden">
           {/* Kolom Chat (Kiri) */}
           <div className="flex-1 flex flex-col h-full min-w-0 relative">
-            <section className={`mx-auto flex h-full w-full max-w-[90%] flex-col items-center justify-end gap-4 px-4 pt-16 sm:px-6 lg:px-10 overflow-y-auto ${
-              activeTool === "jadwal" ? "pb-48" : "pb-36"
-            }`}>
+            <section className="mx-auto flex h-full w-full max-w-[95%] sm:max-w-[90%] flex-col items-center justify-end gap-4 px-3 pt-4 sm:px-6 lg:px-10 overflow-y-auto pb-36 sm:pb-40">
               <ScrollShadow className="w-full flex-1 space-y-3">
                 {messages.length === 0 && !isLoading ? (
-                  <div className="mx-auto mt-20 max-w-2xl text-center">
-                    <div className="mx-auto mb-6 grid size-12 place-items-center rounded-2xl border border-outline text-body">
-                      <SparkleIcon size={22} weight="fill" />
+                  <div className="mx-auto mt-12 sm:mt-20 max-w-2xl text-center px-2">
+                    <div className="mx-auto mb-4 sm:mb-6 grid size-10 sm:size-12 place-items-center rounded-2xl border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-white shadow-xs">
+                      <SparkleIcon size={20} weight="fill" />
                     </div>
-                    <p className="text-[36px] font-semibold leading-[1.15] tracking-[-1px] text-body sm:text-[48px] sm:leading-[1.1] sm:tracking-[-1.5px]">
+                    <p className="text-[28px] sm:text-[40px] md:text-[48px] font-bold leading-tight tracking-tight text-neutral-900 dark:text-white">
                       Tanya apapun ke mb.ai.
                     </p>
                   </div>
@@ -442,10 +470,10 @@ export default function Chatbot() {
                         className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
                       >
                         <div
-                          className={`max-w-[82%] rounded-xl px-4 py-3 text-[15px] leading-[1.6] ${
+                          className={`max-w-[88%] sm:max-w-[82%] rounded-2xl px-4 py-3 text-[14px] sm:text-[15px] leading-[1.6] ${
                             message.role === "user"
-                              ? "bg-body text-white"
-                              : "border border-outline bg-surface-soft text-body"
+                              ? "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900"
+                              : "border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 text-neutral-900 dark:text-neutral-100"
                           }`}
                         >
                           {message.role === "user" ? (
@@ -453,7 +481,7 @@ export default function Chatbot() {
                               {message.content}
                             </p>
                           ) : (
-                            <div className="prose prose-sm max-w-none">
+                            <div className="prose prose-sm max-w-none dark:prose-invert">
                               <MarkdownRenderer content={message.content} />
                             </div>
                           )}
@@ -463,8 +491,8 @@ export default function Chatbot() {
 
                     {isLoading && streamingContent ? (
                       <div className="flex justify-start">
-                        <div className="max-w-[82%] rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
-                          <div className="prose prose-sm max-w-none">
+                        <div className="max-w-[88%] sm:max-w-[82%] rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 px-4 py-3 text-[14px] sm:text-[15px] leading-[1.6] text-neutral-900 dark:text-neutral-100">
+                          <div className="prose prose-sm max-w-none dark:prose-invert">
                             <MarkdownRenderer content={streamingContent} />
                           </div>
                         </div>
@@ -473,7 +501,7 @@ export default function Chatbot() {
 
                     {isLoading && !streamingContent ? (
                       <div className="flex justify-start">
-                        <div className="rounded-xl border border-outline bg-surface-soft px-4 py-3 text-[15px] leading-[1.6] text-body">
+                        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 px-4 py-3 text-[14px] sm:text-[15px] leading-[1.6] text-neutral-600 dark:text-neutral-300">
                           <span className="animate-pulse">
                             mb.ai sedang berpikir...
                           </span>
@@ -503,9 +531,22 @@ export default function Chatbot() {
             />
           </div>
 
-          {/* Kolom Panel Jadwal (Kanan) */}
+          {/* Schedule Panel: Mobile Overlay Drawer */}
           {activeTool === "jadwal" && (
-            <div className="w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex flex-col animate-in fade-in slide-in-from-right-5 duration-200">
+            <div className="fixed inset-0 z-40 flex justify-end lg:hidden">
+              <div
+                className="fixed inset-0 bg-neutral-900/40 backdrop-blur-xs transition-opacity"
+                onClick={() => setActiveTool(null)}
+              />
+              <div className="relative z-50 h-full w-full sm:w-[400px] bg-white dark:bg-neutral-900 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
+                <SchedulePanel />
+              </div>
+            </div>
+          )}
+
+          {/* Schedule Panel: Desktop Split Column */}
+          {activeTool === "jadwal" && (
+            <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex-col animate-in fade-in slide-in-from-right-5 duration-200">
               <SchedulePanel />
             </div>
           )}

@@ -7,15 +7,15 @@ export const fallbackMenus: MenuData[] = [
   {
     title: "Monitoring Kinerja",
     description:
-      "Pantau kinerja dosen, presensi kehadiran, laporan kerja harian, serta evaluasi mahasiswa.",
+      "Cek presensi, laporan harian, dan evaluasi mahasiswa dalam satu dashboard.",
     icon: "Monitor",
     href: "/monitoring",
     visibleToRoles: ["admin", "dosen"],
   },
   {
-    title: "Manajemen Dokumen",
+    title: "Pusat Dokumen",
     description:
-      "Unggah, kelola, serta verifikasi berbagai berkas administrasi dan dokumen PDF pendukung.",
+      "Simpan PDF SK Mengajar, pedoman BKD, dan cari isi dokumen dengan AI.",
     icon: "Folder",
     href: "/documents",
     visibleToRoles: ["admin", "dosen"],
@@ -23,7 +23,7 @@ export const fallbackMenus: MenuData[] = [
   {
     title: "Bimbingan Mahasiswa",
     description:
-      "Akses data mahasiswa bimbingan akademik, laporan magang, konsultasi skripsi, dan KRS.",
+      "Data mahasiswa bimbingan, konsultasi skripsi, persetujuan KRS, dan laporan magang.",
     icon: "Student",
     href: "/students",
     visibleToRoles: ["admin", "dosen"],
@@ -31,15 +31,15 @@ export const fallbackMenus: MenuData[] = [
   {
     title: "Katalog Penelitian",
     description:
-      "Manajemen publikasi jurnal ilmiah, prosiding konferensi, hibah penelitian internal & eksternal.",
+      "Publikasi jurnal, prosiding konferensi, dan pengajuan hibah riset.",
     icon: "BookOpen",
     href: "/research",
     visibleToRoles: ["admin", "dosen"],
   },
   {
-    title: "Portal SINTA",
+    title: "Profil Riset & SINTA",
     description:
-      "Integrasi dan sinkronisasi otomatis skor SINTA, Scopus, Google Scholar, dan H-index.",
+      "Cek skor H-Index, publikasi Scopus, dan lacak portofolio penelitian Anda.",
     icon: "TrendUp",
     href: "/sinta",
     visibleToRoles: ["admin", "dosen"],
