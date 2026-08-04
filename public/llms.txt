@@ -1,0 +1,19 @@
+# mb.ai — Portal Layanan Akademik & Asisten Digital Dosen
+
+> Portal terpadu untuk dosen perguruan tinggi: kelola BKD, perwalian mahasiswa, dokumen SK, dan penelitian dengan bantuan AI.
+
+## Fitur Utama
+- Asisten AI Akademik: Tanya jawab regulasi BKD, panduan akademik, dan konsultasi administratif dosen.
+- Library Dokumen RAG: Unggah PDF (SK Mengajar, Pedoman BKD, Jurnal), cari isi dokumen menggunakan pencarian vektor.
+- Integrasi AISNET & SINTA: Akses jadwal mengajar, rekap presensi, profil riset SINTA/Scopus.
+- Jadwal & Monitoring: Lihat jadwal perkuliahan, penelitian, dan rapat prodi.
+
+## Halaman
+- Portal Utama: /
+- Pengelolaan Dokumen: /documents
+- Dashboard AISNET: /aisnet
+
+## Teknologi
+- Next.js, React, HeroUI, Tailwind CSS
+- Backend: PostgreSQL + pgvector untuk RAG
+- Model AI: Ollama (qwen3.5)
