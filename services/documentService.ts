@@ -1,5 +1,8 @@
-import axios from "axios";
-import { axiosInstance } from "./axiosInstance";
+import {
+  fetchDocumentsAction,
+  uploadDocumentAction,
+  deleteDocumentAction,
+} from "@/lib/server/actions/documents";
 
 export interface SidebarLibraryFile {
   id: string;
@@ -24,15 +27,7 @@ export interface UploadDocumentResponse {
 }
 
 export async function fetchDocuments(): Promise<DocumentData[]> {
-  try {
-    const { data } = await axiosInstance.get<DocumentData[]>("/api/documents");
-    return data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw error;
-  }
+  return fetchDocumentsAction();
 }
 
 export async function uploadDocument(
@@ -41,49 +36,28 @@ export async function uploadDocument(
   const formData = new FormData();
   formData.append("file", file);
 
-  try {
-    const response = await axiosInstance.post<UploadDocumentResponse>(
-      "/api/documents",
-      formData,
-    );
-    return response.data;
-  } catch (error) {
-    console.log("error", error);
-
-    if (axios.isAxiosError(error) && error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw error;
+  const res = await uploadDocumentAction(formData);
+  if (res.error) {
+    throw new Error(res.error);
   }
+  return res as UploadDocumentResponse;
 }
 
 export async function deleteDocument(
   documentId: string,
 ): Promise<{ ok: boolean }> {
-  try {
-    const response = await axiosInstance.delete<{ ok: boolean }>(
-      `/api/documents/${documentId}`,
-    );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw error;
+  const res = await deleteDocumentAction(documentId);
+  if ("error" in res && res.error) {
+    throw new Error(res.error);
   }
+  return { ok: true };
 }
 
 export async function downloadDocumentBlob(documentId: string): Promise<Blob> {
-  try {
-    const response = await axiosInstance.get(
-      `/api/documents/${documentId}/download`,
-      { responseType: "blob" },
-    );
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.data?.error) {
-      throw new Error(error.response.data.error);
-    }
-    throw error;
+  const response = await fetch(`/api/documents/${documentId}/download`);
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || "Gagal mengunduh dokumen");
   }
+  return response.blob();
 }

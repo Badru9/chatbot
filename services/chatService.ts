@@ -1,5 +1,3 @@
-import { axiosInstance } from "./axiosInstance";
-
 export interface Message {
   role: "user" | "assistant" | "system";
   content: string;
@@ -20,17 +18,35 @@ export async function sendChatMessage({
   activeTools,
   onChunk,
 }: ChatRequestParams): Promise<string> {
-  const response = await axiosInstance.post(
-    "/api/chat",
-    { prompt, documentIds, messages, activeTools },
-    {
-      onDownloadProgress: (progressEvent) => {
-        const xhr = progressEvent.event?.target as XMLHttpRequest;
-        if (xhr && xhr.responseText) {
-          onChunk(xhr.responseText);
-        }
-      },
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
-  return response.data;
+    body: JSON.stringify({ prompt, documentIds, messages, activeTools }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP error ${response.status}`);
+  }
+
+  if (!response.body) {
+    throw new Error("Response body is null");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder("utf-8");
+  let fullText = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value, { stream: true });
+    fullText += chunk;
+    onChunk(fullText);
+  }
+
+  return fullText;
 }

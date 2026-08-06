@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api } from "./api";
+import { loginAction, logoutAction, getSessionAction } from "@/lib/server/actions/auth";
 import { AuthSessionResponse, LoginInput } from "./schemas/auth";
 
 export function useSession() {
@@ -9,13 +9,10 @@ export function useSession() {
     queryKey: ["auth-session"],
     queryFn: async () => {
       try {
-        const response = await api.get<AuthSessionResponse>("/api/auth/me");
-        return response.data;
+        const response = await getSessionAction();
+        return response as any;
       } catch (err: any) {
-        if (err.response?.status === 401) {
-          return null;
-        }
-        throw err;
+        return null;
       }
     },
     retry: false,
@@ -37,8 +34,11 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: async (credentials: LoginInput) => {
-      const response = await api.post("/api/auth/login", credentials);
-      return response.data;
+      const response = await loginAction(credentials);
+      if ('error' in response && response.error) {
+        throw new Error(response.error);
+      }
+      return response;
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["auth-session"], data);
@@ -52,8 +52,8 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
-      const response = await api.post("/api/auth/logout");
-      return response.data;
+      const response = await logoutAction();
+      return response;
     },
     onSuccess: () => {
       queryClient.setQueryData(["auth-session"], null);

@@ -1,5 +1,11 @@
 import { MenuData } from "@/lib/types";
-import { axiosInstance } from "./axiosInstance";
+import {
+  getMenusAction,
+  createMenuAction,
+  updateMenuAction,
+  deleteMenuAction,
+  reorderMenusAction,
+} from "@/lib/server/actions/menus";
 
 export type MenuFormValues = Pick<
   MenuData,
@@ -11,17 +17,38 @@ export interface MenuReorder {
   order: number;
 }
 
-export const getMenus = () =>
-  axiosInstance.get<MenuData[]>("/api/menus").then((r) => r.data);
+export const getMenus = async (): Promise<MenuData[]> => {
+  return getMenusAction();
+};
 
-export const createMenu = (values: MenuFormValues) =>
-  axiosInstance.post<MenuData>("/api/menus", values).then((r) => r.data);
+export const createMenu = async (values: MenuFormValues): Promise<MenuData> => {
+  const res = await createMenuAction(values);
+  if ("error" in res && res.error) {
+    throw new Error(res.error);
+  }
+  return res as MenuData;
+};
 
-export const updateMenu = (id: string, values: MenuFormValues) =>
-  axiosInstance.put<MenuData>(`/api/menus/${id}`, values).then((r) => r.data);
+export const updateMenu = async (id: string, values: MenuFormValues): Promise<MenuData> => {
+  const res = await updateMenuAction(id, values);
+  if ("error" in res && res.error) {
+    throw new Error(res.error);
+  }
+  return res as MenuData;
+};
 
-export const deleteMenu = (id: string) =>
-  axiosInstance.delete(`/api/menus/${id}`).then((r) => r.data);
+export const deleteMenu = async (id: string): Promise<any> => {
+  const res = await deleteMenuAction(id);
+  if ("error" in res && res.error) {
+    throw new Error(res.error);
+  }
+  return res;
+};
 
-export const reorderMenus = (reorders: MenuReorder[]) =>
-  axiosInstance.put("/api/menus/reorder", { reorders }).then((r) => r.data);
+export const reorderMenus = async (reorders: MenuReorder[]): Promise<any> => {
+  const res = await reorderMenusAction(reorders);
+  if ("error" in res && res.error) {
+    throw new Error(res.error);
+  }
+  return res;
+};
