@@ -30,12 +30,24 @@ export default function DetailModal({
   isOpen,
   onOpenChange,
 }: {
-  row: TableRow | null;
+  row: any | null;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   if (!row) return null;
-  const data = row.details;
+
+  const ketuaPeneliti = row.nama_dosen || row.details?.ketuaPeneliti || "Leni Fitriani";
+  const skema = row.details?.skema || (row.tahap ? `Tahap ${row.tahap}` : "Penelitian Dosen");
+  const tahunPelaksanaan = row.details?.tahunPelaksanaan || "2026/2027";
+  const sumberDana = row.details?.sumberDana || "Internal ITG";
+  const totalDana = row.details?.totalDana || (row.dana_internal ? `Rp ${Number(row.dana_internal).toLocaleString("id-ID")}` : "Rp 0");
+  const nominal = row.nominal || (row.biaya ? `Rp ${Number(row.biaya).toLocaleString("id-ID")}` : "Rp 0");
+  const tanggal = row.slip || row.tanggal || "";
+  const statusPenelitian = row.details?.statusPenelitian || (row.status === 1 ? "Sedang Berjalan" : "Selesai");
+  const jenisPencairan = row.jenis_pencairan || row.jenisPencairan || "Dana Awal";
+  const anggota: string[] = row.details?.anggota || [];
+  const abstrak = row.details?.abstrak || row.rencana_luaran || "Detail data pencairan dana AISnet.";
+  const luaran: string[] = row.details?.luaran || (row.rencana_luaran ? [row.rencana_luaran] : []);
 
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
@@ -49,7 +61,7 @@ export default function DetailModal({
           </Modal.Header>
           <Modal.Body className="px-6 py-4">
             <ScrollShadow className="max-h-[60vh] pr-1">
-              {/* Status & Type Chips (Spot pastels matching minimalist-ui guidelines) */}
+              {/* Status & Type Chips */}
               <div className="flex flex-wrap gap-2 mb-5">
                 <Chip
                   className="bg-blue-50 text-blue-700 font-mono text-xs font-semibold"
@@ -60,21 +72,21 @@ export default function DetailModal({
                 </Chip>
                 <Chip
                   className={
-                    data.statusPenelitian === "Selesai"
+                    statusPenelitian === "Selesai"
                       ? "bg-green-50 text-green-700 font-mono text-xs font-semibold"
                       : "bg-amber-50 text-amber-700 font-mono text-xs font-semibold"
                   }
                   size="sm"
                   variant="soft"
                 >
-                  <Chip.Label>{data.statusPenelitian}</Chip.Label>
+                  <Chip.Label>{statusPenelitian}</Chip.Label>
                 </Chip>
                 <Chip
                   className="bg-neutral-50 text-neutral-600 font-mono text-xs font-semibold"
                   size="sm"
                   variant="soft"
                 >
-                  <Chip.Label>{row.jenisPencairan}</Chip.Label>
+                  <Chip.Label>{jenisPencairan}</Chip.Label>
                 </Chip>
               </div>
 
@@ -82,58 +94,62 @@ export default function DetailModal({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-6">
                 <DetailField
                   label="Ketua Peneliti"
-                  value={data.ketuaPeneliti}
+                  value={ketuaPeneliti}
                 />
-                <DetailField label="Skema" value={data.skema} />
+                <DetailField label="Skema" value={skema} />
                 <DetailField
                   label="Tahun Pelaksanaan"
-                  value={data.tahunPelaksanaan}
+                  value={tahunPelaksanaan}
                 />
-                <DetailField label="Sumber Dana" value={data.sumberDana} />
+                <DetailField label="Sumber Dana" value={sumberDana} />
                 <DetailField
                   label="Total Dana Penelitian"
-                  value={data.totalDana}
+                  value={totalDana}
                 />
-                <DetailField label="Nominal Pencairan" value={row.nominal} />
+                <DetailField label="Nominal Pencairan" value={nominal} />
                 <DetailField
                   label="Tanggal Pencairan"
-                  value={dateFormatter(row.tanggal)}
+                  value={dateFormatter(tanggal)}
                 />
               </div>
 
               {/* Anggota */}
-              <div className="mb-5">
-                <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1.5">
-                  Anggota Peneliti
-                </span>
-                <ul className="list-disc list-inside text-sm text-neutral-800 space-y-0.5">
-                  {data.anggota.map((a) => (
-                    <li key={a}>{a}</li>
-                  ))}
-                </ul>
-              </div>
+              {anggota.length > 0 && (
+                <div className="mb-5">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1.5">
+                    Anggota Peneliti
+                  </span>
+                  <ul className="list-disc list-inside text-sm text-neutral-800 space-y-0.5">
+                    {anggota.map((a) => (
+                      <li key={a}>{a}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Abstrak */}
               <div className="mb-5">
                 <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1.5">
-                  Abstrak
+                  Abstrak / Deskripsi
                 </span>
                 <p className="text-sm leading-relaxed text-neutral-600">
-                  {data.abstrak}
+                  {abstrak}
                 </p>
               </div>
 
               {/* Luaran */}
-              <div>
-                <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1.5">
-                  Target Luaran
-                </span>
-                <ul className="list-disc list-inside text-sm text-neutral-800 space-y-0.5">
-                  {data.luaran.map((l) => (
-                    <li key={l}>{l}</li>
-                  ))}
-                </ul>
-              </div>
+              {luaran.length > 0 && (
+                <div>
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-neutral-400 mb-1.5">
+                    Target Luaran
+                  </span>
+                  <ul className="list-disc list-inside text-sm text-neutral-800 space-y-0.5">
+                    {luaran.map((l, i) => (
+                      <li key={`${i}-${l}`}>{l}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </ScrollShadow>
           </Modal.Body>
           <Modal.Footer className="px-6 py-4 border-t border-neutral-100 flex justify-end gap-2 bg-neutral-50/50">

@@ -338,40 +338,10 @@ const tableData = [
   },
 ];
 
-export function normalizeTableRow(item: any, index: number): TableRow {
-  const biayaNum = Number(item.biaya || 0);
-  const danaNum = Number(item.dana_internal || 0);
-
-  const formattedNominal = item.nominal || (biayaNum > 0 ? `Rp ${biayaNum.toLocaleString("id-ID")}` : "Rp 0");
-  const formattedTotalDana = item.details?.totalDana || (danaNum > 0 ? `Rp ${danaNum.toLocaleString("id-ID")}` : "Rp 0");
-
-  return {
-    no: item.no || index + 1,
-    jenis: item.jenis || "PENELITIAN",
-    judul: item.judul || "",
-    jenisPencairan: item.jenisPencairan || item.jenis_pencairan || "Dana Awal",
-    nominal: formattedNominal,
-    tanggal: item.slip || item.tanggal || "",
-    details: {
-      ketuaPeneliti: item.details?.ketuaPeneliti || item.nama_dosen || "Leni Fitriani",
-      anggota: item.details?.anggota || [],
-      skema: item.details?.skema || (item.tahap ? `Tahap ${item.tahap}` : "Penelitian Dosen"),
-      tahunPelaksanaan: item.details?.tahunPelaksanaan || "2026/2027",
-      sumberDana: item.details?.sumberDana || "Internal ITG",
-      totalDana: formattedTotalDana,
-      statusPenelitian: item.details?.statusPenelitian || (item.status === 1 ? "Sedang Berjalan" : "Selesai"),
-      abstrak: item.details?.abstrak || item.rencana_luaran || "Detail penelitian terdaftar di sistem AISnet.",
-      luaran: item.details?.luaran || (item.rencana_luaran ? [item.rencana_luaran] : []),
-    },
-  };
-}
-
 // ─── Main Page Component ───────────────────────────────────────
 export default function AisnetPage() {
-  const [selectedRow, setSelectedRow] = useState<TableRow | null>(null);
+  const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-
-  const normalizedRows: TableRow[] = tableData.map((item, idx) => normalizeTableRow(item, idx));
 
   return (
     <div className="min-h-screen bg-[#f5f8fa] font-sans antialiased text-[#181c32] flex">
@@ -401,47 +371,53 @@ export default function AisnetPage() {
                     )}
                   </Table.Header>
                   <Table.Body>
-                    {normalizedRows.map((row) => (
-                      <Table.Row
-                        key={`${row.no}-${row.judul}`}
-                        className="hover:bg-[#f9fafb] transition-colors border-b border-[#eff2f5] last:border-none"
-                      >
-                        <Table.Cell className="font-mono text-center text-sm text-[#a1a5b7] w-12 py-4 px-6">
-                          {row.no}
-                        </Table.Cell>
-                        <Table.Cell className="py-4 px-6">
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-[#e1f3fe] text-[#1f6c9f] font-mono">
-                            {row.jenis}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell className="font-medium text-[#181c32] max-w-md truncate py-4 px-6 text-sm">
-                          {row.judul}
-                        </Table.Cell>
-                        <Table.Cell className="py-4 px-6">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#f7f6f3] text-[#555555] font-mono">
-                            {row.jenisPencairan}
-                          </span>
-                        </Table.Cell>
-                        <Table.Cell className="font-mono text-right font-semibold text-[#181c32] py-4 px-6 text-sm whitespace-nowrap">
-                          {row.nominal}
-                        </Table.Cell>
-                        <Table.Cell className="text-[#a1a5b7] text-xs py-4 px-6 whitespace-nowrap">
-                          {dateFormatter(row.tanggal)}
-                        </Table.Cell>
-                        <Table.Cell className="text-center py-4 px-6">
-                          <Button
-                            variant="secondary"
-                            className="rounded-md text-xs font-semibold px-3 py-1.5 border border-neutral-200 hover:bg-neutral-50 cursor-pointer"
-                            onClick={() => {
-                              setSelectedRow(row);
-                              setIsDetailOpen(true);
-                            }}
-                          >
-                            Detail
-                          </Button>
-                        </Table.Cell>
-                      </Table.Row>
-                    ))}
+                    {tableData.map((row: any, index: number) => {
+                      const nominal = row.nominal || (row.biaya ? `Rp ${Number(row.biaya).toLocaleString("id-ID")}` : "Rp 0");
+                      const jenisPencairan = row.jenis_pencairan || row.jenisPencairan || "Dana Awal";
+                      const tanggal = row.slip || row.tanggal;
+
+                      return (
+                        <Table.Row
+                          key={row.id || index}
+                          className="hover:bg-[#f9fafb] transition-colors border-b border-[#eff2f5] last:border-none"
+                        >
+                          <Table.Cell className="font-mono text-center text-sm text-[#a1a5b7] w-12 py-4 px-6">
+                            {index + 1}
+                          </Table.Cell>
+                          <Table.Cell className="py-4 px-6">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-semibold bg-[#e1f3fe] text-[#1f6c9f] font-mono">
+                              {row.jenis}
+                            </span>
+                          </Table.Cell>
+                          <Table.Cell className="font-medium text-[#181c32] max-w-md truncate py-4 px-6 text-sm">
+                            {row.judul}
+                          </Table.Cell>
+                          <Table.Cell className="py-4 px-6">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#f7f6f3] text-[#555555] font-mono">
+                              {jenisPencairan}
+                            </span>
+                          </Table.Cell>
+                          <Table.Cell className="font-mono text-right font-semibold text-[#181c32] py-4 px-6 text-sm whitespace-nowrap">
+                            {nominal}
+                          </Table.Cell>
+                          <Table.Cell className="text-[#a1a5b7] text-xs py-4 px-6 whitespace-nowrap">
+                            {dateFormatter(tanggal)}
+                          </Table.Cell>
+                          <Table.Cell className="text-center py-4 px-6">
+                            <Button
+                              variant="secondary"
+                              className="rounded-md text-xs font-semibold px-3 py-1.5 border border-neutral-200 hover:bg-neutral-50 cursor-pointer"
+                              onClick={() => {
+                                setSelectedRow(row);
+                                setIsDetailOpen(true);
+                              }}
+                            >
+                              Detail
+                            </Button>
+                          </Table.Cell>
+                        </Table.Row>
+                      );
+                    })}
                   </Table.Body>
                 </Table.Content>
               </Table.ScrollContainer>
