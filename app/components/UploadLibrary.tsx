@@ -269,6 +269,7 @@ function FileCard({
   isDeleting,
 }: {
   file: DocumentData;
+  hasLocalPreview?: boolean;
   onDelete: () => void;
   onPreview: () => void;
   isDeleting: boolean;
@@ -323,18 +324,18 @@ function FileCard({
           <span className="inline-flex items-center rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-muted">
             RAG source
           </span>
-          <Button
-            isIconOnly
-            size="sm"
-            variant="danger"
-            onPress={onDelete}
-            isDisabled={isDeleting}
-            className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"
-            aria-label={`Hapus ${file.name}`}
-          >
-            <TrashIcon size={15} />
-          </Button>
-        </div>
+        )}
+        <Button
+          isIconOnly
+          size="sm"
+          variant="danger"
+          onPress={onDelete}
+          isDisabled={isDeleting}
+          className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"
+          aria-label={`Hapus ${file.name}`}
+        >
+          <TrashIcon size={15} />
+        </Button>
       </div>
     </div>
   );

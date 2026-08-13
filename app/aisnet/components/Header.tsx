@@ -2,8 +2,24 @@
 
 import { Avatar, Button } from "@heroui/react";
 import { BellIcon } from "@phosphor-icons/react";
+import { useSession } from "@/lib/auth-client";
 
 export default function Header() {
+  const { user } = useSession();
+
+  const userName = user?.name || "leni fitriani";
+  const userRole = user?.role || "dosen";
+  const userImage = user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
     <header className="flex justify-between fixed h-[65px] left-[265px] right-0 bg-white border-b border-neutral-200 z-[100]">
       <div className="flex justify-between w-full px-8">
@@ -36,20 +52,19 @@ export default function Header() {
 
             <div className="flex items-center gap-4">
               <Avatar className="w-10 h-10 rounded-sm">
-                <Avatar.Image
-                  alt="user"
-                  src="https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png"
-                />
+                {userImage ? (
+                  <Avatar.Image alt={userName} src={userImage} />
+                ) : null}
                 <Avatar.Fallback className="rounded-sm bg-neutral-200 text-neutral-700">
-                  LF
+                  {getInitials(userName)}
                 </Avatar.Fallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="flex items-center font-semibold capitalize text-[15px] leading-tight text-neutral-800">
-                  leni fitriani
+                  {userName}
                 </span>
                 <span className="font-medium capitalize text-neutral-400 text-xs leading-none">
-                  dosen
+                  {userRole}
                 </span>
               </div>
             </div>
@@ -59,3 +74,4 @@ export default function Header() {
     </header>
   );
 }
+
