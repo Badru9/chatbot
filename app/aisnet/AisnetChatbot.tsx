@@ -47,8 +47,8 @@ export default function AisnetChatbot({ tableData }: AisnetChatbotProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] flex justify-end bg-black/40 backdrop-blur-xs animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+      <div className="relative w-full max-w-5xl h-[85vh] bg-white rounded-2xl border border-neutral-200 shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header bar */}
         <div className="flex items-center justify-between px-6 py-3 bg-[#1e1e2d] text-white shrink-0">
           <div className="flex items-center gap-3">
@@ -78,4 +78,5 @@ export default function AisnetChatbot({ tableData }: AisnetChatbotProps) {
     </div>
   );
 }
+
 
