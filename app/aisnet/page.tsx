@@ -41,7 +41,7 @@ const COLUMNS = [
   { key: "aksi", label: "Aksi" },
 ];
 
-const TABLE_DATA: TableRow[] = [
+const INITIAL_TABLE_DATA: TableRow[] = [
   {
     no: 1,
     jenis: "PENELITIAN",
@@ -195,6 +195,7 @@ const TABLE_DATA: TableRow[] = [
 
 // ─── Main Page Component ───────────────────────────────────────
 export default function AisnetPage() {
+  const [tableData, setTableData] = useState<TableRow[]>(INITIAL_TABLE_DATA);
   const [selectedRow, setSelectedRow] = useState<TableRow | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
@@ -226,7 +227,7 @@ export default function AisnetPage() {
                     )}
                   </Table.Header>
                   <Table.Body>
-                    {TABLE_DATA.map((row) => (
+                    {tableData.map((row) => (
                       <Table.Row
                         key={row.no}
                         className="hover:bg-[#f9fafb] transition-colors border-b border-[#eff2f5] last:border-none"
@@ -289,7 +290,7 @@ export default function AisnetPage() {
       />
 
       {/* ── AI Chatbot ── */}
-      <AisnetChatbot tableData={TABLE_DATA} />
+      <AisnetChatbot tableData={tableData} />
     </div>
   );
 }
