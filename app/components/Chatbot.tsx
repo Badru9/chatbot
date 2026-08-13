@@ -35,6 +35,7 @@ import {
   getSessionTitle,
   buildSidebarSessions,
   toSidebarFile,
+  deleteBlob,
 } from "./chatbotUtils";
 
 interface ChatbotProps {
@@ -175,7 +176,14 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const handleDeleteFile = async (fileId: string) => {
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
     try {
+      // 1. Delete dari backend
       await deleteMutation.mutateAsync(fileId);
+
+      // 2. Delete dari IndexedDB
+      await deleteBlob(fileId);
+
+      // 3. Refresh list
+      queryClient.invalidateQueries({ queryKey: ["documents"] });
     } catch (error) {
       console.error("Failed to delete file from backend:", error);
     }
