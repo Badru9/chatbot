@@ -170,7 +170,7 @@ export default function ChatInputBar({
           autoComplete="off"
           fullWidth
           id="chatbot-input"
-          placeholder="Curhatin sama mb.ai... ketik @ untuk file"
+          placeholder="Mulai chatting... ketik @ untuk file"
           value={input}
           onChange={(event) => onInputChange(event.target.value)}
           onKeyDown={onKeyDown}

@@ -1,16 +1,19 @@
 ▲ Next.js 16.2.6 (Turbopack)
 - Environments: .env
+- Experiments (use with caution):
+  · serverActions
 
   Creating an optimized production build ...
-✓ Compiled successfully in 13.4s
+✓ Compiled successfully in 14.0s
   Running TypeScript ...
-  Finished TypeScript in 7.6s ...
+  Finished TypeScript in 11.7s ...
   Collecting page data using 11 workers ...
-  Generating static pages using 11 workers (0/13) ...
-  Generating static pages using 11 workers (3/13) 
-  Generating static pages using 11 workers (6/13) 
-  Generating static pages using 11 workers (9/13) 
-✓ Generating static pages using 11 workers (13/13) in 809ms
+  Generating static pages using 11 workers (0/15) ...
+user null
+  Generating static pages using 11 workers (3/15) 
+  Generating static pages using 11 workers (7/15) 
+  Generating static pages using 11 workers (11/15) 
+✓ Generating static pages using 11 workers (15/15) in 710ms
   Finalizing page optimization ...
 
 Route (app)
@@ -20,9 +23,11 @@ Route (app)
 ├ ○ /admin/menus
 ├ ○ /admin/users
 ├ ○ /aisnet
+├ ƒ /api/aisnet-chat
 ├ ƒ /api/chat
 ├ ƒ /api/chat/context
 ├ ƒ /api/documents/[id]/download
+├ ƒ /api/documents/manual
 ├ ○ /documents
 ├ ○ /robots.txt
 └ ○ /sitemap.xml
@@ -33,3 +38,4 @@ Route (app)
 ○  (Static)   prerendered as static content
 ƒ  (Dynamic)  server-rendered on demand
 
+EXIT: 0

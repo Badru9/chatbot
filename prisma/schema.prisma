@@ -119,3 +119,28 @@ model Schedule {
 
   @@map("schedules")
 }
+
+model Research {
+  id               Int      @id @default(autoincrement())
+  trPengusulanId   Int      @map("tr_pengusulan_id")
+  tahap            String
+  dokumenPengajuan String?  @map("dokumen_pengajuan")
+  biaya            String
+  validasiStafLppm Int      @default(0) @map("validasi_staf_lppm")
+  validasiLppm     Int      @default(0) @map("validasi_lppm")
+  validasiRektor   Int      @default(0) @map("validasi_rektor")
+  status           Int      @default(0)
+  tanggal          String
+  catatan          String?
+  slip             String?
+  jenis            String   // "PENELITIAN" | "PKM"
+  judul            String   @db.Text
+  rencanaLuaran    String?  @map("rencana_luaran") @db.Text
+  danaInternal     Float?   @map("dana_internal")
+  namaDosen        String   @map("nama_dosen")
+  jenisPencairan   String   @map("jenis_pencairan")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("research")
+}

@@ -45,11 +45,7 @@ export default function DeleteModal({
             >
               Batal
             </Button>
-            <Button
-              variant="danger"
-              onClick={onConfirm}
-              isDisabled={isLoading}
-            >
+            <Button variant="danger" onClick={onConfirm} isDisabled={isLoading}>
               {isLoading ? <Spinner color="current" /> : "Hapus"}
             </Button>
           </Modal.Footer>
@@ -58,4 +54,3 @@ export default function DeleteModal({
     </Modal.Backdrop>
   );
 }
-

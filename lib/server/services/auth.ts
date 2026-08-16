@@ -1,37 +1,45 @@
-import 'server-only'
-import bcrypt from 'bcrypt'
-import crypto from 'crypto'
-import { prisma } from '@/lib/server/db'
-import { v4 as uuid } from 'uuid'
+import "server-only";
+import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { prisma } from "@/lib/server/db";
+import { v4 as uuid } from "uuid";
 
-const SALT_ROUNDS = 10
-const SESSION_TTL_DAYS = 30
+const SALT_ROUNDS = 10;
+const SESSION_TTL_DAYS = 30;
 
 export async function hashPassword(password: string): Promise<string> {
-  return bcrypt.hash(password, SALT_ROUNDS)
+  return bcrypt.hash(password, SALT_ROUNDS);
 }
 
-export async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  return bcrypt.compare(password, hash)
+export async function verifyPassword(
+  password: string,
+  hash: string,
+): Promise<boolean> {
+  return bcrypt.compare(password, hash);
 }
 
-export async function login(email: string, password: string, ipAddress?: string, userAgent?: string) {
+export async function login(
+  email: string,
+  password: string,
+  ipAddress?: string,
+  userAgent?: string,
+) {
   const user = await prisma.user.findUnique({
     where: { email },
-  })
+  });
 
   if (!user || !user.password) {
-    return null
+    return null;
   }
 
-  const isValid = await verifyPassword(password, user.password)
+  const isValid = await verifyPassword(password, user.password);
   if (!isValid) {
-    return null
+    return null;
   }
 
-  const token = crypto.randomBytes(32).toString('hex')
-  const expiresAt = new Date()
-  expiresAt.setDate(expiresAt.getDate() + SESSION_TTL_DAYS)
+  const token = crypto.randomBytes(32).toString("hex");
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + SESSION_TTL_DAYS);
 
   const session = await prisma.session.create({
     data: {
@@ -44,7 +52,7 @@ export async function login(email: string, password: string, ipAddress?: string,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
-  })
+  });
 
   return {
     token,
@@ -56,11 +64,11 @@ export async function login(email: string, password: string, ipAddress?: string,
       image: user.image,
     },
     session,
-  }
+  };
 }
 
 export async function getSession(token: string) {
-  if (!token) return null
+  if (!token) return null;
 
   const session = await prisma.session.findUnique({
     where: { token },
@@ -75,13 +83,13 @@ export async function getSession(token: string) {
         },
       },
     },
-  })
+  });
 
-  if (!session) return null
+  if (!session) return null;
 
   if (session.expiresAt < new Date()) {
-    await prisma.session.delete({ where: { id: session.id } }).catch(() => {})
-    return null
+    await prisma.session.delete({ where: { id: session.id } }).catch(() => {});
+    return null;
   }
 
   return {
@@ -91,15 +99,15 @@ export async function getSession(token: string) {
       expiresAt: session.expiresAt,
     },
     user: session.user,
-  }
+  };
 }
 
 export async function logout(token: string): Promise<boolean> {
-  if (!token) return false
+  if (!token) return false;
   try {
-    await prisma.session.delete({ where: { token } })
-    return true
+    await prisma.session.delete({ where: { token } });
+    return true;
   } catch {
-    return false
+    return false;
   }
 }

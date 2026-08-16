@@ -3,6 +3,7 @@ import {
   uploadDocumentAction,
   deleteDocumentAction,
 } from "@/lib/server/actions/documents";
+import { axiosInstance } from "./axiosInstance";
 
 export interface SidebarLibraryFile {
   id: string;
@@ -40,6 +41,9 @@ export async function uploadDocument(
   if (res.error) {
     throw new Error(res.error);
   }
+
+  console.log("upload document action", res);
+
   return res as UploadDocumentResponse;
 }
 
@@ -54,10 +58,19 @@ export async function deleteDocument(
 }
 
 export async function downloadDocumentBlob(documentId: string): Promise<Blob> {
-  const response = await fetch(`/api/documents/${documentId}/download`);
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || "Gagal mengunduh dokumen");
-  }
-  return response.blob();
+  const response = await axiosInstance.get(
+    `/api/documents/${documentId}/download`,
+    {
+      responseType: "blob",
+    },
+  );
+  return response.data;
+}
+
+export async function createManualDataset(payload: {
+  name: string;
+  description: string;
+  source: string;
+}) {
+  return axiosInstance.post("/api/documents/manual", payload);
 }

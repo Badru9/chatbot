@@ -1,11 +1,11 @@
 "use client";
 
+import { MenuData } from "@/lib/types";
 import { getMenus } from "@/services/menuApi";
 import { Skeleton } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { useSession } from "../../../lib/auth-client";
 import PortalCard from "./PortalCard";
-import { MenuData } from "@/lib/types";
 
 export default function PortalGrid() {
   const { isPending: isSessionPending } = useSession();

@@ -1,8 +1,9 @@
 import { NextRequest } from "next/server";
+import { getGeminiChatModel } from "@/lib/server/services/gemini";
 
 /**
  * Unauthenticated API route for the AISnet page chatbot.
- * Accepts page context (TABLE_DATA JSON) and proxies to Ollama
+ * Accepts page context (TABLE_DATA JSON) and proxies to Gemini
  * with a focused system instruction for answering questions
  * about research funding data.
  */
@@ -77,98 +78,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const ollamaHost = process.env.OLLAMA_HOST || "http://localhost:11434";
-    const ollamaModel = process.env.OLLAMA_MODEL || "qwen3.5";
+    const model = getGeminiChatModel();
 
-    // Build messages for Ollama
-    const ollamaMessages: Array<{ role: string; content: string }> = [
-      { role: "system", content: SYSTEM_PROMPT },
+    // Build Gemini prompt as plain strings
+    const geminiParts = [
+      SYSTEM_PROMPT,
+      ...(pageContext
+        ? [`Berikut adalah data pencairan dana penelitian dan PkM yang ditampilkan di halaman AISnet. Gunakan data ini untuk menjawab pertanyaan pengguna:\n\n${pageContext}`]
+        : []),
+      ...messages.map((msg) => msg.content),
     ];
 
-    // Inject page context
-    if (pageContext) {
-      ollamaMessages.push({
-        role: "system",
-        content: `Berikut adalah data pencairan dana penelitian dan PkM yang ditampilkan di halaman AISnet. Gunakan data ini untuk menjawab pertanyaan pengguna:\n\n${pageContext}`,
-      });
-    }
-
-    // Add conversation history (limit to last 10 messages for context window)
-    const conversationHistory = Array.isArray(messages)
-      ? messages.slice(-10)
-      : [];
-    ollamaMessages.push(...conversationHistory);
-
-    // Request Ollama with streaming
-    const ollamaRes = await fetch(`${ollamaHost}/api/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: ollamaModel,
-        messages: ollamaMessages,
-        stream: true,
-      }),
-    });
-
-    if (!ollamaRes.ok) {
-      const errText = await ollamaRes.text();
-      return Response.json(
-        { error: `AI service error: ${errText}` },
-        { status: 500 },
-      );
-    }
-
-    if (!ollamaRes.body) {
-      return Response.json(
-        { error: "AI response body is empty" },
-        { status: 500 },
-      );
-    }
+    // Request Gemini with streaming
+    const result = await model.generateContentStream(geminiParts);
 
     // Stream response
-    const reader = ollamaRes.body.getReader();
-    const decoder = new TextDecoder();
-    const encoder = new TextEncoder();
-
     const stream = new ReadableStream({
       async pull(controller) {
-        let buffer = "";
-
-        while (true) {
-          const { done, value } = await reader.read();
-
-          if (done) {
-            if (buffer.trim()) {
-              try {
-                const parsed = JSON.parse(buffer);
-                const content = parsed.message?.content || "";
-                if (content) {
-                  controller.enqueue(encoder.encode(content));
-                }
-              } catch {
-                // Ignore parse errors on final buffer
-              }
-            }
-            controller.close();
-            return;
-          }
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (!line.trim()) continue;
-            try {
-              const parsed = JSON.parse(line);
-              const content = parsed.message?.content || "";
-              if (content) {
-                controller.enqueue(encoder.encode(content));
-              }
-            } catch {
-              // Ignore parse errors
+        try {
+          for await (const chunk of result.stream) {
+            if (chunk && chunk.text) {
+              controller.enqueue(chunk.text());
             }
           }
+          controller.close();
+        } catch (err) {
+          console.error("Gemini streaming error:", err);
+          controller.error(err);
         }
       },
     });

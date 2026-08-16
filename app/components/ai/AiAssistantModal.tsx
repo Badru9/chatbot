@@ -1,20 +1,21 @@
 "use client";
 
-import React from "react";
-import { Button, Modal } from "@heroui/react";
-import { XIcon } from "@phosphor-icons/react";
+import { Research } from "@/lib/types";
+import { Modal } from "@heroui/react";
+import { useSession } from "../../../lib/auth-client";
 import Chatbot from "../Chatbot";
 import LoginForm from "../portal/LoginForm";
-import { useSession } from "../../../lib/auth-client";
 
 interface AiAssistantModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tableData?: Research[];
 }
 
 export default function AiAssistantModal({
   isOpen,
   onClose,
+  tableData,
 }: AiAssistantModalProps) {
   const { user, isPending } = useSession();
 
@@ -44,7 +45,7 @@ export default function AiAssistantModal({
                   <LoginForm onSuccess={onClose} />
                 </div>
               ) : (
-                <Chatbot />
+                <Chatbot tableData={tableData} />
               )}
             </div>
           </Modal.Dialog>

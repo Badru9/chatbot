@@ -7,9 +7,12 @@ import { useSession } from "@/lib/auth-client";
 export default function Header() {
   const { user } = useSession();
 
+  console.log("user", user);
+
   const userName = user?.name || "leni fitriani";
   const userRole = user?.role || "dosen";
-  const userImage = user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
+  const userImage =
+    user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
 
   const getInitials = (name: string) => {
     return name
@@ -21,7 +24,7 @@ export default function Header() {
   };
 
   return (
-    <header className="flex justify-between fixed h-[65px] left-[265px] right-0 bg-white border-b border-neutral-200 z-[100]">
+    <header className="flex justify-between fixed h-[65px] left-[265px] right-0 bg-white border-b border-neutral-200">
       <div className="flex justify-between w-full px-8">
         <div className="flex items-center" />
 
@@ -29,13 +32,9 @@ export default function Header() {
           {/* Breadcrumb */}
           <div className="flex items-center">
             <div className="flex items-center flex-wrap gap-2 text-sm">
-              <h1 className="font-semibold text-neutral-900">
-                Keuangan
-              </h1>
+              <h1 className="font-semibold text-neutral-900">Keuangan</h1>
               <span className="text-neutral-300">/</span>
-              <span className="text-neutral-500">
-                Penelitian dan PkM
-              </span>
+              <span className="text-neutral-500">Penelitian dan PkM</span>
             </div>
           </div>
 
@@ -74,4 +73,3 @@ export default function Header() {
     </header>
   );
 }
-

@@ -1,9 +1,8 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
 import * as Icons from "@phosphor-icons/react";
 import { ArrowUpRight } from "@phosphor-icons/react";
+import Link from "next/link";
 
 interface PortalCardProps {
   title: string;
