@@ -19,7 +19,7 @@ export const createId = () =>
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
 
-export const safeParse = <T,>(value: string | null, fallback: T): T => {
+export const safeParse = <T>(value: string | null, fallback: T): T => {
   if (!value) return fallback;
   try {
     return JSON.parse(value) as T;
@@ -39,7 +39,9 @@ export const getSessionTitle = (messages: Message[]) => {
   );
 };
 
-export function buildSidebarSessions(sessions: ChatSession[]): SidebarSession[] {
+export function buildSidebarSessions(
+  sessions: ChatSession[],
+): SidebarSession[] {
   return sessions
     .filter((s) => s.messages.length > 0)
     .sort((a, b) => b.updatedAt - a.updatedAt)
@@ -57,7 +59,9 @@ export function toSidebarFile(doc: DocumentData): SidebarLibraryFile {
     name: doc.name,
     size: 0,
     type: "application/pdf",
-    uploadedAt: doc.uploadedAt ? new Date(doc.uploadedAt).getTime() : Date.now(),
+    uploadedAt: doc.uploadedAt
+      ? new Date(doc.uploadedAt).getTime()
+      : Date.now(),
     chunksCount: doc.chunkCount,
   };
 }
@@ -94,4 +98,3 @@ export async function deleteBlob(fileId: string): Promise<void> {
     console.error("Failed to delete blob from IndexedDB:", err);
   }
 }
-

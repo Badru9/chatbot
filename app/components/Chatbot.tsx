@@ -1,6 +1,9 @@
 "use client";
 
+import { SESSIONS_STORAGE_KEY } from "@/constants";
+import { useDocumentServices } from "@/hooks/useDocumentServices";
 import { ListIcon, SparkleIcon } from "@phosphor-icons/react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   type ChangeEvent,
   type KeyboardEvent,
@@ -9,34 +12,25 @@ import {
   useRef,
   useState,
 } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sendChatMessage } from "../../services/chatService";
-import { sendAisnetChatMessage } from "@/services/aisnetChatService";
-import {
-  fetchDocuments,
-  uploadDocument,
-  deleteDocument,
-  type DocumentData,
-} from "../../services/documentService";
-import { QUERY_KEYS, SESSIONS_STORAGE_KEY } from "@/constants";
 
+import { ScrollShadow } from "@heroui/react";
 import ChatInputBar from "./ChatInputBar";
 import ChatSidebar, { type SidebarLibraryFile } from "./ChatSidebar";
 import MarkdownRenderer from "./MarkdownRenderer";
 import UploadFileModal from "./UploadFileModal";
-import { ScrollShadow } from "@heroui/react";
 import UploadLibrary from "./UploadLibrary";
-import SchedulePanel from "./portal/SchedulePanel";
 import {
-  type Message,
+  buildSidebarSessions,
   type ChatSession,
   createId,
-  safeParse,
-  getSessionTitle,
-  buildSidebarSessions,
-  toSidebarFile,
   deleteBlob,
+  getSessionTitle,
+  type Message,
+  safeParse,
+  toSidebarFile,
 } from "./chatbotUtils";
+import SchedulePanel from "./portal/SchedulePanel";
 
 interface ChatbotProps {
   tableData?: any[];
@@ -47,7 +41,9 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">("new");
+  const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">(
+    "new",
+  );
   const [activeTool, setActiveTool] = useState<"jadwal" | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -61,21 +57,25 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const [streamingContent, setStreamingContent] = useState("");
   const [isStorageReady, setIsStorageReady] = useState(false);
 
-  const { data: documentsRaw = [] } = useQuery<DocumentData[]>({
-    queryKey: QUERY_KEYS.documents,
-    queryFn: fetchDocuments,
-  });
+  const { documentsQuery, uploadDocumentMutation, deleteDocumentMutation } =
+    useDocumentServices();
 
-  const libraryFiles = useMemo(() => documentsRaw.map(toSidebarFile), [documentsRaw]);
+  const libraryFiles = useMemo(
+    () => (documentsQuery.data ?? []).map(toSidebarFile),
+    [documentsQuery.data],
+  );
 
   const mentionStart = input.lastIndexOf("@");
-  const mentionQuery = mentionStart >= 0 ? input.slice(mentionStart + 1).toLowerCase() : "";
+  const mentionQuery =
+    mentionStart >= 0 ? input.slice(mentionStart + 1).toLowerCase() : "";
   const hasOpenMention = mentionStart >= 0 && !/\s/.test(mentionQuery);
 
   const mentionMatches = useMemo(
     () =>
       hasOpenMention
-        ? libraryFiles.filter((f) => f.name.toLowerCase().includes(mentionQuery)).slice(0, 6)
+        ? libraryFiles
+            .filter((f) => f.name.toLowerCase().includes(mentionQuery))
+            .slice(0, 6)
         : [],
     [hasOpenMention, libraryFiles, mentionQuery],
   );
@@ -85,10 +85,15 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     [libraryFiles, selectedFileIds],
   );
 
-  const sidebarSessions = useMemo(() => buildSidebarSessions(sessions), [sessions]);
+  const sidebarSessions = useMemo(
+    () => buildSidebarSessions(sessions),
+    [sessions],
+  );
 
   useEffect(() => {
-    setSessions(safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []));
+    setSessions(
+      safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []),
+    );
     setIsStorageReady(true);
   }, []);
 
@@ -109,38 +114,33 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
         id: currentSessionId,
         title: getSessionTitle(messages),
         messages,
-        createdAt: prev.find((s) => s.id === currentSessionId)?.createdAt ?? now,
+        createdAt:
+          prev.find((s) => s.id === currentSessionId)?.createdAt ?? now,
         updatedAt: now,
       };
-      return [next, ...prev.filter((s) => s.id !== currentSessionId)].slice(0, 30);
+      return [next, ...prev.filter((s) => s.id !== currentSessionId)].slice(
+        0,
+        30,
+      );
     });
   }, [currentSessionId, messages]);
 
   const chatMutation = useMutation({ mutationFn: sendChatMessage });
-  const aisnetChatMutation = useMutation({ mutationFn: sendAisnetChatMessage });
-
-  const uploadMutation = useMutation({
-    mutationFn: uploadDocument,
-    onSuccess: (payload) => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents });
-      if (payload.document) {
-        setSelectedFileIds((prev) =>
-          prev.includes(payload.document!.id) ? prev : [payload.document!.id, ...prev],
-        );
-      }
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteDocument,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
-  });
 
   const saveUploadFile = async () => {
-    if (!uploadFile || uploadMutation.isPending) return;
+    if (!uploadFile || uploadDocumentMutation.isPending) return;
     try {
-      const payload = await uploadMutation.mutateAsync(uploadFile);
-      if (!payload.document) throw new Error(payload.error ?? "Gagal upload PDF.");
+      const payload = await uploadDocumentMutation.mutateAsync(uploadFile);
+
+      console.log("payload results", payload);
+
+      if (!payload.document)
+        throw new Error(payload.error ?? "Gagal upload PDF.");
+      setSelectedFileIds((prev) =>
+        prev.includes(payload.document!.id)
+          ? prev
+          : [payload.document!.id, ...prev],
+      );
       setUploadFile(null);
       setIsUploadModalOpen(false);
       setActiveMenu("library");
@@ -152,6 +152,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
           content: `Gagal memproses PDF. Detail: ${error instanceof Error ? error.message : "unknown error"}`,
         },
       ]);
+      console.log("error happens", error);
     }
   };
 
@@ -177,7 +178,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     setSelectedFileIds((prev) => prev.filter((id) => id !== fileId));
     try {
       // 1. Delete dari backend
-      await deleteMutation.mutateAsync(fileId);
+      await deleteDocumentMutation.mutateAsync(fileId);
 
       // 2. Delete dari IndexedDB
       await deleteBlob(fileId);
@@ -191,15 +192,21 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
 
   const toggleFile = (fileId: string) => {
     setSelectedFileIds((prev) =>
-      prev.includes(fileId) ? prev.filter((id) => id !== fileId) : [...prev, fileId],
+      prev.includes(fileId)
+        ? prev.filter((id) => id !== fileId)
+        : [...prev, fileId],
     );
   };
 
   const chooseMentionFile = (file: SidebarLibraryFile) => {
     const beforeMention = input.slice(0, mentionStart);
     const afterQuery = input.slice(mentionStart + mentionQuery.length + 1);
-    setInput(`${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, " "));
-    setSelectedFileIds((prev) => (prev.includes(file.id) ? prev : [...prev, file.id]));
+    setInput(
+      `${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, " "),
+    );
+    setSelectedFileIds((prev) =>
+      prev.includes(file.id) ? prev : [...prev, file.id],
+    );
     requestAnimationFrame(() => chatbotInputRef.current?.focus());
   };
 
@@ -220,37 +227,28 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     setInput("");
 
     try {
-      let finalResponse = "";
-      if (tableData && tableData.length > 0) {
-        await aisnetChatMutation.mutateAsync({
-          prompt: userMessage.content,
-          messages: updatedMessages.map((msg) => ({
-            role: msg.role === "user" ? "user" : "assistant",
-            content: msg.content,
-          })),
-          pageContext: JSON.stringify(tableData),
-          onChunk: (text) => {
-            finalResponse = text;
-            setStreamingContent(text);
-          },
-        });
-      } else {
-        await chatMutation.mutateAsync({
-          prompt: userMessage.content,
-          documentIds: selectedFileIds,
-          messages: updatedMessages.map((msg) => ({
-            role: msg.role === "user" ? "user" : "assistant",
-            content: msg.content,
-          })),
-          activeTools: activeTool ? [activeTool] : [],
-          onChunk: (accumulatedText) => {
-            finalResponse = accumulatedText;
-            setStreamingContent(accumulatedText);
-          },
-        });
-      }
+      console.log(tableData);
 
-      setMessages((prev) => [...prev, { role: "assistant", content: finalResponse }]);
+      let finalResponse = "";
+      await chatMutation.mutateAsync({
+        prompt: userMessage.content,
+        documentIds: selectedFileIds,
+        messages: updatedMessages.map((msg) => ({
+          role: msg.role === "user" ? "user" : "assistant",
+          content: msg.content,
+        })),
+        activeTools: activeTool ? [activeTool] : [],
+        onChunk: (accumulatedText) => {
+          finalResponse = accumulatedText;
+          setStreamingContent(accumulatedText);
+        },
+        tableData,
+      });
+
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: finalResponse },
+      ]);
       setStreamingContent("");
 
       if (activeTool === "jadwal") {
@@ -285,7 +283,9 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
           <ListIcon size={20} />
           <span>Menu</span>
         </button>
-        <span className="font-bold text-sm text-neutral-900 dark:text-white">mb.ai</span>
+        <span className="font-bold text-sm text-neutral-900 dark:text-white">
+          mb.ai
+        </span>
         {activeTool === "jadwal" ? (
           <button
             onClick={() => setActiveTool(null)}
@@ -317,7 +317,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
         <div className="flex flex-1 h-full w-full relative overflow-hidden">
           <div className="flex-1 flex flex-col h-full min-w-0 relative">
             <section className="mx-auto flex h-full w-full max-w-[95%] sm:max-w-[90%] flex-col items-center justify-end gap-4 px-3 pt-4 sm:px-6 lg:px-10 overflow-y-auto pb-36 sm:pb-40">
-              <ScrollShadow className="w-full flex-1 space-y-3">
+              <ScrollShadow className="container mx-auto flex-1 space-y-3">
                 {messages.length === 0 && !isLoading ? (
                   <div className="mx-auto mt-12 sm:mt-20 max-w-2xl text-center px-2">
                     <div className="mx-auto mb-4 sm:mb-6 grid size-10 sm:size-12 place-items-center rounded-2xl border border-neutral-200 dark:border-neutral-800 text-neutral-800 dark:text-white shadow-xs">
@@ -342,7 +342,9 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
                           }`}
                         >
                           {message.role === "user" ? (
-                            <p className="whitespace-pre-wrap">{message.content}</p>
+                            <p className="whitespace-pre-wrap">
+                              {message.content}
+                            </p>
                           ) : (
                             <div className="prose prose-sm max-w-none dark:prose-invert">
                               <MarkdownRenderer content={message.content} />
@@ -365,7 +367,9 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
                     {isLoading && !streamingContent ? (
                       <div className="flex justify-start">
                         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-850 px-4 py-3 text-[14px] sm:text-[15px] leading-[1.6] text-neutral-600 dark:text-neutral-300">
-                          <span className="animate-pulse">mb.ai sedang berpikir...</span>
+                          <span className="animate-pulse">
+                            mb.ai sedang berpikir...
+                          </span>
                         </div>
                       </div>
                     ) : null}
@@ -417,9 +421,11 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
       <UploadFileModal
         file={uploadFile}
         isOpen={isUploadModalOpen}
-        isUploading={uploadMutation.isPending}
+        isUploading={uploadDocumentMutation.isPending}
         onCancel={() => setUploadFile(null)}
-        onFileChange={(e: ChangeEvent<HTMLInputElement>) => setUploadFile(e.target.files?.[0] ?? null)}
+        onFileChange={(e: ChangeEvent<HTMLInputElement>) =>
+          setUploadFile(e.target.files?.[0] ?? null)
+        }
         onOpenChange={setIsUploadModalOpen}
         onSubmit={saveUploadFile}
       />

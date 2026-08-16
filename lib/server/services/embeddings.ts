@@ -1,73 +1,77 @@
-import 'server-only'
+import "server-only";
 
 /**
  * Embeddings service — OpenAI in production, local model in dev.
  * Both use OpenAI-compatible API format.
  */
 
-const OPENAI_MODEL = 'text-embedding-3-small'
+const OPENAI_MODEL = "text-embedding-3-small";
 
 const baseUrl = (
   process.env.OPENAI_API_KEY
-    ? process.env.OPENAI_URL || 'https://api.openai.com/v1'
-    : process.env.LOCAL_MODEL_URL || 'http://localhost:11434/v1'
-).replace(/\/embeddings\/?$/, '')
+    ? process.env.OPENAI_URL || "https://api.openai.com/v1"
+    : process.env.LOCAL_MODEL_URL || "http://localhost:11434/v1"
+).replace(/\/embeddings\/?$/, "");
 
 const model = process.env.OPENAI_API_KEY
   ? OPENAI_MODEL
-  : process.env.LOCAL_EMBEDDING_MODEL || 'mxbai-embed-large'
+  : process.env.LOCAL_EMBEDDING_MODEL || "mxbai-embed-large";
 
 interface EmbeddingResponse {
-  data: { embedding: number[]; index: number }[]
+  data: { embedding: number[]; index: number }[];
 }
 
 async function fetchEmbeddings(input: string[]): Promise<number[][]> {
   const res = await fetch(`${baseUrl}/embeddings`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       ...(process.env.OPENAI_API_KEY && {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       }),
     },
     body: JSON.stringify({ model, input }),
-  })
+  });
+
+  console.log("response embedding", res);
 
   if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Embedding API error ${res.status}: ${text}`)
+    const text = await res.text();
+    throw new Error(`Embedding API error ${res.status}: ${text}`);
   }
 
-  const json: EmbeddingResponse = await res.json()
-  return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding)
+  const json: EmbeddingResponse = await res.json();
+  return json.data.sort((a, b) => a.index - b.index).map((d) => d.embedding);
 }
 
 export async function embedText(text: string): Promise<number[]> {
   try {
-    const [vector] = await fetchEmbeddings([text])
-    return vector
+    const [vector] = await fetchEmbeddings([text]);
+    return vector;
   } catch (error) {
-    console.error('Error generating embedding:', error)
-    throw new Error('Gagal membuat embedding dokumen.')
+    console.error("Error generating embedding:", error);
+    throw new Error("Gagal membuat embedding dokumen.");
   }
 }
 
 export async function embedTexts(texts: string[]): Promise<number[][]> {
-  if (texts.length === 0) return []
+  if (texts.length === 0) return [];
 
   try {
-    const BATCH_SIZE = 100
-    const results: number[][] = []
+    const BATCH_SIZE = 100;
+    const results: number[][] = [];
+    console.log("still safe");
 
     for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-      const batch = texts.slice(i, i + BATCH_SIZE)
-      const batchResults = await fetchEmbeddings(batch)
-      results.push(...batchResults)
+      console.log("still safe 1", i);
+      const batch = texts.slice(i, i + BATCH_SIZE);
+      const batchResults = await fetchEmbeddings(batch);
+      results.push(...batchResults);
     }
 
-    return results
+    return results;
   } catch (error) {
-    console.error('Error generating batch embeddings:', error)
-    throw new Error('Gagal membuat embedding dokumen dalam batch.')
+    console.error("Error generating batch embeddings:", error);
+    throw new Error("Gagal membuat embedding dokumen dalam batch.");
   }
 }

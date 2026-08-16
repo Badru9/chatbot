@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button, ScrollShadow } from "@heroui/react";
 import {
-  fetchSchedules,
+  BookOpenIcon,
+  CalendarIcon,
+  CaretLeftIcon,
+  CaretRightIcon,
+  ClockIcon,
+  DotsThreeOutlineIcon,
+  FlaskIcon,
+  MapPinIcon,
+  TrashIcon,
+} from "@phosphor-icons/react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import {
   deleteSchedules,
+  fetchSchedules,
   ScheduleData,
 } from "../../../services/scheduleService";
-import {
-  CalendarIcon,
-  TrashIcon,
-  BookOpenIcon,
-  ClockIcon,
-  MapPinIcon,
-  CaretLeftIcon,
-  FlaskIcon,
-  DotsThreeOutlineIcon,
-  CaretRightIcon,
-} from "@phosphor-icons/react";
-import { Button, ScrollShadow } from "@heroui/react";
 import DeleteModal from "../modal/DeleteModal";
 
 interface GroupedSchedules {
@@ -38,7 +38,9 @@ const DAY_ORDER = [
 type CategoryType = "mengajar" | "penelitian" | "lainnya";
 
 export default function SchedulePanel() {
-  const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(
+    null,
+  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const queryClient = useQueryClient();
@@ -134,8 +136,8 @@ export default function SchedulePanel() {
               {selectedCategory === "mengajar"
                 ? "Jadwal Mengajar"
                 : selectedCategory === "penelitian"
-                ? "Jadwal Penelitian"
-                : "Jadwal Lainnya"}
+                  ? "Jadwal Penelitian"
+                  : "Jadwal Lainnya"}
             </h2>
           </div>
         )}
@@ -170,7 +172,9 @@ export default function SchedulePanel() {
                   className="w-full text-left p-4 rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-850 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 transition-all duration-200 hover:scale-[1.01] shadow-xs group flex items-center justify-between gap-3 cursor-pointer"
                 >
                   <div className="flex items-start gap-3.5">
-                    <div className={`p-2.5 rounded-xl ${cat.bgColor} ${cat.color} shrink-0 mt-0.5`}>
+                    <div
+                      className={`p-2.5 rounded-xl ${cat.bgColor} ${cat.color} shrink-0 mt-0.5`}
+                    >
                       <IconComp size={22} weight="bold" />
                     </div>
                     <div>
@@ -189,7 +193,10 @@ export default function SchedulePanel() {
                       </p>
                     </div>
                   </div>
-                  <CaretRightIcon size={16} className="text-neutral-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
+                  <CaretRightIcon
+                    size={16}
+                    className="text-neutral-400 group-hover:translate-x-0.5 transition-transform shrink-0"
+                  />
                 </button>
               );
             })}
@@ -295,5 +302,3 @@ export default function SchedulePanel() {
     </div>
   );
 }
-
-

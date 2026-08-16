@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { Button, Modal, Dropdown } from "@heroui/react";
+import { Button, Dropdown, Modal } from "@heroui/react";
 import { User } from "@phosphor-icons/react";
-import { useSession, useLogout } from "../../../lib/auth-client";
-import LoginForm from "./LoginForm";
 import Link from "next/link";
+import { useState } from "react";
+import { useLogout, useSession } from "../../../lib/auth-client";
+import LoginForm from "./LoginForm";
 
 export default function ProfileFab() {
   const { user } = useSession();

@@ -1,8 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button } from '@heroui/react';
-import { RobotIcon } from '@phosphor-icons/react';
+import { Button } from "@heroui/react";
+import { RobotIcon } from "@phosphor-icons/react";
 
 interface AiFabProps {
   onClick: () => void;

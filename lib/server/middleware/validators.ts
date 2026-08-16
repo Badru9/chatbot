@@ -1,5 +1,5 @@
-import 'server-only'
-import { z } from 'zod'
+import "server-only";
+import { z } from "zod";
 
 /**
  * Chat POST / — main chat endpoint
@@ -7,26 +7,24 @@ import { z } from 'zod'
 export const chatSchema = z.object({
   prompt: z
     .string()
-    .min(1, 'Prompt tidak boleh kosong')
-    .max(10000, 'Prompt terlalu panjang (maks 10.000 karakter)'),
+    .min(1, "Prompt tidak boleh kosong")
+    .max(10000, "Prompt terlalu panjang (maks 10.000 karakter)"),
   documentIds: z
     .array(z.string().max(256))
-    .max(20, 'Maksimal 20 dokumen')
+    .max(20, "Maksimal 20 dokumen")
     .optional(),
   messages: z
     .array(
       z.object({
-        role: z.enum(['user', 'assistant', 'system']),
+        role: z.enum(["user", "assistant", "system"]),
         content: z.string().max(30000),
       }),
     )
-    .max(50, 'Maksimal 50 pesan dalam histori')
+    .max(50, "Maksimal 50 pesan dalam histori")
     .optional(),
-  activeTools: z
-    .array(z.string().max(50))
-    .max(10)
-    .optional(),
-})
+  activeTools: z.array(z.string().max(50)).max(10).optional(),
+  systemPrompt: z.string().max(50000).optional(),
+});
 
 /**
  * Chat POST /context — retrieval-only endpoint
@@ -34,28 +32,25 @@ export const chatSchema = z.object({
 export const chatContextSchema = z.object({
   prompt: z
     .string()
-    .min(1, 'Prompt tidak boleh kosong')
-    .max(10000, 'Prompt terlalu panjang'),
-  documentIds: z
-    .array(z.string().max(256))
-    .max(20)
-    .optional(),
+    .min(1, "Prompt tidak boleh kosong")
+    .max(10000, "Prompt terlalu panjang"),
+  documentIds: z.array(z.string().max(256)).max(20).optional(),
   limit: z.number().int().min(1).max(50).optional(),
-})
+});
 
 /**
  * Auth login
  */
 export const loginSchema = z.object({
-  email: z.string().email('Format email tidak valid').max(255),
+  email: z.email().trim(),
   password: z.string().min(1).max(128),
-})
+});
 
 /**
  * Manual dataset
  */
 export const manualDatasetSchema = z.object({
-  name: z.string().min(1).max(255, 'Judul maks 255 karakter'),
-  description: z.string().min(1).max(100000, 'Deskripsi maks 100.000 karakter'),
+  name: z.string().min(1).max(255, "Judul maks 255 karakter"),
+  description: z.string().min(1).max(100000, "Deskripsi maks 100.000 karakter"),
   source: z.string().max(500).optional(),
-})
+});

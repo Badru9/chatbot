@@ -1,15 +1,7 @@
 "use client";
 
-import { Button, Chip, Label } from "@heroui/react";
-import {
-  ChatCircleIcon,
-  ClockCounterClockwiseIcon,
-  FilePdfIcon,
-  FilesIcon,
-  PlusIcon,
-  TrashIcon,
-  XIcon,
-} from "@phosphor-icons/react";
+import { Button } from "@heroui/react";
+import { ChatCircleIcon, FilesIcon, XIcon } from "@phosphor-icons/react";
 
 export interface SidebarSession {
   id: string;

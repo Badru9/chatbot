@@ -1,32 +1,31 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
 import { Button } from "@heroui/react";
 import {
-  FilePdfIcon,
-  TrashIcon,
-  EyeIcon,
   CaretLeftIcon,
   CaretRightIcon,
-  PlusIcon,
-  ArrowsOutIcon,
-  ArrowsInIcon,
-  XIcon,
-  SpinnerIcon,
+  FilePdfIcon,
   MagnifyingGlassMinusIcon,
   MagnifyingGlassPlusIcon,
+  PlusIcon,
+  SpinnerIcon,
+  TrashIcon,
+  XIcon,
 } from "@phosphor-icons/react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import dynamic from "next/dynamic";
+import { useState } from "react";
+
+// Configure PDF.js worker at module level — guarded for SSR
+if (typeof window !== "undefined") {
+  import("react-pdf").then((mod) => {
+    mod.pdfjs.GlobalWorkerOptions.workerSrc = `${window.location.origin}/pdf.worker.min.mjs`;
+  });
+}
 
 // Lazy-load PDF components with SSR disabled to avoid DOMMatrix issue
 const PdfDocument = dynamic(
-  () =>
-    import("react-pdf").then((mod) => {
-      // Configure PDF.js worker using CDN (avoids bundler issues)
-      mod.pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${mod.pdfjs.version}/build/pdf.worker.min.mjs`;
-      return mod.Document;
-    }),
+  () => import("react-pdf").then((mod) => mod.Document),
   {
     ssr: false,
     loading: () => (
@@ -40,15 +39,14 @@ const PdfPage = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
   ssr: false,
 });
 
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
+// CSS imports removed — AnnotationLayer/TextLayer disabled via renderTextLayer={false} renderAnnotationLayer={false}
 
 import { QUERY_KEYS } from "@/constants";
 import {
-  fetchDocuments,
-  uploadDocument,
   deleteDocument,
   downloadDocumentBlob,
+  fetchDocuments,
+  uploadDocument,
   type DocumentData,
 } from "@/services/documentService";
 import UploadFileModal from "./UploadFileModal";
@@ -56,16 +54,6 @@ import UploadFileModal from "./UploadFileModal";
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
-
-const formatBytes = (bytes?: number) => {
-  if (bytes === undefined || bytes === null || bytes === 0) return "—";
-  const units = ["B", "KB", "MB", "GB"];
-  const index = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
-};
 
 const formatDate = (dateStr: string | null) => {
   if (!dateStr) return "—";
@@ -281,11 +269,16 @@ function FileCard({
         type="button"
         onClick={onPreview}
         disabled={!hasLocalPreview}
-        title={hasLocalPreview ? "Pratinjau PDF" : "Pratinjau lokal tidak tersedia (diunggah dari perangkat lain)"}
-        className={`flex h-40 items-center justify-center rounded-t-xl transition-colors duration-150 ${hasLocalPreview
+        title={
+          hasLocalPreview
+            ? "Pratinjau PDF"
+            : "Pratinjau lokal tidak tersedia (diunggah dari perangkat lain)"
+        }
+        className={`flex h-40 items-center justify-center rounded-t-xl transition-colors duration-150 ${
+          hasLocalPreview
             ? "bg-surface-soft hover:bg-primary/5 cursor-pointer"
             : "bg-surface-soft/50 opacity-60 cursor-not-allowed"
-          }`}
+        }`}
         aria-label={`Pratinjau ${file.name}`}
       >
         <div className="grid size-14 place-items-center rounded-2xl bg-red-50 text-red-500 transition-transform duration-200 group-hover:scale-105">
@@ -331,7 +324,7 @@ function FileCard({
           variant="danger"
           onPress={onDelete}
           isDisabled={isDeleting}
-          className="size-8 rounded-lg text-muted hover:bg-red-50 hover:text-danger active:scale-95"
+          className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95"
           aria-label={`Hapus ${file.name}`}
         >
           <TrashIcon size={15} />

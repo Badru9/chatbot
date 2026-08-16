@@ -1,5 +1,5 @@
 import 'server-only'
-import { PDFParse } from 'pdf-parse'
+import { getDocumentProxy, extractText } from 'unpdf'
 
 interface PdfPageText {
   pageNumber: number
@@ -7,11 +7,11 @@ interface PdfPageText {
 }
 
 export async function parsePdfPages(data: Buffer): Promise<PdfPageText[]> {
-  const parser = new PDFParse({ data })
-  const result = await parser.getText()
+  const pdf = await getDocumentProxy(new Uint8Array(data))
+  const { text } = await extractText(pdf, { mergePages: false })
 
-  return result.pages.map((p) => ({
-    pageNumber: p.num,
-    text: p.text,
+  return text.map((pageText, index) => ({
+    pageNumber: index + 1,
+    text: pageText,
   }))
 }

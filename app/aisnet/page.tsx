@@ -1,35 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { Table, Button } from "@heroui/react";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
+import { researchData } from "@/constants";
+import { Research } from "@/lib/types";
+import { currencyFormatter } from "@/lib/utils/currencyFormatter";
+import { dateFormatter } from "@/lib/utils/dateFormatter";
+import { Button, Table } from "@heroui/react";
+import { useEffect, useState } from "react";
+import AiAssistantModal from "../components/ai/AiAssistantModal";
+import AiFab from "../components/portal/AiFab";
 import DetailModal from "./components/DetailModal";
-import AisnetChatbot from "./AisnetChatbot";
-import { dateFormatter } from "@/lib/dateFormatter";
-
-// ─── Types & Interfaces ────────────────────────────────────────
-interface TableRowDetail {
-  ketuaPeneliti: string;
-  anggota: string[];
-  skema: string;
-  tahunPelaksanaan: string;
-  sumberDana: string;
-  totalDana: string;
-  statusPenelitian: string;
-  abstrak: string;
-  luaran: string[];
-}
-
-interface TableRow {
-  no: number;
-  jenis: string;
-  judul: string;
-  jenisPencairan: string;
-  nominal: string;
-  tanggal: string;
-  details: TableRowDetail;
-}
+import Header from "./components/Header";
+import Sidebar from "./components/Sidebar";
 
 const COLUMNS = [
   { key: "no", label: "No" },
@@ -41,316 +22,30 @@ const COLUMNS = [
   { key: "aksi", label: "Aksi" },
 ];
 
-const TABLE_DATA: TableRow[] = [
-  {
-    no: 1,
-    jenis: "PENELITIAN",
-    judul:
-      "Generative Intelligence Chatbot Untuk Perguruan Tinggi Berbasis Model Transformer",
-    jenisPencairan: "Dana Awal",
-    nominal: "Rp 2.500.000",
-    tanggal: "2026-07-04 10:06:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: ["Dr. Rina Marlina, S.Kom., M.T.", "Andi Fajar, S.Kom., M.Cs."],
-      skema: "Penelitian Dosen Pemula (PDP)",
-      tahunPelaksanaan: "2026/2027",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 5.000.000",
-      statusPenelitian: "Sedang Berjalan",
-      abstrak:
-        "Penelitian ini bertujuan untuk mengembangkan chatbot berbasis Generative AI menggunakan arsitektur model Transformer yang dioptimalkan untuk kebutuhan perguruan tinggi. Chatbot ini dirancang agar mampu menjawab pertanyaan akademik, memberikan informasi seputar perkuliahan, serta mendukung layanan administrasi kampus secara otomatis dan efisien.",
-      luaran: [
-        "Publikasi Jurnal Nasional Terakreditasi SINTA 3",
-        "Prototipe Aplikasi Chatbot",
-        "HKI (Hak Cipta Perangkat Lunak)",
-      ],
-    },
-  },
-  {
-    no: 2,
-    jenis: "PENELITIAN",
-    judul:
-      "A Bilingual Academic Chatbot Based on Semantic Retrieval Using m-BERT",
-    jenisPencairan: "Dana Awal",
-    nominal: "Rp 2.500.000",
-    tanggal: "2026-06-22 16:04:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: [
-        "Dian Nursantika, S.Kom., M.Kom.",
-        "Rizki Pratama, S.T., M.Cs.",
-      ],
-      skema: "Penelitian Terapan Unggulan Perguruan Tinggi",
-      tahunPelaksanaan: "2026/2027",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 5.000.000",
-      statusPenelitian: "Sedang Berjalan",
-      abstrak:
-        "Penelitian ini mengembangkan chatbot akademik bilingual (Bahasa Indonesia dan Inggris) yang memanfaatkan teknik semantic retrieval dengan model m-BERT untuk memahami konteks pertanyaan pengguna secara lebih akurat dalam dua bahasa. Chatbot ini diharapkan mampu memberikan respons yang relevan terhadap pertanyaan seputar informasi akademik perguruan tinggi.",
-      luaran: [
-        "Publikasi Jurnal Internasional Terindeks Scopus",
-        "Prototipe Sistem Chatbot Bilingual",
-        "Poster Ilmiah",
-      ],
-    },
-  },
-  {
-    no: 3,
-    jenis: "PENELITIAN",
-    judul:
-      "Plant Disease Detection Using Digital Image Processing : Opportunities and challenges",
-    jenisPencairan: "Dana Awal",
-    nominal: "Rp 2.500.000",
-    tanggal: "2026-01-30 10:56:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: ["Siti Nurhasanah, S.Kom., M.T."],
-      skema: "Penelitian Dasar",
-      tahunPelaksanaan: "2025/2026",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 5.000.000",
-      statusPenelitian: "Selesai",
-      abstrak:
-        "Penelitian ini mengkaji peluang dan tantangan dalam penerapan pengolahan citra digital untuk mendeteksi penyakit tanaman. Metode yang digunakan meliputi segmentasi citra, ekstraksi fitur warna dan tekstur, serta klasifikasi menggunakan algoritma machine learning. Studi ini bertujuan untuk memberikan tinjauan komprehensif terhadap pendekatan terkini di bidang deteksi penyakit tanaman.",
-      luaran: [
-        "Publikasi Prosiding Konferensi Internasional",
-        "Review Article",
-      ],
-    },
-  },
-  {
-    no: 4,
-    jenis: "PENELITIAN",
-    judul:
-      "Plant Disease Detection Using Digital Image Processing : Opportunities and challenges",
-    jenisPencairan: "Sisa Dana",
-    nominal: "Rp 2.500.000",
-    tanggal: "2026-01-30 10:56:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: ["Siti Nurhasanah, S.Kom., M.T."],
-      skema: "Penelitian Dasar",
-      tahunPelaksanaan: "2025/2026",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 5.000.000",
-      statusPenelitian: "Selesai",
-      abstrak:
-        "Penelitian ini mengkaji peluang dan tantangan dalam penerapan pengolahan citra digital untuk mendeteksi penyakit tanaman. Metode yang digunakan meliputi segmentasi citra, ekstraksi fitur warna dan tekstur, serta klasifikasi menggunakan algoritma machine learning. Studi ini bertujuan untuk memberikan tinjauan komprehensif terhadap pendekatan terkini di bidang deteksi penyakit tanaman.",
-      luaran: [
-        "Publikasi Prosiding Konferensi Internasional",
-        "Review Article",
-      ],
-    },
-  },
-  {
-    no: 5,
-    jenis: "PENELITIAN",
-    judul: "Object Detection on Analog Water Meters Using Region-Based CNN",
-    jenisPencairan: "Dana Awal",
-    nominal: "Rp 1.750.000",
-    tanggal: "2026-01-30 10:48:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: ["Agung Wahyudi, S.T., M.Kom.", "Nadia Putri, S.Kom."],
-      skema: "Penelitian Terapan",
-      tahunPelaksanaan: "2025/2026",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 3.500.000",
-      statusPenelitian: "Selesai",
-      abstrak:
-        "Penelitian ini mengimplementasikan deteksi objek pada meteran air analog menggunakan Region-Based Convolutional Neural Network (R-CNN). Sistem ini dirancang untuk membaca angka pada meteran air secara otomatis melalui citra digital, sehingga dapat digunakan untuk otomatisasi pencatatan pemakaian air oleh perusahaan penyedia layanan air bersih.",
-      luaran: [
-        "Publikasi Jurnal Nasional Terakreditasi SINTA 4",
-        "Prototipe Sistem Deteksi",
-        "HKI (Hak Cipta Perangkat Lunak)",
-      ],
-    },
-  },
-  {
-    no: 6,
-    jenis: "PENELITIAN",
-    judul: "Object Detection on Analog Water Meters Using Region-Based CNN",
-    jenisPencairan: "Sisa Dana",
-    nominal: "Rp 1.750.000",
-    tanggal: "2026-01-30 10:39:00",
-    details: {
-      ketuaPeneliti: "Leni Fitriani, M.Kom.",
-      anggota: ["Agung Wahyudi, S.T., M.Kom.", "Nadia Putri, S.Kom."],
-      skema: "Penelitian Terapan",
-      tahunPelaksanaan: "2025/2026",
-      sumberDana: "Internal ITG",
-      totalDana: "Rp 3.500.000",
-      statusPenelitian: "Selesai",
-      abstrak:
-        "Penelitian ini mengimplementasikan deteksi objek pada meteran air analog menggunakan Region-Based Convolutional Neural Network (R-CNN). Sistem ini dirancang untuk membaca angka pada meteran air secara otomatis melalui citra digital, sehingga dapat digunakan untuk otomatisasi pencatatan pemakaian air oleh perusahaan penyedia layanan air bersih.",
-      luaran: [
-        "Publikasi Jurnal Nasional Terakreditasi SINTA 4",
-        "Prototipe Sistem Deteksi",
-        "HKI (Hak Cipta Perangkat Lunak)",
-      ],
-    },
-  },
-];
-
-const tableData = [
-  {
-    id: 396,
-    tr_pengusulan_id: 308,
-    tahap: "1",
-    dokumen_pengajuan: null,
-    biaya: "2500000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2026-07-01",
-    catatan: null,
-    slip: "2026-07-04 10:06:00",
-    created_at: "2026-06-21T04:59:44.000000Z",
-    updated_at: "2026-07-06T09:06:25.000000Z",
-    jenis: "PENELITIAN",
-    judul:
-      "Generative Intelligence Chatbot Untuk Perguruan Tinggi Berbasis Model Transformer",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
-    dana_internal: 5000000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Dana Awal",
-  },
-  {
-    id: 393,
-    tr_pengusulan_id: 337,
-    tahap: "1",
-    dokumen_pengajuan: null,
-    biaya: "2500000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2026-06-19",
-    catatan: null,
-    slip: "2026-06-22 16:04:00",
-    created_at: "2026-06-09T12:38:53.000000Z",
-    updated_at: "2026-06-23T08:58:54.000000Z",
-    jenis: "PENELITIAN",
-    judul:
-      "A Bilingual Academic Chatbot Based on Semantic Retrieval Using m-BERT",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
-    dana_internal: 5000000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Dana Awal",
-  },
-  {
-    id: 211,
-    tr_pengusulan_id: 211,
-    tahap: "1",
-    dokumen_pengajuan: null,
-    biaya: "2500000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2024-12-23",
-    catatan: null,
-    slip: "2026-01-30 10:56:00",
-    created_at: "2024-12-12T06:43:44.000000Z",
-    updated_at: "2026-01-30T03:56:13.000000Z",
-    jenis: "PENELITIAN",
-    judul:
-      "Plant Disease Detection Using Digital Image Processing : \nOpportunities and challenges",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
-    dana_internal: 5000000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Dana Awal",
-  },
-  {
-    id: 307,
-    tr_pengusulan_id: 211,
-    tahap: "2",
-    dokumen_pengajuan: null,
-    biaya: "2500000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2025-11-21",
-    catatan: null,
-    slip: "2026-01-30 10:56:00",
-    created_at: "2025-11-11T14:38:17.000000Z",
-    updated_at: "2026-01-30T03:56:25.000000Z",
-    jenis: "PENELITIAN",
-    judul:
-      "Plant Disease Detection Using Digital Image Processing : \nOpportunities and challenges",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
-    dana_internal: 5000000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Sisa Dana",
-  },
-  {
-    id: 318,
-    tr_pengusulan_id: 292,
-    tahap: "1",
-    dokumen_pengajuan: null,
-    biaya: "1750000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2026-01-19",
-    catatan: null,
-    slip: "2026-01-30 10:48:00",
-    created_at: "2026-01-12T04:03:11.000000Z",
-    updated_at: "2026-01-30T03:48:23.000000Z",
-    jenis: "PENELITIAN",
-    judul: "Object Detection on Analog Water Meters Using Region-Based CNN",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam Temu Ilmiah Internasional dengan luaran minimal prosiding bereputasi",
-    dana_internal: 3500000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Dana Awal",
-  },
-  {
-    id: 321,
-    tr_pengusulan_id: 292,
-    tahap: "2",
-    dokumen_pengajuan: null,
-    biaya: "1750000",
-    validasi_staf_lppm: 1,
-    validasi_lppm: 1,
-    validasi_rektor: 1,
-    status: 1,
-    tanggal: "2026-01-30",
-    catatan: null,
-    slip: "2026-01-30 10:39:00",
-    created_at: "2026-01-13T06:16:54.000000Z",
-    updated_at: "2026-01-30T03:39:55.000000Z",
-    jenis: "PENELITIAN",
-    judul: "Object Detection on Analog Water Meters Using Region-Based CNN",
-    rencana_luaran:
-      "Penelitian yang hasilnnya disajikan dalam Temu Ilmiah Internasional dengan luaran minimal prosiding bereputasi",
-    dana_internal: 3500000,
-    nama_dosen: "Leni Fitriani",
-    jenis_pencairan: "Sisa Dana",
-  },
-];
-
-// ─── Main Page Component ───────────────────────────────────────
 export default function AisnetPage() {
+  const [data, setData] = useState<Research[]>(researchData);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
-  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [isAiOpen, setIsAiOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/research")
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          setData(json.data);
+        }
+      })
+      .catch((err) => console.error("Gagal memuat data penelitian dari DB:", err))
+      .finally(() => setIsLoadingData(false));
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#f5f8fa] font-sans antialiased text-[#181c32] flex">
-      {/* ── Sidebar ── */}
       <Sidebar />
 
-      {/* ── Main Area ── */}
       <div className="flex flex-col flex-1 pl-[265px] min-h-screen">
-        {/* Top Header */}
         <Header />
 
         {/* Content Table Container */}
@@ -371,11 +66,7 @@ export default function AisnetPage() {
                     )}
                   </Table.Header>
                   <Table.Body>
-                    {tableData.map((row: any, index: number) => {
-                      const nominal = row.nominal || (row.biaya ? `Rp ${Number(row.biaya).toLocaleString("id-ID")}` : "Rp 0");
-                      const jenisPencairan = row.jenis_pencairan || row.jenisPencairan || "Dana Awal";
-                      const tanggal = row.slip || row.tanggal;
-
+                    {data.map((row: Research, index: number) => {
                       return (
                         <Table.Row
                           key={row.id || index}
@@ -394,19 +85,20 @@ export default function AisnetPage() {
                           </Table.Cell>
                           <Table.Cell className="py-4 px-6">
                             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#f7f6f3] text-[#555555] font-mono">
-                              {jenisPencairan}
+                              {row.jenis_pencairan}
                             </span>
                           </Table.Cell>
                           <Table.Cell className="font-mono text-right font-semibold text-[#181c32] py-4 px-6 text-sm whitespace-nowrap">
-                            {nominal}
+                            {currencyFormatter(Number(row.biaya))}
                           </Table.Cell>
                           <Table.Cell className="text-[#a1a5b7] text-xs py-4 px-6 whitespace-nowrap">
-                            {dateFormatter(tanggal)}
+                            {dateFormatter(row.tanggal)}
                           </Table.Cell>
                           <Table.Cell className="text-center py-4 px-6">
                             <Button
-                              variant="secondary"
-                              className="rounded-md text-xs font-semibold px-3 py-1.5 border border-neutral-200 hover:bg-neutral-50 cursor-pointer"
+                              variant="primary"
+                              className="rounded-md"
+                              size="sm"
                               onClick={() => {
                                 setSelectedRow(row);
                                 setIsDetailOpen(true);
@@ -425,22 +117,26 @@ export default function AisnetPage() {
           </div>
         </main>
 
-        {/* Footer */}
         <footer className="w-full max-w-6xl mx-auto px-8 py-6 border-t border-[#eff2f5] text-xs text-[#a1a5b7] flex flex-col sm:flex-row justify-between gap-2 bg-transparent">
           <span>© 2022 AISnet Web Institut Teknologi Garut (ITG)</span>
           <span>Lembaga Sistem Informasi dan Pangkalan Data (LSIPD)</span>
         </footer>
       </div>
 
-      {/* ── Detail Modal ── */}
       <DetailModal
         row={selectedRow}
         isOpen={isDetailOpen}
         onOpenChange={setIsDetailOpen}
       />
 
-      {/* ── AI Chatbot ── */}
-      <AisnetChatbot tableData={tableData as any} />
+      <div className="flex fixed right-6 bottom-6 sm:right-8 sm:bottom-8 flex-col gap-3.5 z-40">
+        <AiFab onClick={() => setIsAiOpen(true)} />
+      </div>
+      <AiAssistantModal
+        isOpen={isAiOpen}
+        onClose={() => setIsAiOpen(false)}
+        tableData={data}
+      />
     </div>
   );
 }

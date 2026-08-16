@@ -1,6 +1,6 @@
 "use client";
 
-import { dateFormatter } from "@/lib/dateFormatter";
+import { dateFormatter } from "@/lib/utils/dateFormatter";
 import { Modal, Button, Chip, ScrollShadow } from "@heroui/react";
 
 interface TableRowDetail {
@@ -36,18 +36,34 @@ export default function DetailModal({
 }) {
   if (!row) return null;
 
-  const ketuaPeneliti = row.nama_dosen || row.details?.ketuaPeneliti || "Leni Fitriani";
-  const skema = row.details?.skema || (row.tahap ? `Tahap ${row.tahap}` : "Penelitian Dosen");
+  const ketuaPeneliti =
+    row.nama_dosen || row.details?.ketuaPeneliti || "Leni Fitriani";
+  const skema =
+    row.details?.skema ||
+    (row.tahap ? `Tahap ${row.tahap}` : "Penelitian Dosen");
   const tahunPelaksanaan = row.details?.tahunPelaksanaan || "2026/2027";
   const sumberDana = row.details?.sumberDana || "Internal ITG";
-  const totalDana = row.details?.totalDana || (row.dana_internal ? `Rp ${Number(row.dana_internal).toLocaleString("id-ID")}` : "Rp 0");
-  const nominal = row.nominal || (row.biaya ? `Rp ${Number(row.biaya).toLocaleString("id-ID")}` : "Rp 0");
+  const totalDana =
+    row.details?.totalDana ||
+    (row.dana_internal
+      ? `Rp ${Number(row.dana_internal).toLocaleString("id-ID")}`
+      : "Rp 0");
+  const nominal =
+    row.nominal ||
+    (row.biaya ? `Rp ${Number(row.biaya).toLocaleString("id-ID")}` : "Rp 0");
   const tanggal = row.slip || row.tanggal || "";
-  const statusPenelitian = row.details?.statusPenelitian || (row.status === 1 ? "Sedang Berjalan" : "Selesai");
-  const jenisPencairan = row.jenis_pencairan || row.jenisPencairan || "Dana Awal";
+  const statusPenelitian =
+    row.details?.statusPenelitian ||
+    (row.status === 1 ? "Sedang Berjalan" : "Selesai");
+  const jenisPencairan =
+    row.jenis_pencairan || row.jenisPencairan || "Dana Awal";
   const anggota: string[] = row.details?.anggota || [];
-  const abstrak = row.details?.abstrak || row.rencana_luaran || "Detail data pencairan dana AISnet.";
-  const luaran: string[] = row.details?.luaran || (row.rencana_luaran ? [row.rencana_luaran] : []);
+  const abstrak =
+    row.details?.abstrak ||
+    row.rencana_luaran ||
+    "Detail data pencairan dana AISnet.";
+  const luaran: string[] =
+    row.details?.luaran || (row.rencana_luaran ? [row.rencana_luaran] : []);
 
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
@@ -92,20 +108,14 @@ export default function DetailModal({
 
               {/* Info Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4 mb-6">
-                <DetailField
-                  label="Ketua Peneliti"
-                  value={ketuaPeneliti}
-                />
+                <DetailField label="Ketua Peneliti" value={ketuaPeneliti} />
                 <DetailField label="Skema" value={skema} />
                 <DetailField
                   label="Tahun Pelaksanaan"
                   value={tahunPelaksanaan}
                 />
                 <DetailField label="Sumber Dana" value={sumberDana} />
-                <DetailField
-                  label="Total Dana Penelitian"
-                  value={totalDana}
-                />
+                <DetailField label="Total Dana Penelitian" value={totalDana} />
                 <DetailField label="Nominal Pencairan" value={nominal} />
                 <DetailField
                   label="Tanggal Pencairan"

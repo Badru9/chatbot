@@ -1,5 +1,6 @@
 "use client";
 
+import { NavItem, NavSection } from "@/lib/types";
 import { Link, Button } from "@heroui/react";
 import {
   CaretDoubleLeftIcon,
@@ -19,20 +20,6 @@ import {
   MagnifyingGlassIcon,
   MegaphoneIcon,
 } from "@phosphor-icons/react";
-
-// ─── Types & Config ────────────────────────────────────────────
-export interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  active?: boolean;
-  hasChevron?: boolean;
-}
-
-export interface NavSection {
-  heading?: string;
-  items: NavItem[];
-}
 
 const SIDEBAR_SECTIONS: NavSection[] = [
   {
@@ -187,7 +174,7 @@ const ICON_SIZE = 20;
 
 export default function Sidebar() {
   return (
-    <aside className="flex flex-col overflow-hidden fixed w-[265px] left-0 top-0 bottom-0 bg-[#1e1e2d] z-[101]">
+    <aside className="flex flex-col overflow-hidden fixed w-[265px] left-0 top-0 bottom-0 bg-[#1e1e2d]">
       {/* Header */}
       <div className="flex items-center justify-between h-[65px] bg-[#1a1a27] px-6 shrink-0 border-b border-[#2b2b40]">
         <Link
@@ -202,12 +189,11 @@ export default function Sidebar() {
             height={100}
           />
         </Link>
-        <Button
-          variant="ghost"
-          className="flex items-center justify-center relative text-center font-medium text-[#9899ac] hover:text-white"
-        >
-          <CaretDoubleLeftIcon size={36} />
-        </Button>
+
+        <CaretDoubleLeftIcon
+          size={20}
+          className="flex items-center justify-center text-center font-medium text-[#9899ac]"
+        />
       </div>
 
       {/* Navigation */}
@@ -233,11 +219,11 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-4 shrink-0 border-t border-[#2b2b40]">
         <Link
-          href="https://drive.google.com/drive/folders/1rn2StvyZ1jv9HuUvcFWVwgM4bB1-gXZW"
+          href="/aisnet"
           className="flex items-center justify-center text-center font-medium w-full bg-[rgba(63,66,84,0.35)] text-[#9899ac] hover:text-white text-sm py-2 px-4 rounded-sm no-underline"
         >
           <span className="block overflow-hidden text-center whitespace-nowrap">
-            Unduh Template
+            Panduan Penggunaan
           </span>
         </Link>
       </div>
@@ -252,7 +238,8 @@ function SidebarLink({ item }: { item: NavItem }) {
   if (item.active) {
     return (
       <Link
-        href={item.href}
+        // href={item.href}
+        href={"/aisnet"}
         className="flex items-center bg-[#1b1b28] text-white py-2 px-6 no-underline border-l-4 border-[#009ef7]"
       >
         <Icon size={ICON_SIZE} color={iconColor} weight="fill" />
@@ -281,7 +268,8 @@ function SidebarLink({ item }: { item: NavItem }) {
 
   return (
     <Link
-      href={item.href}
+      href={"/aisnet"}
+      // href={item.href}
       className="flex items-center text-[#9899ac] py-2 px-6 no-underline hover:bg-[#1b1b28] hover:text-white transition-colors"
     >
       <Icon size={ICON_SIZE} color={iconColor} />
