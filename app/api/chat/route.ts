@@ -208,7 +208,9 @@ export async function POST(request: NextRequest) {
     }
 
     const customPageContext =
-      systemPrompt && typeof systemPrompt === "string" && systemPrompt.trim().length > 0
+      systemPrompt &&
+      typeof systemPrompt === "string" &&
+      systemPrompt.trim().length > 0
         ? `<page_context>\n${systemPrompt.trim()}\n</page_context>`
         : "";
 
