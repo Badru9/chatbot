@@ -10,6 +10,7 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
+    "db:seed:research": "bun run prisma/seed-research.ts",
     "test": "node --import tsx --test lib/**/*.test.ts"
   },
   "prisma": {
@@ -52,7 +53,7 @@
     "@types/uuid": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "prisma": "^6.19.3",
+    "prisma": "^7.9.1",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"
