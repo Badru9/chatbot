@@ -1,50 +1,7 @@
-import { MenuData, Research } from "./lib/types";
+import { Research } from "./lib/types";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-export const fallbackMenus: MenuData[] = [
-  {
-    title: "Monitoring Kinerja",
-    description:
-      "Cek presensi, laporan harian, dan evaluasi mahasiswa dalam satu dashboard.",
-    icon: "Monitor",
-    href: "/monitoring",
-    visibleToRoles: ["admin", "dosen"],
-  },
-  {
-    title: "Pusat Dokumen",
-    description:
-      "Simpan PDF SK Mengajar, pedoman BKD, dan cari isi dokumen dengan AI.",
-    icon: "Folder",
-    href: "/documents",
-    visibleToRoles: ["admin", "dosen"],
-  },
-  {
-    title: "Bimbingan Mahasiswa",
-    description:
-      "Data mahasiswa bimbingan, konsultasi skripsi, persetujuan KRS, dan laporan magang.",
-    icon: "Student",
-    href: "/students",
-    visibleToRoles: ["admin", "dosen"],
-  },
-  {
-    title: "Katalog Penelitian",
-    description:
-      "Publikasi jurnal, prosiding konferensi, dan pengajuan hibah riset.",
-    icon: "BookOpen",
-    href: "/research",
-    visibleToRoles: ["admin", "dosen"],
-  },
-  {
-    title: "Profil Riset & SINTA",
-    description:
-      "Cek skor H-Index, publikasi Scopus, dan lacak portofolio penelitian Anda.",
-    icon: "TrendUp",
-    href: "/sinta",
-    visibleToRoles: ["admin", "dosen"],
-  },
-];
 
 export const researchData: Research[] = [
   {
