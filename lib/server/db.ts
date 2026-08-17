@@ -1,6 +1,7 @@
 import 'server-only'
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
+import { prismaQueryInsights } from '@prisma/sqlcommenter-query-insights'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -8,7 +9,12 @@ const globalForPrisma = globalThis as unknown as {
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter })
+export const prisma =
+  globalForPrisma.prisma ??
+  new PrismaClient({
+    adapter,
+    comments: [prismaQueryInsights()],
+  })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 
