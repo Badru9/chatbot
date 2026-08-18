@@ -347,7 +347,7 @@ export default function UploadLibrary() {
     queryFn: fetchDocuments,
   });
 
-  // Upload mutation
+  // ERROR HERE
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadDocument(file),
     onSuccess: () =>

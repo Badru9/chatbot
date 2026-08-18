@@ -270,7 +270,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   return (
     <main
       id="chatbot-wrapper"
-      className={`relative h-full max-w-full overflow-x-hidden text-black ${tableData ? "" : "lg:pl-73"} flex flex-col`}
+      className={`relative h-full max-w-full overflow-x-hidden text-black lg:pl-73 flex flex-col `}
       style={{ minHeight: 0 }}
     >
       {/* Mobile Header */}
