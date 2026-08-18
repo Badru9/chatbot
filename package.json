@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "chatbot",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -65,5 +65,9 @@
   "trustedDependencies": [
     "sharp",
     "unrs-resolver"
-  ]
+  ],
+  "optionalDependencies": {
+    "@next/swc-linux-x64-gnu": "16.2.6",
+    "@next/swc-linux-x64-musl": "16.2.6"
+  }
 }

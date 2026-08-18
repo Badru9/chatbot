@@ -1,0 +1,7 @@
+{
+  "app": {
+    "name": "chatbot",
+    "framework": "nextjs",
+    "httpPort": 3000
+  }
+}
