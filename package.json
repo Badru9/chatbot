@@ -20,6 +20,7 @@
     "@heroui/styles": "^3.0.5",
     "@phosphor-icons/react": "^2.1.10",
     "@prisma/adapter-pg": "7.9.1",
+    "@prisma/cli": "^3.0.0-beta.30",
     "@prisma/client": "7.9.1",
     "@prisma/sqlcommenter-query-insights": "^7.9.1",
     "@tanstack/react-query": "^5.101.3",
