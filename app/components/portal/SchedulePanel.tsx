@@ -37,7 +37,11 @@ const DAY_ORDER = [
 
 type CategoryType = "mengajar" | "penelitian" | "lainnya";
 
-export default function SchedulePanel() {
+interface SchedulePanelProps {
+  onClose?: () => void;
+}
+
+export default function SchedulePanel({ onClose }: SchedulePanelProps = {}) {
   const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(
     null,
   );
@@ -114,6 +118,17 @@ export default function SchedulePanel() {
       <div className="px-6 py-4 flex items-center justify-between border-b border-neutral-100 dark:border-neutral-800">
         {selectedCategory === null ? (
           <div className="flex items-center gap-2">
+            {onClose ? (
+              <Button
+                isIconOnly
+                variant="ghost"
+                size="sm"
+                onPress={onClose}
+                aria-label="Tutup Jadwal"
+              >
+                <CaretLeftIcon size={18} />
+              </Button>
+            ) : null}
             <CalendarIcon
               size={20}
               className="text-emerald-600 dark:text-emerald-400"
@@ -144,7 +159,7 @@ export default function SchedulePanel() {
 
         {selectedCategory === "mengajar" && schedules.length > 0 && (
           <Button
-            onClick={() => setIsDeleteModalOpen(true)}
+            onPress={() => setIsDeleteModalOpen(true)}
             isDisabled={deleteMutation.isPending}
             variant="danger-soft"
             size="sm"

@@ -1,153 +1,110 @@
-# Class Diagram
+# Class Diagram — Portal Dosen & Asisten Virtual (ITG)
+
+### Penjelasan Diagram
+Diagram kelas tunggal ini merepresentasikan struktur model data inti seluruh sistem, hubungan pewarisan `User` ke `Dosen` dan `Admin`, relasi kepemilikan dokumen pribadi dosen, serta batasan privasi data antara Admin dan Dokumen Dosen.
 
 ```plantuml
 @startuml
-title Class Diagram System Portal Dosen & Asisten Virtual AI (mb.ai)
+title Class Diagram - Portal Dosen & Asisten Virtual (ITG)
 
-package "Backend Models (Prisma ORM & PostgreSQL)" {
+skinparam classAttributeIconSize 0
+skinparam monochrome false
+skinparam shadowing false
 
-    class User {
-        +id : String [PK]
-        +name : String
-        +email : String [Unique]
-        +emailVerified : Boolean
-        +password : String
-        +image : String
-        +role : String
-        +createdAt : DateTime
-        +updatedAt : DateTime
-    }
-
-    class Session {
-        +id : String [PK]
-        +token : String [Unique]
-        +userId : String [FK]
-        +expiresAt : DateTime
-        +ipAddress : String
-        +userAgent : String
-        +createdAt : DateTime
-        +updatedAt : DateTime
-        +isExpired() : Boolean
-    }
-
-    class Account {
-        +id : String [PK]
-        +userId : String [FK]
-        +accountId : String
-        +providerId : String
-        +accessToken : String
-        +refreshToken : String
-        +password : String
-        +createdAt : DateTime
-        +updatedAt : DateTime
-    }
-
-    class PdfChunk << (T,#FFAAAA) vectors >> {
-        +id : Int [PK, AutoIncrement]
-        +documentId : String
-        +documentName : String
-        +documentHash : String
-        +pageNumber : Int
-        +chunkIndex : Int
-        +chunkText : String
-        +tokenCount : Int
-        +embedding : Vector1024
-        +metadata : Json
-        +createdAt : DateTime
-    }
-
-    class PortalMenu << (T,#FFAAAA) portal_menu >> {
-        +id : String [PK]
-        +title : String
-        +description : String
-        +icon : String
-        +href : String
-        +order : Int
-        +visibleToRoles : String[]
-        +createdBy : String
-        +createdAt : DateTime
-        +updatedAt : DateTime
-    }
+abstract class User {
+  - id: String
+  - nama: String
+  - email: String
+  - passwordHash: String
+  - role: String
+  - createdAt: DateTime
+  + login(): Boolean
+  + logout(): Void
 }
 
-package "Frontend Client State (Browser Storage)" {
-
-    class ChatHistory << (S,#AAFFAA) localStorage >> {
-        +id : String
-        +title : String
-        +createdAt : DateTime
-        +updatedAt : DateTime
-        +messages : ChatMessage[]
-        +saveToLocalStorage()
-        +loadFromLocalStorage()
-    }
-
-    class ChatMessage {
-        +id : String
-        +role : String
-        +content : String
-        +documentIds : String[]
-        +timestamp : DateTime
-    }
-
-    class LocalPdfBlob << (S,#AAFFAA) IndexedDB >> {
-        +documentId : String [Key]
-        +fileName : String
-        +fileBlob : Blob
-        +mimeType : String
-        +createdAt : DateTime
-        +saveToIndexedDB()
-        +getFromIndexedDB()
-    }
+class Dosen {
+  - nidn: String
+  - prodi: String
+  - fakultas: String
 }
 
-package "Backend Services & Controllers" {
-
-    class ChatService {
-        +retrievePdfContext(prompt: String, documentIds: String[], userId: String) : String
-        +streamOllamaChat(prompt: String, documentIds: String[], messages: Array) : Stream
-    }
-
-    class DocumentService {
-        +ingestPdfBuffer(buffer: Buffer, fileName: String, size: Number, mimeType: String, userId: String) : Document
-        +listDocuments(userId: String, isUserAdmin: Boolean) : Document[]
-        +deleteDocumentChunks(documentId: String, userId: String) : Boolean
-    }
-
-    class MenuService {
-        +getMenus() : PortalMenu[]
-        +createMenu(data: Object) : PortalMenu
-        +updateMenu(id: String, data: Object) : PortalMenu
-        +deleteMenu(id: String) : Boolean
-        +reorderMenus(reorders: Array) : Boolean
-    }
+class Admin {
+  - nip: String
+  + manageSystemAccess(): Void
 }
 
-User "1" -- "0..n" Session : memilik
-User "1" -- "0..n" Account : memiliki
-User "1" -- "0..n" PdfChunk : mengunggah (via metadata.userId)
-User "1" -- "0..n" PortalMenu : mengelola (createdBy)
+class ChatSession {
+  - id: String
+  - userId: String
+  - title: String
+  - createdAt: DateTime
+  - updatedAt: DateTime
+  + createNewChat(): ChatSession
+  + getHistory(): List<Message>
+}
 
-ChatHistory "1" *-- "0..n" ChatMessage : berisi
+class Message {
+  - id: String
+  - sessionId: String
+  - senderType: String
+  - content: String
+  - attachedDocId: String
+  - timestamp: DateTime
+}
 
-DocumentService ..> PdfChunk : mengelola & melakukan vector search
-ChatService ..> PdfChunk : mengambil konteks RAG
-MenuService ..> PortalMenu : mengelola CRUD & order
+class Dokumen {
+  - id: String
+  - ownerId: String
+  - fileName: String
+  - filePath: String
+  - fileSize: Integer
+  - mimeType: String
+  - uploadedAt: DateTime
+  - parsedContent: String
+}
 
-note right of PdfChunk
-Tabel 'vectors' di PostgreSQL menggunakan extension pgvector (vector 1024).
-Setiap chunk menyimpan metadata userId milik pengunggah.
-end note
+class JadwalMengajar {
+  - id: String
+  - dosenId: String
+  - kodeMK: String
+  - namaMK: String
+  - kelas: String
+  - hari: String
+  - jamMulai: String
+  - jamSelesai: String
+  - ruangan: String
+  - sks: Integer
+  - semester: String
+  - tahunAkademik: String
+}
 
-note right of LocalPdfBlob
-IndexedDB browser menyimpan blob PDF asli
-secara lokal untuk pratinjau instan via react-pdf.
-end note
+class DataKeuanganPenelitian {
+  - id: String
+  - dosenId: String
+  - judulPenelitian: String
+  - skema: String
+  - tahunAnggaran: String
+  - nominalDisetujui: Decimal
+  - statusPencairan: String
+  - jenis: String
+}
 
-note right of ChatHistory
-Chatbot menyimpan hingga 30 sesi riwayat
-percakapan langsung di localStorage browser pengguna.
-end note
+' Inheritance / Generalization
+User <|-- Dosen
+User <|-- Admin
+
+' Relationships
+Dosen "1" *-- "0..*" ChatSession : memiliki >
+ChatSession "1" *-- "1..*" Message : berisi >
+Dosen "1" *-- "0..*" Dokumen : mengupload >
+Message "0..*" o-- "0..1" Dokumen : mereferensikan >
+Dosen "1" *-- "0..*" JadwalMengajar : memiliki >
+Dosen "1" -- "0..*" DataKeuanganPenelitian : terkait data AISnet >
+
+' Privacy Constraint Note
+note "Constraint Privasi:\nAdmin mengelola data akun & akses sistem,\nnamun TIDAK memiliki relasi atau hak akses\nke isi/file Dokumen milik Dosen." as N1
+Admin .. N1
+Dokumen .. N1
 
 @enduml
 ```

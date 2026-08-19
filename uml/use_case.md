@@ -1,109 +1,77 @@
-# Use Case Diagram
+# Use Case Diagram — Portal Dosen & Asisten Virtual (ITG)
+
+### Penjelasan Diagram
+Diagram Use Case ini memodelkan seluruh interaksi fungsional utama antara sistem dengan dua aktor utama, yaitu **Dosen** dan **Admin**. Seluruh use case yang membutuhkan autentikasi memiliki relasi `<<include>>` ke use case *Login*, dengan catatan batasan privasi bahwa Admin tidak memiliki hak akses terhadap isi dokumen pribadi milik Dosen.
 
 ```plantuml
 @startuml
-title Use Case Diagram Portal Dosen dengan Asisten Virtual AI (mb.ai)
+title Use Case Diagram Portal Dosen & Asisten Virtual - Institut Teknologi Garut
 
 left to right direction
-scale 0.85
-
-skinparam shadowing false
 skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam monochrome false
 skinparam actorStyle awesome
 
-actor Dosen
-actor "Admin / USI" as Admin
+actor "Dosen" as dosen
+actor "Admin" as admin
 
-rectangle "Portal Dosen & Asisten Virtual AI (mb.ai)" {
+rectangle "Portal Dosen & Plugin Asisten Virtual (ITG)" {
+  ' Autentikasi
+  usecase "Login" as UC_Login
 
-    package "Portal & Autentikasi" {
-        usecase "Melihat Daftar\nMenu Portal" as UC01
-        usecase "Membuka Tautan\nLayanan Eksternal" as UC02
-        usecase "Login Akun" as UC03
-        usecase "Logout Akun" as UC04
-        usecase "Melihat Profil" as UC05
-    }
+  ' Domain: Asisten Virtual
+  usecase "Chat dengan Asisten Virtual" as UC_Chat
+  usecase "Upload Dokumen (PDF)\nke Library" as UC_UploadDoc
+  usecase "Gunakan Dokumen dari Library\nsebagai Konteks" as UC_UseDoc
+  usecase "Kelola Riwayat Percakapan\n(History & New Chat)" as UC_History
 
-    package "Fitur Asisten Virtual AI (Chatbot)" {
-        usecase "Membuka Asisten AI\nvia AiFab" as UC06
-        usecase "Mengirim Pertanyaan Chat" as UC07
-        usecase "Menggunakan Mention Dokumen (@)" as UC071
-        usecase "Menerima Jawaban\nStreaming Real-Time" as UC072
-        usecase "Mengelola Riwayat\nChat (localStorage)" as UC08
-    }
+  ' Domain: Jadwal Mengajar
+  usecase "Ekstrak Jadwal Mengajar\ndari PDF" as UC_ExtractJadwal
+  usecase "Lihat & Kelola\nJadwal Mengajar" as UC_KelolaJadwal
 
-    package "Fitur Library Dokumen (RAG)" {
-        usecase "Melihat Daftar Dokumen\nPribadi" as UC09
-        usecase "Mengunggah Dokumen PDF" as UC091
-        usecase "Menghapus Dokumen PDF" as UC092
-        usecase "Melihat Pratinjau PDF\n(IndexedDB & react-pdf)" as UC093
-    }
+  ' Domain: AISnet
+  usecase "Lihat Data Keuangan\nPenelitian/PkM (AISnet)" as UC_ViewAISnet
+  usecase "Tanya Asisten AI\ntentang Data AISnet" as UC_AskAISnet
 
-    package "Fitur Panel Admin" {
-        usecase "Mengakses Panel Admin" as UC10
-        usecase "Mengelola Dataset AI\n(/admin/datasets)" as UC11
-        usecase "Melihat Statistik Vector Chunks" as UC111
-        usecase "Mengunggah PDF Global" as UC112
-        usecase "Menghapus Dokumen Global" as UC113
-        usecase "Mengelola Menu Portal\n(/admin/menus)" as UC12
-        usecase "Mengatur Urutan Menu" as UC121
-        usecase "Mengelola Kacung Napitupulu\n(/admin/users)" as UC13
-        usecase "Mereset Password Dosen" as UC131
-    }
+  ' Domain: Admin
+  usecase "Kelola Data & Akses Sistem" as UC_ManageSystem
+  usecase "Lihat Data AISnet\n(Seluruh Dosen)" as UC_AdminAISnet
 }
 
-Dosen --> UC01
-Dosen --> UC02
-Dosen --> UC03
-Dosen --> UC04
-Dosen --> UC05
-Dosen --> UC06
-Dosen --> UC07
-Dosen --> UC08
-Dosen --> UC09
+' Relasi Aktor Dosen
+dosen --> UC_Chat
+dosen --> UC_UploadDoc
+dosen --> UC_ExtractJadwal
+dosen --> UC_KelolaJadwal
+dosen --> UC_ViewAISnet
+dosen --> UC_AskAISnet
+dosen --> UC_History
 
-Admin --> UC01
-Admin --> UC02
-Admin --> UC03
-Admin --> UC04
-Admin --> UC10
-Admin --> UC11
-Admin --> UC12
-Admin --> UC13
+' Relasi Aktor Admin
+admin --> UC_ManageSystem
+admin --> UC_AdminAISnet
 
-UC07 ..> UC071 : <<extend>>
-UC07 ..> UC072 : <<include>>
+' Include Relasi ke Login untuk semua use case yang memerlukan otentikasi
+UC_Chat ..> UC_Login : <<include>>
+UC_UploadDoc ..> UC_Login : <<include>>
+UC_ExtractJadwal ..> UC_Login : <<include>>
+UC_KelolaJadwal ..> UC_Login : <<include>>
+UC_ViewAISnet ..> UC_Login : <<include>>
+UC_AskAISnet ..> UC_Login : <<include>>
+UC_History ..> UC_Login : <<include>>
+UC_ManageSystem ..> UC_Login : <<include>>
+UC_AdminAISnet ..> UC_Login : <<include>>
 
-UC09 ..> UC091 : <<include>>
-UC09 ..> UC092 : <<include>>
-UC09 ..> UC093 : <<extend>>
+' Include Relasi Konteks Dokumen
+UC_Chat ..> UC_UseDoc : <<include>>
 
-UC11 ..> UC111 : <<include>>
-UC11 ..> UC112 : <<include>>
-UC11 ..> UC113 : <<include>>
-
-UC12 ..> UC121 : <<extend>>
-UC13 ..> UC131 : <<extend>>
-
-note bottom of UC01
-Dapat diakses publik tanpa login.
-Layanan eksternal: AISNET, E-Learning,
-Bimbingan, Portal SINTA.
-end note
-
-note bottom of UC071
-Pengguna mengetik @ di input chat
-untuk memilih dokumen RAG spesifik.
-end note
-
-note bottom of UC093
-File PDF asli disimpan di IndexedDB browser
-untuk rendering cepat offline/local preview.
-end note
-
-note bottom of UC11
-Admin mengelola seluruh dokumen institusi
-dan melihat statistik pgvector.
+' Constraint Note Privasi Dokumen
+note right of admin
+  **Constraint Privasi:**
+  Admin tidak memiliki akses ke
+  isi dokumen pribadi yang diupload
+  dosen ke asisten virtual.
 end note
 
 @enduml

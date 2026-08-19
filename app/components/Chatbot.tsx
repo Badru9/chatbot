@@ -14,7 +14,7 @@ import {
 } from "react";
 import { sendChatMessage } from "../../services/chatService";
 
-import { ScrollShadow } from "@heroui/react";
+import { Drawer, ScrollShadow } from "@heroui/react";
 import ChatInputBar from "./ChatInputBar";
 import ChatSidebar, { type SidebarLibraryFile } from "./ChatSidebar";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -269,7 +269,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
       style={{ minHeight: 0 }}
     >
       {/* Mobile Header */}
-      <div className="flex h-12 items-center justify-between border-b border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-900/90 px-4 backdrop-blur-md lg:hidden shrink-0 z-20">
+      <div className="flex h-12 items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-4 lg:hidden">
         <button
           onClick={() => setIsMobileSidebarOpen(true)}
           className="flex items-center gap-2 rounded-lg p-1.5 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer text-xs font-semibold"
@@ -391,21 +391,26 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
             />
           </div>
 
-          {activeTool === "jadwal" && (
-            <div className="fixed inset-0 z-40 flex justify-end lg:hidden">
-              <div
-                className="fixed inset-0 bg-neutral-900/40 backdrop-blur-xs transition-opacity"
-                onClick={() => setActiveTool(null)}
-              />
-              <div className="relative z-50 h-full w-full sm:w-[400px] bg-white dark:bg-neutral-900 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200">
-                <SchedulePanel />
-              </div>
-            </div>
-          )}
+          {/* Mobile Schedule Drawer */}
+          <Drawer.Backdrop
+            isOpen={activeTool === "jadwal"}
+            onOpenChange={(isOpen) => {
+              if (!isOpen) setActiveTool(null);
+            }}
+            variant="opaque"
+            className="lg:hidden"
+          >
+            <Drawer.Content placement="right" className="w-full h-full">
+              <Drawer.Dialog className="p-0 h-full w-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl">
+                <SchedulePanel onClose={() => setActiveTool(null)} />
+              </Drawer.Dialog>
+            </Drawer.Content>
+          </Drawer.Backdrop>
 
+          {/* Desktop Schedule Panel */}
           {activeTool === "jadwal" && (
             <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex-col animate-in fade-in slide-in-from-right-5 duration-200">
-              <SchedulePanel />
+              <SchedulePanel onClose={() => setActiveTool(null)} />
             </div>
           )}
         </div>
