@@ -1,47 +1,108 @@
 "use client";
 
-import React from "react";
+import { useSession } from "@/lib/auth-client";
+import { CreateUserInput, UserData } from "@/lib/types";
+import { toast } from "@heroui/react";
+import { useState } from "react";
 import PortalLayout from "../../(portal)/layout";
-import { Button } from "@heroui/react";
-import { ArrowLeft, Shield } from "@phosphor-icons/react";
-import Link from "next/link";
+import UsersLoading from "./UsersLoading";
+import DeleteModal from "./components/DeleteModal";
+import Header from "./components/Header";
+import UserFormModal from "./components/UserFormModal";
+import UserTable from "./components/UserTable";
+import { useUserServices } from "./hooks/useUserServices";
+
+const EMPTY_FORM: CreateUserInput = {
+  name: "",
+  email: "",
+  role: "dosen",
+};
 
 export default function AdminUsersPage() {
+  const { user: currentUser } = useSession();
+  const { users, isLoading, createMutation, deleteMutation } =
+    useUserServices();
+
+  const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
+  const [form, setForm] = useState<CreateUserInput>(EMPTY_FORM);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+
+  const setField = <K extends keyof CreateUserInput>(
+    key: K,
+    value: CreateUserInput[K],
+  ) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const handleOpenAdd = () => {
+    setForm(EMPTY_FORM);
+    setIsFormOpen(true);
+  };
+
+  const handleSave = () => {
+    if (!form.name || !form.email || !form.role) {
+      toast("Semua kolom wajib diisi.", { variant: "danger" });
+      return;
+    }
+
+    createMutation.mutate(form, {
+      onSuccess: () => {
+        toast("Akun user berhasil ditambahkan!", { variant: "success" });
+        setIsFormOpen(false);
+      },
+      onError: (err) => {
+        toast(err.message || "Gagal menambahkan user.", { variant: "danger" });
+      },
+    });
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget?.id) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast("Akun user berhasil dihapus.", { variant: "success" });
+        setDeleteTarget(null);
+      },
+      onError: (err) => {
+        toast(err.message || "Gagal menghapus user.", { variant: "danger" });
+      },
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <PortalLayout>
+        <UsersLoading />
+      </PortalLayout>
+    );
+  }
+
   return (
     <PortalLayout>
-      <div className="w-full max-w-3xl flex flex-col gap-6 mt-8">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button
-              isIconOnly
-              variant="ghost"
-              className="rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
-            >
-              <ArrowLeft size={20} />
-            </Button>
-          </Link>
-          <div>
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 font-medium">
-              Portal / Admin
-            </p>
-            <h1 className="text-2xl font-bold text-neutral-900 dark:text-white tracking-tight">
-              Kelola Akun User
-            </h1>
-          </div>
-        </div>
-        <div className="p-12 border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl flex flex-col items-center justify-center gap-4 text-center shadow-xs">
-          <div className="w-14 h-14 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center border border-neutral-200/60 dark:border-neutral-700/60 text-neutral-900 dark:text-white">
-            <Shield size={32} weight="duotone" />
-          </div>
-          <h2 className="text-xl font-bold text-neutral-900 dark:text-white tracking-tight">
-            Panel Admin: Pengelolaan User
-          </h2>
-          <p className="text-neutral-600 dark:text-neutral-400 max-w-md text-sm leading-relaxed font-normal">
-            Halaman khusus admin untuk menambahkan, mengedit, atau menghapus
-            data Kacung Napitupulu dan hak akses.
-          </p>
-        </div>
+      <div className="w-full max-w-5xl flex flex-col gap-6 mt-8">
+        <Header onAdd={handleOpenAdd} />
+        <UserTable
+          users={users}
+          onDelete={setDeleteTarget}
+          currentUserId={currentUser?.id}
+        />
       </div>
+
+      <UserFormModal
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        form={form}
+        onFormChange={setField}
+        onSave={handleSave}
+        isPending={createMutation.isPending}
+      />
+
+      <DeleteModal
+        deleteTarget={deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onDelete={handleDelete}
+        isPending={deleteMutation.isPending}
+      />
     </PortalLayout>
   );
 }

@@ -1,5 +1,20 @@
 export type Role = "admin" | "dosen";
 
+export interface UserData {
+  id: string;
+  name: string;
+  email: string;
+  role: Role | string;
+  image?: string | null;
+  createdAt: string | Date;
+}
+
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  role: Role;
+}
+
 export interface MenuData {
   id?: string;
   title: string;
