@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Dropdown, Modal } from "@heroui/react";
-import { User } from "@phosphor-icons/react";
+import { User, UserIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 import { useLogout, useSession } from "../../../lib/auth-client";
@@ -30,7 +30,7 @@ export default function ProfileFab() {
             className="w-14 h-14 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800 rounded-full shadow-lg flex items-center justify-center transition"
             aria-label="Profil"
           >
-            <User
+            <UserIcon
               size={24}
               className="text-neutral-700 dark:text-neutral-300"
             />

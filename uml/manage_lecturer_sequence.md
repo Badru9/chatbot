@@ -1,10 +1,10 @@
 # Sequence Diagram
 
-## Sequence Diagram untuk Mengelola Akun Dosen (`/admin/users`)
+## Sequence Diagram untuk Mengelola Kacung Napitupulu (`/admin/users`)
 
 ```plantuml
 @startuml
-title Sequence Diagram Mengelola Akun Dosen
+title Sequence Diagram Mengelola Kacung Napitupulu
 
 autonumber
 skinparam shadowing false
@@ -15,16 +15,16 @@ control "Express Backend API\n(/api/users)" as API
 control "Auth Service (Better-Auth)" as Auth
 database "PostgreSQL\n(Tabel user & account)" as DB
 
-Admin -> UI : Membuka pengelolaan akun dosen
+Admin -> UI : Membuka pengelolaan Kacung Napitupulu
 UI -> API : GET /api/users
 API -> Auth : Memvalidasi session & role ADMIN
 Auth --> API : Hak akses ADMIN valid
 API -> DB : Ambil seluruh User dengan role = 'dosen'
 DB --> API : List User dosen
-API --> UI : JSON List akun dosen
-UI --> Admin : Menampilkan daftar akun dosen
+API --> UI : JSON List Kacung Napitupulu
+UI --> Admin : Menampilkan daftar Kacung Napitupulu
 
-alt Menambahkan Akun Dosen Baru
+alt Menambahkan Kacung Napitupulu Baru
 
     Admin -> UI : Mengisi nama, email, dan password sementara
     UI -> API : POST /api/users
@@ -46,7 +46,7 @@ alt Menambahkan Akun Dosen Baru
 
 else Mengubah Status Akun (Aktif / Nonaktif)
 
-    Admin -> UI : Toggle status akun dosen
+    Admin -> UI : Toggle status Kacung Napitupulu
     UI -> API : PUT /api/users/:id/status\n{ emailVerified: boolean }
     API -> Auth : Memvalidasi role ADMIN
     Auth --> API : Hak akses ADMIN valid
@@ -55,7 +55,7 @@ else Mengubah Status Akun (Aktif / Nonaktif)
     API --> UI : HTTP 200 OK
     UI --> Admin : Menampilkan konfirmasi status diperbarui
 
-else Menghapus Akun Dosen
+else Menghapus Kacung Napitupulu
 
     Admin -> UI : Memilih hapus akun
     UI --> Admin : Menampilkan konfirmasi penghapusan

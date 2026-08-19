@@ -29,11 +29,11 @@ export async function fetchResearchData() {
       created_at:
         typeof r.createdAt === "string"
           ? r.createdAt
-          : r.createdAt?.toISOString?.() ?? new Date().toISOString(),
+          : (r.createdAt?.toISOString?.() ?? new Date().toISOString()),
       updated_at:
         typeof r.updatedAt === "string"
           ? r.updatedAt
-          : r.updatedAt?.toISOString?.() ?? new Date().toISOString(),
+          : (r.updatedAt?.toISOString?.() ?? new Date().toISOString()),
     }));
   }
 
@@ -64,11 +64,11 @@ export async function fetchResearchData() {
     created_at:
       typeof r.created_at === "string"
         ? r.created_at
-        : r.created_at?.toISOString?.() ?? new Date().toISOString(),
+        : (r.created_at?.toISOString?.() ?? new Date().toISOString()),
     updated_at:
       typeof r.updated_at === "string"
         ? r.updated_at
-        : r.updated_at?.toISOString?.() ?? new Date().toISOString(),
+        : (r.updated_at?.toISOString?.() ?? new Date().toISOString()),
   }));
 }
 

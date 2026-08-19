@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@heroui/react";
+import { Button, toast } from "@heroui/react";
 import {
   CaretLeftIcon,
   CaretRightIcon,
@@ -353,7 +353,10 @@ export default function UploadLibrary() {
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.documents }),
     onError: (error) => {
-      console.log("error ketika upload", error);
+      toast("Gagal memuat PDF", {
+        variant: "danger",
+        description: error.message,
+      });
     },
   });
 

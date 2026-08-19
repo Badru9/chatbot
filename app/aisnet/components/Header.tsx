@@ -1,26 +1,27 @@
 "use client";
 
-import { Avatar, Button } from "@heroui/react";
-import { BellIcon } from "@phosphor-icons/react";
-import { useSession } from "@/lib/auth-client";
+import { fallbackUser } from "@/constants";
+import { useLogout, useSession } from "@/lib/auth-client";
+import { Breadcrumbs, Button, Chip, Popover } from "@heroui/react";
+import { BellIcon, SignOutIcon } from "@phosphor-icons/react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { user } = useSession();
+  const logout = useLogout();
+  const router = useRouter();
 
-  console.log("user", user);
+  const userName = user?.name || fallbackUser.name;
+  const userRole = user?.role || fallbackUser.role;
+  const userImage = user?.image || fallbackUser.image;
 
-  const userName = user?.name || "leni fitriani";
-  const userRole = user?.role || "dosen";
-  const userImage =
-    user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
-
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
+  const handleLogout = async () => {
+    logout.mutate(undefined, {
+      onSuccess: () => {
+        router.push("/");
+      },
+    });
   };
 
   return (
@@ -29,43 +30,65 @@ export default function Header() {
         <div className="flex items-center" />
 
         <div className="flex flex-1 justify-between">
-          {/* Breadcrumb */}
-          <div className="flex items-center">
-            <div className="flex items-center flex-wrap gap-2 text-sm">
-              <h1 className="font-semibold text-neutral-900">Keuangan</h1>
-              <span className="text-neutral-300">/</span>
-              <span className="text-neutral-500">Penelitian dan PkM</span>
-            </div>
-          </div>
+          <Breadcrumbs>
+            <Breadcrumbs.Item href="/" isDisabled>
+              Keuangan
+            </Breadcrumbs.Item>
+            <Breadcrumbs.Item href="/aisnet">
+              Penelitian dan PkM
+            </Breadcrumbs.Item>
+          </Breadcrumbs>
 
           {/* User controls */}
           <div className="flex shrink-0 items-center gap-3">
-            <Button
-              variant="ghost"
-              className="flex items-center justify-center w-10 h-10 min-w-0 p-0 bg-transparent rounded-sm text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 border-none"
-            >
+            <Button variant="ghost" isIconOnly>
               <span className="flex items-center justify-center">
                 <BellIcon size={20} />
               </span>
             </Button>
+            <div>
+              <Popover>
+                <Popover.Trigger>
+                  <div className="flex flex-col">
+                    <span className="flex items-center font-semibold capitalize text-[15px] leading-tight text-neutral-800">
+                      {userName}
+                    </span>
+                    <span className="font-medium capitalize text-neutral-400 text-xs leading-none">
+                      {userRole}
+                    </span>
+                  </div>
+                </Popover.Trigger>
 
-            <div className="flex items-center gap-4">
-              <Avatar className="w-10 h-10 rounded-sm">
-                {userImage ? (
-                  <Avatar.Image alt={userName} src={userImage} />
-                ) : null}
-                <Avatar.Fallback className="rounded-sm bg-neutral-200 text-neutral-700">
-                  {getInitials(userName)}
-                </Avatar.Fallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="flex items-center font-semibold capitalize text-[15px] leading-tight text-neutral-800">
-                  {userName}
-                </span>
-                <span className="font-medium capitalize text-neutral-400 text-xs leading-none">
-                  {userRole}
-                </span>
-              </div>
+                <Popover.Content className={"max-w-64"}>
+                  <Popover.Dialog className="space-y-3 flex flex-col">
+                    <div className="flex gap-3">
+                      <Image
+                        src={userImage}
+                        alt="user-image"
+                        width={40}
+                        height={40}
+                        className="rounded-full w-12 aspect-square object-cover"
+                      />
+                      <div className="flex flex-col gap-1">
+                        <p className="font-semibold">{userName}</p>
+                        <Chip variant="secondary" className="w-fit">
+                          {userRole}
+                        </Chip>
+                      </div>
+                    </div>
+                    <Button
+                      variant="danger-soft"
+                      fullWidth
+                      onClick={handleLogout}
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        Keluar
+                        <SignOutIcon size={20} />
+                      </span>
+                    </Button>
+                  </Popover.Dialog>
+                </Popover.Content>
+              </Popover>
             </div>
           </div>
         </div>

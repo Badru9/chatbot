@@ -1,5 +1,6 @@
 "use client";
 
+import { Alert, Link } from "@heroui/react";
 import PortalLayout from "./(portal)/layout";
 import PortalGrid from "./components/portal/PortalGrid";
 
@@ -18,6 +19,27 @@ export default function App() {
           Kelola perwalian, upload dokumen BKD, dan tanya jawab regulasi kampus.
           Semua dalam satu portal cerdas.
         </p>
+        <Alert status="warning" className="animate-pulse">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>Pemberitahuan</Alert.Title>
+            <Alert.Description>
+              <p className="text-left">
+                Portal masih dalam tahap pengembangan. Saat ini fitur yang dapat
+                digunakan adalah <strong>Asisten Virtual (Chatbot)</strong> dan
+                tools <strong>Pembuatan Jadwal Mengajar</strong>. Untuk membuat
+                jadwal, buka Asisten AI lalu aktifkan tool &quot;Jadwal
+                Mengajar&quot; dan unggah PDF jadwal Anda.{" "}
+                <Link
+                  href="/guide"
+                  className="font-semibold text-sm underline underline-offset-2"
+                >
+                  Lihat Panduan Lengkap →
+                </Link>
+              </p>
+            </Alert.Description>
+          </Alert.Content>
+        </Alert>
       </div>
       <PortalGrid />
     </PortalLayout>

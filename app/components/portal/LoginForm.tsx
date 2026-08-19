@@ -15,6 +15,11 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
 
   const loginMutation = useLogin();
 
+  const handleDemoAccount = () => {
+    setEmail("dosen@mb.ai");
+    setPassword("password123");
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -25,6 +30,8 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       });
       return;
     }
+
+    console.log("validation", validation);
 
     loginMutation.mutate(
       { email, password },
@@ -47,12 +54,21 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       onSubmit={handleSubmit}
       className="w-full max-w-fit p-6 flex flex-col gap-4"
     >
-      <div className="flex flex-col gap-1 mb-2">
+      <div className="flex flex-col gap-1 mb-2 space-y-2">
         <h2 className="text-2xl font-bold text-neutral-900 dark:text-white">
           Masuk ke mb.ai
         </h2>
         <p className="text-sm text-neutral-500">
-          Gunakan akun dosen atau admin Anda untuk membuka AI Assistant.
+          Gunakan{" "}
+          <Button
+            onPress={handleDemoAccount}
+            size="sm"
+            variant="outline"
+            className="font-semibold mx-2"
+          >
+            Akun Demo
+          </Button>{" "}
+          untuk menggunakan fitur ini.
         </p>
       </div>
 

@@ -9,6 +9,7 @@
 **Tech Stack:** Next.js, React, HeroUI (`@heroui/react`), Phosphor Icons (`@phosphor-icons/react`), React Query, Tailwind CSS.
 
 ## Global Constraints
+
 - Target files: `app/aisnet/components/Header.tsx`, `app/aisnet/page.tsx`, `app/aisnet/AisnetChatbot.tsx`, `app/components/Chatbot.tsx`.
 - Follow existing patterns and code conventions.
 - Do not break existing `/` root Chatbot experience.
@@ -18,9 +19,11 @@
 ### Task 1: Integrate User Session into AISnet Header
 
 **Files:**
+
 - Modify: [app/aisnet/components/Header.tsx](file:///d:/Badru/Projects/chatbot/app/aisnet/components/Header.tsx)
 
 **Interfaces:**
+
 - Consumes: `useSession` hook from `@/lib/auth-client` which returns `{ user, isLoading }`.
 
 - [ ] **Step 1: Inspect Header.tsx imports and structure**
@@ -30,6 +33,7 @@ Read `app/aisnet/components/Header.tsx` to ensure imports for `useSession` from 
 - [ ] **Step 2: Update Header.tsx to use session data**
 
 Update `Header.tsx` with dynamic user data:
+
 ```tsx
 "use client";
 
@@ -40,9 +44,10 @@ import { useSession } from "@/lib/auth-client";
 export default function Header() {
   const { user, isLoading } = useSession();
 
-  const userName = user?.name || "Leni Fitriani";
+  const userName = user?.name || "Kacung Napitupulu";
   const userRole = user?.role || "dosen";
-  const userImage = user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
+  const userImage =
+    user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";
 
   const getInitials = (name: string) => {
     return name
@@ -62,13 +67,9 @@ export default function Header() {
           {/* Breadcrumb */}
           <div className="flex items-center">
             <div className="flex items-center flex-wrap gap-2 text-sm">
-              <h1 className="font-semibold text-neutral-900">
-                Keuangan
-              </h1>
+              <h1 className="font-semibold text-neutral-900">Keuangan</h1>
               <span className="text-neutral-300">/</span>
-              <span className="text-neutral-500">
-                Penelitian dan PkM
-              </span>
+              <span className="text-neutral-500">Penelitian dan PkM</span>
             </div>
           </div>
 
@@ -118,6 +119,7 @@ Run build or check for lint errors to verify syntax.
 ### Task 2: Refactor `TABLE_DATA` to Dynamic `tableData` State in AISnet Page
 
 **Files:**
+
 - Modify: [app/aisnet/page.tsx](file:///d:/Badru/Projects/chatbot/app/aisnet/page.tsx)
 
 - [ ] **Step 1: Declare `tableData` state inside `AisnetPage` component**
@@ -134,6 +136,7 @@ Update `tableData.map((row) => ...)` in the table body and pass `<AisnetChatbot 
 ### Task 3: Embed Full Chatbot Experience in AISnet Floating Drawer
 
 **Files:**
+
 - Modify: [app/aisnet/AisnetChatbot.tsx](file:///d:/Badru/Projects/chatbot/app/aisnet/AisnetChatbot.tsx)
 - Modify: [app/components/Chatbot.tsx](file:///d:/Badru/Projects/chatbot/app/components/Chatbot.tsx) (if optional prop `embedded` or `initialContext` is needed)
 
@@ -205,8 +208,12 @@ export default function AisnetChatbot({ tableData }: AisnetChatbotProps) {
               AI
             </div>
             <div>
-              <h3 className="text-sm font-semibold">AISnet AI Assistant & Chatbot</h3>
-              <p className="text-xs text-neutral-400">Tanya seputar penelitian, dokumen, & jadwal</p>
+              <h3 className="text-sm font-semibold">
+                AISnet AI Assistant & Chatbot
+              </h3>
+              <p className="text-xs text-neutral-400">
+                Tanya seputar penelitian, dokumen, & jadwal
+              </p>
             </div>
           </div>
           <button

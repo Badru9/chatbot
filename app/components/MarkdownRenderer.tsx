@@ -1,5 +1,6 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function CodeBlock({ children }: { children: React.ReactNode }) {
   const [copied, setCopied] = useState(false);
@@ -72,6 +73,8 @@ function CodeBlock({ children }: { children: React.ReactNode }) {
 export default function MarkdownRenderer({ content }: { content: string }) {
   return (
     <ReactMarkdown
+      // ponytail: remark-gfm enables GFM tables, strikethrough, autolinks & tasklists
+      remarkPlugins={[remarkGfm]}
       components={{
         pre: ({ children }) => <CodeBlock>{children}</CodeBlock>,
         code: ({ children, className }) => {
@@ -126,6 +129,47 @@ export default function MarkdownRenderer({ content }: { content: string }) {
           <h3 className="mb-1 text-base font-semibold text-slate-900 dark:text-slate-200">
             {children}
           </h3>
+        ),
+        // ponytail: clean, responsive table rendering with borders and hover state
+        table: ({ children }) => (
+          <div className="my-3 w-full overflow-x-auto rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-xs">
+            <table className="w-full min-w-full divide-y divide-neutral-200 text-left text-sm dark:divide-neutral-800">
+              {children}
+            </table>
+          </div>
+        ),
+        thead: ({ children }) => (
+          <thead className="bg-neutral-100/90 dark:bg-neutral-800/70 font-semibold text-neutral-900 dark:text-white">
+            {children}
+          </thead>
+        ),
+        tbody: ({ children }) => (
+          <tbody className="divide-y divide-neutral-200 bg-white dark:divide-neutral-800 dark:bg-neutral-900/30">
+            {children}
+          </tbody>
+        ),
+        tr: ({ children }) => (
+          <tr className="transition-colors hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40">
+            {children}
+          </tr>
+        ),
+        th: ({ children }) => (
+          <th className="px-3.5 py-2.5 text-xs font-bold uppercase tracking-wider text-neutral-700 dark:text-neutral-300">
+            {children}
+          </th>
+        ),
+        td: ({ children }) => (
+          <td className="px-3.5 py-2 text-sm text-neutral-700 dark:text-neutral-300 whitespace-nowrap sm:whitespace-normal">
+            {children}
+          </td>
+        ),
+        blockquote: ({ children }) => (
+          <blockquote className="border-l-4 border-neutral-300 dark:border-neutral-700 pl-3.5 my-2 italic text-neutral-600 dark:text-neutral-400">
+            {children}
+          </blockquote>
+        ),
+        hr: () => (
+          <hr className="my-3 border-neutral-200 dark:border-neutral-800" />
         ),
       }}
     >

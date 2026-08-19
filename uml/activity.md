@@ -142,10 +142,10 @@ else (Pengguna Terautentikasi)
                 :Kirim PUT/POST/DELETE ke /api/menus;
                 :Perbarui urutan dan data menu di database;
 
-            else (Kelola Akun Dosen /admin/users)
+            else (Kelola Kacung Napitupulu /admin/users)
 
                 |Admin / USI|
-                :Kelola akun dosen atau Reset password;
+                :Kelola Kacung Napitupulu atau Reset password;
 
                 |Sistem|
                 :Perbarui data User dan Account di database;

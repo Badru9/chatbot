@@ -177,10 +177,7 @@ export default function Sidebar() {
     <aside className="flex flex-col overflow-hidden fixed w-[265px] left-0 top-0 bottom-0 bg-[#1e1e2d]">
       {/* Header */}
       <div className="flex items-center justify-between h-[65px] bg-[#1a1a27] px-6 shrink-0 border-b border-[#2b2b40]">
-        <Link
-          href="https://aisnet.itg.ac.id/"
-          className="block text-[#009ef7] no-underline"
-        >
+        <Link href="/" className="block text-[#009ef7] no-underline">
           <img
             alt="Logo"
             src="/aisnet.png"
@@ -219,7 +216,7 @@ export default function Sidebar() {
       {/* Footer */}
       <div className="p-4 shrink-0 border-t border-[#2b2b40]">
         <Link
-          href="/aisnet"
+          href="/guide"
           className="flex items-center justify-center text-center font-medium w-full bg-[rgba(63,66,84,0.35)] text-[#9899ac] hover:text-white text-sm py-2 px-4 rounded-sm no-underline"
         >
           <span className="block overflow-hidden text-center whitespace-nowrap">

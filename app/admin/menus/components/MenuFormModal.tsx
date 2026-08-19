@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuData } from "@/lib/types";
+import { MenuData, Role } from "@/lib/types";
 import type { MenuFormValues } from "@/services/menuApi";
 import {
   Button,
@@ -20,7 +20,7 @@ export interface MenuFormState {
   description: string;
   icon: string;
   href: string;
-  visibleToRoles: string[];
+  visibleToRoles: Role[];
   order: number;
 }
 
@@ -122,7 +122,7 @@ export default function MenuFormModal({
                   </span>
                   <CheckboxGroup
                     value={form.visibleToRoles}
-                    onChange={(val) => onFormChange("visibleToRoles", val)}
+                    onChange={(val) => onFormChange("visibleToRoles", val as Role[])}
                     className="flex flex-row gap-4"
                   >
                     <Checkbox value="admin">

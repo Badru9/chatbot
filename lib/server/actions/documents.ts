@@ -61,15 +61,11 @@ export async function uploadDocumentAction(formData: FormData) {
 
   const file = formData.get("file") as File | null;
 
-  console.log("file uploaded", file);
-
   if (!file) {
     return { error: "Field file wajib diisi." };
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-
-  console.log("buffer", buffer);
 
   // Validate PDF magic bytes (%PDF-)
   if (
@@ -92,11 +88,8 @@ export async function uploadDocumentAction(formData: FormData) {
       userId,
     );
 
-    console.log(document);
-
     return { document };
   } catch (error) {
-    console.log("Error uploading document:", error);
     return {
       error: error instanceof Error ? error.message : "Gagal memproses PDF.",
     };
@@ -121,7 +114,6 @@ export async function createManualDatasetAction(input: {
   }
 
   const { name, description, source } = parsed.data;
-  console.log("input", parsed.data);
 
   const documentHash = crypto
     .createHash("sha256")
