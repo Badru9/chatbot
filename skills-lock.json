@@ -49,6 +49,12 @@
       "skillPath": "skills/minimalist-skill/SKILL.md",
       "computedHash": "7e88897e0371184e97a82b8d9ef080323c13f21eb067b58ef71eb05173a08ac2"
     },
+    "plantuml-ascii": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/plantuml-ascii/SKILL.md",
+      "computedHash": "2fb2b41487ea6559f4ccf877fe397c87214b35049528685ff1c02bb792b027d1"
+    },
     "prisma-cli": {
       "source": "prisma/skills",
       "sourceType": "github",

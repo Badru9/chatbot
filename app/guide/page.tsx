@@ -1,7 +1,8 @@
 "use client";
 
-import { Link, Tabs } from "@heroui/react";
+import { Button, Tabs } from "@heroui/react";
 import {
+  ArrowLeftIcon,
   CalendarCheckIcon,
   CalendarIcon,
   ChartBarIcon,
@@ -24,6 +25,7 @@ import {
   TrashIcon,
   TrendUpIcon,
 } from "@phosphor-icons/react";
+import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import PortalLayout from "../(portal)/layout";
 
@@ -130,10 +132,16 @@ function RoadmapItem({
 /* ------------------------------------------------------------------ */
 
 export default function PanduanPage() {
+  const router = useRouter();
+
+  const handleBack = () => {
+    router.push("/");
+  };
+
   return (
     <PortalLayout>
       {/* Header */}
-      <div className="text-center max-w-2xl mb-10">
+      <div className="text-center max-w-2xl m-10">
         <div className="inline-flex items-center gap-2 rounded-full px-3.5 py-1 text-xs font-semibold tracking-wider text-neutral-700 dark:text-neutral-300 bg-neutral-100 dark:bg-neutral-800/80 border border-neutral-200/80 dark:border-neutral-700/60 shadow-xs mb-4">
           <SparkleIcon size={14} weight="fill" className="text-amber-500" />
           PANDUAN PENGGUNAAN
@@ -154,17 +162,17 @@ export default function PanduanPage() {
             <Tabs.List aria-label="Panduan Penggunaan">
               <Tabs.Tab id="chatbot">
                 <RobotIcon size={16} weight="duotone" className="mr-1.5" />
-                Asisten Virtual
+                <span className="whitespace-nowrap">Asisten Virtual</span>
                 <Tabs.Indicator />
               </Tabs.Tab>
               <Tabs.Tab id="jadwal">
                 <CalendarIcon size={16} weight="duotone" className="mr-1.5" />
-                Jadwal Mengajar
+                <span className="whitespace-nowrap">Jadwal Mengajar</span>
                 <Tabs.Indicator />
               </Tabs.Tab>
               <Tabs.Tab id="aisnet">
                 <MonitorIcon size={16} weight="duotone" className="mr-1.5" />
-                AISnet
+                <span className="whitespace-nowrap">AISnet</span>
                 <Tabs.Indicator />
               </Tabs.Tab>
               <Tabs.Tab id="roadmap">
@@ -173,7 +181,7 @@ export default function PanduanPage() {
                   weight="duotone"
                   className="mr-1.5"
                 />
-                Roadmap
+                <span className="whitespace-nowrap">Roadmap</span>
                 <Tabs.Indicator />
               </Tabs.Tab>
             </Tabs.List>
@@ -367,13 +375,10 @@ export default function PanduanPage() {
         </Tabs>
       </div>
       {/* Back to portal link */}
-      <div className="mt-10 text-center">
-        <Link
-          href="/"
-          className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
-        >
-          ← Kembali ke Portal
-        </Link>
+      <div className="text-center fixed left-5 top-10">
+        <Button onPress={handleBack} size="sm" variant="ghost">
+          <ArrowLeftIcon /> Kembali ke Portal
+        </Button>
       </div>
     </PortalLayout>
   );

@@ -1,169 +1,110 @@
-# Activity Diagram
+# Activity Diagram — Portal Dosen & Asisten Virtual (ITG)
+
+Dokumen ini memuat tepat 3 Activity Diagram untuk proses-proses inti yang memiliki percabangan logika bisnis nyata (validasi, penanganan kegagalan, dan multi-jalur keputusan).
+
+---
+
+## 1. Activity Diagram: Login
+
+### Penjelasan Diagram
+
+Memodelkan validasi kredensial pengguna dan percabangan _routing_ ke antarmuka Dashboard Dosen atau Dashboard Admin berdasarkan _role_ yang terverifikasi.
 
 ```plantuml
 @startuml
-title Activity Diagram Portal Dosen dengan Asisten Virtual AI (mb.ai)
+title Activity Diagram - Login Pengguna
 
-scale 0.80
-skinparam shadowing false
-skinparam defaultFontSize 11
-skinparam activityFontSize 11
-
-|Sistem|
 start
-:Menampilkan portal utama;
-:Memuat daftar menu portal dari API (/api/menus);
+:Pengguna memasukkan NIDN/Email dan Password;
+:Sistem memvalidasi kredensial pengguna;
 
-if (Jenis Pengguna?) then (Tamu / Tanpa Login)
+if (Kredensial Valid?) then (Ya)
+  if (Role Pengguna?) then (Dosen)
+    :Arahkan ke Portal Dosen;
+  else (Admin)
+    :Arahkan ke Panel Admin;
+  endif
+  :Tampilkan antarmuka sesuai hak akses;
+  stop
+else (Tidak)
+  :Tampilkan pesan kesalahan "Kredensial Tidak Valid";
+  :Kembali ke form login;
+  stop
+endif
+@enduml
+```
 
-    |Pengguna|
-    :Melihat daftar platform akademik (AISNET, E-Learning, dll);
-    :Klik salah satu menu platform;
+---
 
-    |Sistem|
-    :Membuka tautan eksternal pada tab baru;
+## 2. Activity Diagram: Ekstrak Jadwal Mengajar dari PDF
 
-else (Pengguna Terautentikasi)
+### Penjelasan Diagram
 
-    |Sistem|
-    :Menampilkan form login;
+Memodelkan alur validasi berkas PDF, proses ekstraksi data berbasis AI, penanganan kegagalan parsing, serta mekanisme penimpaan (_overwrite_) jika data jadwal dosen sebelumnya telah tersimpan.
 
-    |Pengguna|
-    :Memasukkan email dan password;
+```plantuml
+@startuml
+title Activity Diagram - Ekstrak Jadwal Mengajar dari PDF
 
-    |Sistem|
-    :Memvalidasi kredensial (Better-Auth);
+start
+:Dosen mengaktifkan tool "Jadwal Mengajar" di antarmuka;
+:Dosen memilih dan mengunggah berkas PDF jadwal;
+:Sistem memverifikasi format (.pdf) dan ukuran berkas;
 
-    if (Kredensial Valid?) then (Tidak)
-
-        :Menampilkan pesan kesalahan;
-
-    else (Ya)
-
-        :Membuat session pengguna;
-        :Menampilkan ProfileFab dan AiFab;
-
-        if (Role Pengguna?) then (Dosen)
-
-            |Dosen|
-            if (Pilihan Aktivitas?) then (Asisten Virtual AI)
-
-                :Klik AiFab di pojok kanan bawah;
-
-                |Sistem|
-                :Membuka AiAssistantModal;
-                :Memuat riwayat chat dari localStorage;
-
-                |Dosen|
-                :Ketik pesan (Opsional ketik @ untuk mention dokumen);
-                :Kirim pertanyaan;
-
-                |Sistem|
-                :Kirim POST /api/chat ke Express Backend;
-                :Ambil konteks RAG dari pgvector (tabel vectors);
-                :Susun prompt berbasis dokumen & riwayat;
-                :Streaming jawaban real-time dari Ollama (qwen3.5);
-                :Tampilkan teks jawaban secara streaming;
-                :Simpan riwayat percakapan ke localStorage;
-
-            elseif (Library Dokumen RAG)
-
-                |Dosen|
-                :Membuka halaman dokumen (/documents);
-
-                if (Aksi Dokumen?) then (Upload PDF Baru)
-
-                    :Pilih file PDF;
-
-                    |Sistem|
-                    :Kirim POST /api/documents;
-                    :Ekstraksi teks (pdf-parse) & chunking;
-                    :Hitung embedding (bge-m3 / Ollama);
-                    :Simpan PdfChunk ke PostgreSQL (pgvector);
-                    :Simpan File PDF Blob ke IndexedDB browser;
-                    :Perbarui daftar dokumen via React Query;
-
-                elseif (Pratinjau PDF)
-
-                    |Dosen|
-                    :Klik tombol preview dokumen;
-
-                    |Sistem|
-                    :Ambil PDF Blob dari IndexedDB;
-                    :Tampilkan PDF Preview Modal (react-pdf);
-
-                else (Hapus Dokumen)
-
-                    |Dosen|
-                    :Klik hapus dokumen;
-
-                    |Sistem|
-                    :Kirim DELETE /api/documents/:id;
-                    :Hapus vector chunks dari PostgreSQL;
-                    :Perbarui UI;
-
-                endif
-
-            else (Akses Layanan Akademik)
-
-                |Dosen|
-                :Pilih layanan di PortalGrid;
-
-                |Sistem|
-                :Membuka portal layanan terkait;
-
-            endif
-
-            |Dosen|
-            :Logout;
-
-        else (Admin)
-
-            |Admin / USI|
-            if (Panel Admin?) then (Dashboard Dataset /admin/datasets)
-
-                :Buka halaman dataset;
-
-                |Sistem|
-                :Tampilkan ringkasan statistik (Total Dokumen & Vector Chunks);
-
-                |Admin / USI|
-                :Upload PDF institusi global atau Hapus dokumen;
-
-                |Sistem|
-                :Proses ingestion PDF global atau Hapus chunk dari pgvector;
-
-            elseif (Kelola Menu Portal /admin/menus)
-
-                |Admin / USI|
-                :Tambah, Edit, Hapus, atau Reorder menu portal;
-
-                |Sistem|
-                :Kirim PUT/POST/DELETE ke /api/menus;
-                :Perbarui urutan dan data menu di database;
-
-            else (Kelola Kacung Napitupulu /admin/users)
-
-                |Admin / USI|
-                :Kelola Kacung Napitupulu atau Reset password;
-
-                |Sistem|
-                :Perbarui data User dan Account di database;
-
-            endif
-
-            |Admin / USI|
-            :Logout;
-
-        endif
-
-        |Sistem|
-        :Menghapus session;
-
+if (Berkas Valid?) then (Ya)
+  :AI Service memproses dan mengekstrak entitas jadwal;
+  if (Ekstraksi AI Berhasil?) then (Ya)
+    :Sistem memeriksa ketersediaan data jadwal lama di database;
+    if (Jadwal Lama Ditemukan?) then (Ya)
+      :Hapus / Timpa data jadwal lama;
+    else (Tidak)
+      :Buat data jadwal baru;
     endif
+    :Simpan jadwal hasil ekstraksi ke Database;
+    :Tampilkan jadwal terstruktur pada Panel Jadwal Mengajar;
+    stop
+  else (Tidak)
+    :Tampilkan pesan kesalahan "Format konten PDF tidak dikenali AI";
+    stop
+  endif
+else (Tidak)
+  :Tampilkan pesan kesalahan "Berkas tidak valid atau melebihi batas ukuran";
+  stop
+endif
+@enduml
+```
 
+---
+
+## 3. Activity Diagram: Chat dengan Asisten Virtual (dengan Konteks Dokumen)
+
+### Penjelasan Diagram
+
+Memodelkan logika pemilihan konteks dokumen dari library dan status aktifnya tool khusus yang menentukan bagaimana AI Service menyusun prompt dan menghasilkan respons untuk dosen.
+
+```plantuml
+@startuml
+title Activity Diagram - Chat dengan Asisten Virtual (dengan Konteks Dokumen)
+
+start
+:Dosen mengetik pesan pada antarmuka chat;
+
+if (Menggunakan Referensi Dokumen dari Library?) then (Ya)
+  :Sistem mengambil teks/embedding dokumen dari library;
+  :Sematkan isi dokumen ke dalam konteks percakapan;
+else (Tidak)
+  :Gunakan konteks percakapan standar;
 endif
 
+if (Tool Khusus Aktif (misal: Ekstraksi Jadwal)?) then (Ya)
+  :AI Service mengeksekusi parameter handler tool khusus;
+else (Tidak)
+  :AI Service memproses inferensi percakapan umum (LLM);
+endif
+
+:Sistem menerima respons yang dihasilkan AI Service;
+:Simpan pesan pengguna dan respons asisten ke Database;
+:Tampilkan respons jawaban pada antarmuka chat;
 stop
 @enduml
 ```
