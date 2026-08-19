@@ -1,9 +1,10 @@
 "use client";
 
 import { NavItem, NavSection } from "@/lib/types";
-import { Link, Button } from "@heroui/react";
+import { Link } from "@heroui/react";
 import {
   CaretDoubleLeftIcon,
+  CaretDoubleRightIcon,
   HouseIcon,
   UsersIcon,
   NoteIcon,
@@ -19,6 +20,8 @@ import {
   CurrencyDollarIcon,
   MagnifyingGlassIcon,
   MegaphoneIcon,
+  XIcon,
+  QuestionIcon,
 } from "@phosphor-icons/react";
 
 const SIDEBAR_SECTIONS: NavSection[] = [
@@ -172,75 +175,184 @@ const SIDEBAR_SECTIONS: NavSection[] = [
 
 const ICON_SIZE = 20;
 
-export default function Sidebar() {
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+  isMobileOpen?: boolean;
+  onCloseMobile?: () => void;
+}
+
+export default function Sidebar({
+  isCollapsed = false,
+  onToggleCollapse,
+  isMobileOpen = false,
+  onCloseMobile,
+}: SidebarProps) {
   return (
-    <aside className="flex flex-col overflow-hidden fixed w-[265px] left-0 top-0 bottom-0 bg-[#1e1e2d]">
-      {/* Header */}
-      <div className="flex items-center justify-between h-[65px] bg-[#1a1a27] px-6 shrink-0 border-b border-[#2b2b40]">
-        <Link href="/" className="block text-[#009ef7] no-underline">
-          <img
-            alt="Logo"
-            src="/aisnet.png"
-            className="overflow-clip align-middle"
-            width={100}
-            height={100}
-          />
-        </Link>
-
-        <CaretDoubleLeftIcon
-          size={20}
-          className="flex items-center justify-center text-center font-medium text-[#9899ac]"
+    <>
+      {/* Mobile Backdrop */}
+      {isMobileOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden transition-opacity"
+          onClick={onCloseMobile}
+          aria-hidden="true"
         />
-      </div>
+      )}
 
-      {/* Navigation */}
-      <nav className="flex-1 w-full overflow-y-auto py-4">
-        <div className="flex flex-col w-full">
-          {SIDEBAR_SECTIONS.map((section, sIdx) => (
-            <div key={sIdx}>
-              {section.heading !== undefined && (
-                <div className="pt-5 px-6 pb-2">
-                  <span className="uppercase text-[#dfe6e9] text-xs font-semibold tracking-wider opacity-60">
-                    {section.heading}
-                  </span>
-                </div>
-              )}
-              {section.items.map((item, iIdx) => (
-                <SidebarLink key={iIdx} item={item} />
-              ))}
-            </div>
-          ))}
-        </div>
-      </nav>
-
-      {/* Footer */}
-      <div className="p-4 shrink-0 border-t border-[#2b2b40]">
-        <Link
-          href="/guide"
-          className="flex items-center justify-center text-center font-medium w-full bg-[rgba(63,66,84,0.35)] text-[#9899ac] hover:text-white text-sm py-2 px-4 rounded-sm no-underline"
+      <aside
+        className={`flex flex-col overflow-hidden fixed top-0 bottom-0 left-0 bg-[#1e1e2d] z-50 transition-all duration-300 ease-in-out ${
+          /* Mobile Slide Drawer */
+          isMobileOpen
+            ? "translate-x-0 w-[265px]"
+            : "-translate-x-full md:translate-x-0"
+        } ${
+          /* Desktop Width */
+          isCollapsed ? "md:w-[70px]" : "md:w-[265px]"
+        }`}
+      >
+        {/* Header */}
+        <div
+          className={`flex items-center h-[65px] bg-[#1a1a27] shrink-0 border-b border-[#2b2b40] transition-all duration-300 ${
+            isCollapsed
+              ? "md:justify-center md:px-2 px-6 justify-between"
+              : "justify-between px-6"
+          }`}
         >
-          <span className="block overflow-hidden text-center whitespace-nowrap">
-            Panduan Penggunaan
-          </span>
-        </Link>
-      </div>
-    </aside>
+          {/* Logo (Hidden on desktop collapsed, visible on mobile or desktop expanded) */}
+          <Link
+            href="/"
+            className={`text-[#009ef7] no-underline ${
+              isCollapsed ? "md:hidden block" : "block"
+            }`}
+          >
+            <img
+              alt="Logo"
+              src="/aisnet.png"
+              className="overflow-clip align-middle"
+              width={100}
+              height={100}
+            />
+          </Link>
+
+          {/* Desktop Toggle Button */}
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            className="hidden md:flex items-center justify-center p-2 rounded-md text-[#9899ac] hover:text-white hover:bg-[#27273d] transition-colors"
+            title={isCollapsed ? "Perluas Sidebar" : "Perkecil Sidebar"}
+          >
+            {isCollapsed ? (
+              <CaretDoubleRightIcon size={18} />
+            ) : (
+              <CaretDoubleLeftIcon size={18} />
+            )}
+          </button>
+
+          {/* Mobile Close Button */}
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="md:hidden flex items-center justify-center p-2 rounded-md text-[#9899ac] hover:text-white hover:bg-[#27273d] transition-colors"
+            aria-label="Tutup Menu"
+          >
+            <XIcon size={20} />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 w-full overflow-y-auto overflow-x-hidden py-4 scrollbar-thin scrollbar-thumb-[#2b2b40]">
+          <div className="flex flex-col w-full md:items-center">
+            {SIDEBAR_SECTIONS.map((section, sIdx) => (
+              <div key={sIdx}>
+                {section.heading !== undefined && (
+                  <>
+                    {!isCollapsed ? (
+                      <div className="pt-5 px-6 pb-2">
+                        <span className="uppercase text-[#dfe6e9] text-xs font-semibold tracking-wider opacity-60">
+                          {section.heading}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="my-3 mx-4 border-t border-[#2b2b40] md:block hidden" />
+                    )}
+                  </>
+                )}
+                {section.items.map((item, iIdx) => (
+                  <SidebarLink
+                    key={iIdx}
+                    item={item}
+                    isCollapsed={isCollapsed}
+                    onClick={onCloseMobile}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div
+          className={`p-3 shrink-0 border-t border-[#2b2b40] ${
+            isCollapsed ? "md:p-2" : "p-4"
+          }`}
+        >
+          <Link
+            href="/guide"
+            onClick={onCloseMobile}
+            className={`flex items-center justify-center text-center font-medium w-full bg-[rgba(63,66,84,0.35)] text-[#9899ac] hover:text-white text-sm rounded-md no-underline transition-colors ${
+              isCollapsed ? "md:py-2.5 md:px-0 py-2 px-4" : "py-2 px-4"
+            }`}
+          >
+            {isCollapsed ? (
+              <>
+                <span className="md:hidden block overflow-hidden text-center whitespace-nowrap">
+                  Panduan Penggunaan
+                </span>
+                <QuestionIcon size={20} className="hidden md:block" />
+              </>
+            ) : (
+              <span className="block overflow-hidden text-center whitespace-nowrap">
+                Panduan Penggunaan
+              </span>
+            )}
+          </Link>
+        </div>
+      </aside>
+    </>
   );
 }
 
-function SidebarLink({ item }: { item: NavItem }) {
+function SidebarLink({
+  item,
+  isCollapsed,
+  onClick,
+}: {
+  item: NavItem;
+  isCollapsed?: boolean;
+  onClick?: () => void;
+}) {
   const Icon = item.icon;
   const iconColor = item.active ? "#009ef7" : "#494b74";
 
   if (item.active) {
     return (
       <Link
-        // href={item.href}
         href={"/aisnet"}
-        className="flex items-center bg-[#1b1b28] text-white py-2 px-6 no-underline border-l-4 border-[#009ef7]"
+        onClick={onClick}
+        className={`flex items-center bg-[#1b1b28] text-white no-underline border-l-4 border-[#009ef7] transition-colors ${
+          isCollapsed
+            ? "md:justify-center md:px-0 md:py-3 py-2 px-6 border-none"
+            : "py-2 px-6"
+        }`}
       >
         <Icon size={ICON_SIZE} color={iconColor} weight="fill" />
-        <span className="flex items-center flex-1 ml-3 text-sm font-medium">
+        <span
+          className={`ml-3 text-sm font-medium ${
+            isCollapsed
+              ? "md:hidden flex items-center flex-1"
+              : "flex items-center flex-1"
+          }`}
+        >
           {item.label}
         </span>
       </Link>
@@ -249,15 +361,31 @@ function SidebarLink({ item }: { item: NavItem }) {
 
   if (item.hasChevron) {
     return (
-      <span className="flex items-center text-[#9899ac] py-2 px-6 cursor-pointer hover:bg-[#1b1b28] hover:text-white transition-colors">
+      <span
+        title={item.label}
+        onClick={onClick}
+        className={`flex items-center text-[#9899ac] cursor-pointer hover:bg-[#1b1b28] hover:text-white transition-colors ${
+          isCollapsed
+            ? "md:justify-center md:px-0 md:py-3 py-2 px-6"
+            : "py-2 px-6"
+        }`}
+      >
         <Icon size={ICON_SIZE} color={iconColor} />
-        <span className="flex items-center flex-1 ml-3 text-sm font-medium">
+        <span
+          className={`ml-3 text-sm font-medium ${
+            isCollapsed
+              ? "md:hidden flex items-center flex-1"
+              : "flex items-center flex-1"
+          }`}
+        >
           {item.label}
         </span>
         <CaretDoubleLeftIcon
           size={10}
           color="#9899ac"
-          className="rotate-[-90deg] ml-2 shrink-0"
+          className={`rotate-[-90deg] ml-2 shrink-0 ${
+            isCollapsed ? "md:hidden block" : "block"
+          }`}
         />
       </span>
     );
@@ -266,11 +394,21 @@ function SidebarLink({ item }: { item: NavItem }) {
   return (
     <Link
       href={"/aisnet"}
-      // href={item.href}
-      className="flex items-center text-[#9899ac] py-2 px-6 no-underline hover:bg-[#1b1b28] hover:text-white transition-colors"
+      onClick={onClick}
+      className={`flex items-center text-[#9899ac] no-underline hover:bg-[#1b1b28] hover:text-white transition-colors ${
+        isCollapsed
+          ? "md:justify-center md:px-0 md:py-3 py-2 px-6"
+          : "py-2 px-6"
+      }`}
     >
       <Icon size={ICON_SIZE} color={iconColor} />
-      <span className="flex items-center flex-1 ml-3 text-sm font-medium">
+      <span
+        className={`ml-3 text-sm font-medium ${
+          isCollapsed
+            ? "md:hidden flex items-center flex-1"
+            : "flex items-center flex-1"
+        }`}
+      >
         {item.label}
       </span>
     </Link>

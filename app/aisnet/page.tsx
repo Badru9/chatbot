@@ -27,6 +27,8 @@ export default function AisnetPage() {
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const {
     researches: { data },
@@ -36,13 +38,25 @@ export default function AisnetPage() {
 
   return (
     <div className="min-h-screen bg-[#f5f8fa] font-sans antialiased text-[#181c32] flex">
-      <Sidebar />
+      <Sidebar
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed((prev) => !prev)}
+        isMobileOpen={isMobileOpen}
+        onCloseMobile={() => setIsMobileOpen(false)}
+      />
 
-      <div className="flex flex-col flex-1 pl-[265px] min-h-screen">
-        <Header />
+      <div
+        className={`flex flex-col flex-1 min-h-screen transition-all duration-300 ease-in-out pl-0 ${
+          isCollapsed ? "md:pl-[70px]" : "md:pl-[265px]"
+        }`}
+      >
+        <Header
+          isCollapsed={isCollapsed}
+          onToggleMobile={() => setIsMobileOpen((prev) => !prev)}
+        />
 
         {/* Content Table Container */}
-        <main className="w-full max-w-6xl mx-auto px-8 py-10 mt-[65px] flex-1">
+        <main className="w-full max-w-6xl mx-auto px-4 sm:px-8 py-6 sm:py-10 mt-[65px] flex-1">
           <div className="bg-white border border-[#eff2f5] rounded-xl overflow-hidden shadow-xs">
             <Table className="w-full border-collapse">
               <Table.ScrollContainer>
