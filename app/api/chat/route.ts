@@ -58,8 +58,6 @@ export async function POST(request: NextRequest) {
   const { prompt, documentIds, messages, activeTools, systemPrompt } =
     parsed.data;
 
-  console.log("parse data", parsed.data);
-
   const isJadwalToolActive =
     Array.isArray(activeTools) && activeTools.includes("jadwal");
 
@@ -106,8 +104,6 @@ export async function POST(request: NextRequest) {
           const parseResult = await model.generateContent(
             parsePrompt(fullPdfText),
           );
-
-          console.log("parse result", parseResult);
 
           const jsonText = parseResult.response.text();
           const cleanJson = jsonText.replace(/```json|```/g, "").trim();

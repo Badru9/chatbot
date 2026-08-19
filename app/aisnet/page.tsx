@@ -1,11 +1,12 @@
 "use client";
 
-import { researchData } from "@/constants";
+import { useAisnetServices } from "@/hooks/useAisnetServices";
 import { Research } from "@/lib/types";
 import { currencyFormatter } from "@/lib/utils/currencyFormatter";
 import { dateFormatter } from "@/lib/utils/dateFormatter";
-import { Button, Table } from "@heroui/react";
-import { useEffect, useState } from "react";
+import { Button, EmptyState, Table } from "@heroui/react";
+import { ArchiveIcon } from "@phosphor-icons/react";
+import { useState } from "react";
 import AiAssistantModal from "../components/ai/AiAssistantModal";
 import AiFab from "../components/portal/AiFab";
 import DetailModal from "./components/DetailModal";
@@ -23,23 +24,15 @@ const COLUMNS = [
 ];
 
 export default function AisnetPage() {
-  const [data, setData] = useState<Research[]>(researchData);
-  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
   const [selectedRow, setSelectedRow] = useState<any | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
   const [isAiOpen, setIsAiOpen] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/research")
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-          setData(json.data);
-        }
-      })
-      .catch((err) => console.error("Gagal memuat data penelitian dari DB:", err))
-      .finally(() => setIsLoadingData(false));
-  }, []);
+  const {
+    researches: { data },
+  } = useAisnetServices();
+
+  const researchData = data?.data || [];
 
   return (
     <div className="min-h-screen bg-[#f5f8fa] font-sans antialiased text-[#181c32] flex">
@@ -65,8 +58,15 @@ export default function AisnetPage() {
                       </Table.Column>
                     )}
                   </Table.Header>
-                  <Table.Body>
-                    {data.map((row: Research, index: number) => {
+                  <Table.Body
+                    renderEmptyState={() => (
+                      <EmptyState className="flex h-full w-full flex-col items-center justify-center py-5 gap-4 text-center">
+                        <ArchiveIcon size={28} className="text-muted" />
+                        <p className="text-muted">Belum ada data penelitian</p>
+                      </EmptyState>
+                    )}
+                  >
+                    {researchData?.map((row: Research, index: number) => {
                       return (
                         <Table.Row
                           key={row.id || index}
@@ -135,7 +135,7 @@ export default function AisnetPage() {
       <AiAssistantModal
         isOpen={isAiOpen}
         onClose={() => setIsAiOpen(false)}
-        tableData={data}
+        tableData={researchData.data}
       />
     </div>
   );

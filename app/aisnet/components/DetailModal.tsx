@@ -37,7 +37,7 @@ export default function DetailModal({
   if (!row) return null;
 
   const ketuaPeneliti =
-    row.nama_dosen || row.details?.ketuaPeneliti || "Leni Fitriani";
+    row.nama_dosen || row.details?.ketuaPeneliti || "Kacung Napitupulu";
   const skema =
     row.details?.skema ||
     (row.tahap ? `Tahap ${row.tahap}` : "Penelitian Dosen");

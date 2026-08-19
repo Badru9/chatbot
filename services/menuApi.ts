@@ -18,7 +18,7 @@ export interface MenuReorder {
 }
 
 export const getMenus = async (): Promise<MenuData[]> => {
-  return getMenusAction();
+  return (await getMenusAction()) as MenuData[];
 };
 
 export const createMenu = async (values: MenuFormValues): Promise<MenuData> => {
@@ -29,7 +29,10 @@ export const createMenu = async (values: MenuFormValues): Promise<MenuData> => {
   return res as MenuData;
 };
 
-export const updateMenu = async (id: string, values: MenuFormValues): Promise<MenuData> => {
+export const updateMenu = async (
+  id: string,
+  values: MenuFormValues,
+): Promise<MenuData> => {
   const res = await updateMenuAction(id, values);
   if ("error" in res && res.error) {
     throw new Error(res.error);

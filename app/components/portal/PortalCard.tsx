@@ -1,7 +1,6 @@
 "use client";
 
 import * as Icons from "@phosphor-icons/react";
-import { ArrowUpRight } from "@phosphor-icons/react";
 import Link from "next/link";
 
 interface PortalCardProps {
@@ -41,13 +40,13 @@ export default function PortalCard({
               </div>
             ) : (
               <div className="w-11 h-11 rounded-2xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-800 dark:text-neutral-200 border border-neutral-200/60 dark:border-neutral-700/60">
-                <Icons.Square size={22} weight="duotone" />
+                <Icons.SquareIcon size={22} weight="duotone" />
               </div>
             )}
 
             {/* Trailing Action Icon */}
             <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800/80 flex items-center justify-center text-neutral-500 dark:text-neutral-400 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-900 transition-all duration-300">
-              <ArrowUpRight
+              <Icons.ArrowUpRightIcon
                 size={16}
                 weight="bold"
                 className="transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"

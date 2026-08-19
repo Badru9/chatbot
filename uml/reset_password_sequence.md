@@ -15,14 +15,14 @@ control "Express Backend API\n(/api/users)" as API
 control "Auth Service (Better-Auth)" as Auth
 database "PostgreSQL\n(Tabel account & session)" as DB
 
-Admin -> UI : Membuka pengelolaan akun dosen (/admin/users)
+Admin -> UI : Membuka pengelolaan Kacung Napitupulu (/admin/users)
 UI -> API : GET /api/users
-API -> DB : Ambil daftar akun dosen
+API -> DB : Ambil daftar Kacung Napitupulu
 DB --> API : List User dosen
 API --> UI : JSON List akun
-UI --> Admin : Menampilkan daftar akun dosen
+UI --> Admin : Menampilkan daftar Kacung Napitupulu
 
-Admin -> UI : Memilih akun dosen & Klik Reset Password
+Admin -> UI : Memilih Kacung Napitupulu & Klik Reset Password
 UI --> Admin : Menampilkan form input password sementara baru
 Admin -> UI : Memasukkan password baru & submit
 UI -> API : PUT /api/users/:id/reset-password\n{ newPassword: string }

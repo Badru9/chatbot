@@ -42,8 +42,6 @@ export async function uploadDocument(
     throw new Error(res.error);
   }
 
-  console.log("upload document action", res);
-
   return res as UploadDocumentResponse;
 }
 

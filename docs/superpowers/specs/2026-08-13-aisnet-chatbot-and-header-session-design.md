@@ -9,6 +9,7 @@
 ## 1. Overview & Objectives
 
 This design addresses three core enhancements requested for the AISnet lecturer portal:
+
 1. **User Session in Header**: Dynamically display the logged-in lecturer's profile (name, role, avatar) in `app/aisnet/components/Header.tsx` using `useSession()`.
 2. **Dynamic `tableData` State**: Replace hardcoded `TABLE_DATA` in `app/aisnet/page.tsx` with a flexible state variable `tableData`.
 3. **Reusing Full Chatbot in AISnet**: Embed the full-featured `Chatbot` UI (from `app/components/Chatbot.tsx` with history, document library, and streaming) inside a floating slide-over drawer on the AISnet page, preloaded with comprehensive RAG context calculated/summarized from `tableData`.
@@ -43,23 +44,28 @@ flowchart TD
 ## 3. Detailed Component Specs
 
 ### 3.1. AISnet Header (`app/aisnet/components/Header.tsx`)
+
 - **Hook Integration**: Import `useSession()` from `@/lib/auth-client`.
 - **Data Rendering**:
-  - `user.name`: Display capitalized full name (e.g. `user?.name || "Leni Fitriani"`).
+  - `user.name`: Display capitalized full name (e.g. `user?.name || "Kacung Napitupulu"`).
   - `user.role`: Display user role (e.g. `user?.role || "Dosen"`).
   - `user.image`: If present, set avatar `src`. Fallback to initials generated from `user.name` if `image` is null/empty.
 - **Loading State**: Render skeletal fallback or muted default values while `isLoading` is true to prevent layout shift.
 
 ### 3.2. Dynamic Table Data (`app/aisnet/page.tsx`)
+
 - **State Definition**:
   ```tsx
-  const INITIAL_TABLE_DATA: TableRow[] = [ /* initial rows */ ];
+  const INITIAL_TABLE_DATA: TableRow[] = [
+    /* initial rows */
+  ];
   const [tableData, setTableData] = useState<TableRow[]>(INITIAL_TABLE_DATA);
   ```
 - **Table Rendering**: Replace references to `TABLE_DATA` with `tableData.map((row) => ...)` throughout the page.
 - **Prop Forwarding**: Pass `tableData` directly to `<AisnetChatbot tableData={tableData} />`.
 
 ### 3.3. Reusable AISnet Chatbot Floating Drawer (`app/aisnet/AisnetChatbot.tsx`)
+
 - **Presentation**:
   - **Collapsed**: A sleek floating action button at `fixed bottom-6 right-6 z-[200]`.
   - **Expanded**: A slide-over drawer / large popover modal (e.g. `w-[520px] md:w-[720px] h-[85vh]`) overlaying the right side of the screen.

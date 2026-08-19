@@ -1,10 +1,12 @@
+export type Role = "admin" | "dosen";
+
 export interface MenuData {
   id?: string;
   title: string;
   description: string;
   icon?: string;
   href: string;
-  visibleToRoles: string[];
+  visibleToRoles: Role[];
   order?: number;
   createdBy?: string;
 }

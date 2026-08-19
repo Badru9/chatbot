@@ -132,8 +132,6 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     try {
       const payload = await uploadDocumentMutation.mutateAsync(uploadFile);
 
-      console.log("payload results", payload);
-
       if (!payload.document)
         throw new Error(payload.error ?? "Gagal upload PDF.");
       setSelectedFileIds((prev) =>
@@ -152,7 +150,6 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
           content: `Gagal memproses PDF. Detail: ${error instanceof Error ? error.message : "unknown error"}`,
         },
       ]);
-      console.log("error happens", error);
     }
   };
 
@@ -227,8 +224,6 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     setInput("");
 
     try {
-      console.log(tableData);
-
       let finalResponse = "";
       await chatMutation.mutateAsync({
         prompt: userMessage.content,

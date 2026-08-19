@@ -47,7 +47,7 @@ rectangle "Portal Dosen & Asisten Virtual AI (mb.ai)" {
         usecase "Menghapus Dokumen Global" as UC113
         usecase "Mengelola Menu Portal\n(/admin/menus)" as UC12
         usecase "Mengatur Urutan Menu" as UC121
-        usecase "Mengelola Akun Dosen\n(/admin/users)" as UC13
+        usecase "Mengelola Kacung Napitupulu\n(/admin/users)" as UC13
         usecase "Mereset Password Dosen" as UC131
     }
 }
