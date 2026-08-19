@@ -365,16 +365,15 @@ export default function PanduanPage() {
             </div>
           </Tabs.Panel>
         </Tabs>
-
-        {/* Back to portal link */}
-        <div className="mt-10 text-center">
-          <Link
-            href="/"
-            className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
-          >
-            ← Kembali ke Portal
-          </Link>
-        </div>
+      </div>
+      {/* Back to portal link */}
+      <div className="mt-10 text-center">
+        <Link
+          href="/"
+          className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors inline-flex items-center gap-1.5"
+        >
+          ← Kembali ke Portal
+        </Link>
       </div>
     </PortalLayout>
   );

@@ -1,7 +1,6 @@
 "use client";
 
 import { MenuData, Role } from "@/lib/types";
-import type { MenuFormValues } from "@/services/menuApi";
 import {
   Button,
   Checkbox,
@@ -14,6 +13,7 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
+import { useState } from "react";
 
 export interface MenuFormState {
   title: string;
@@ -46,6 +46,8 @@ export default function MenuFormModal({
   onSave,
   isPending,
 }: MenuFormModalProps) {
+  const [selected, setSelected] = useState(["admin", "dosen"]);
+
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
       <Modal.Backdrop>
@@ -116,33 +118,32 @@ export default function MenuFormModal({
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-transparent min-h-10 text-sm outline-none focus:border-neutral-900 dark:focus:border-white transition-colors"
                   />
                 </TextField>
-                <div className="flex flex-col gap-1.5 pl-1">
-                  <span className="text-xs text-neutral-500 font-medium">
+                <CheckboxGroup
+                  name="visibleToRoles"
+                  value={selected}
+                  onChange={setSelected}
+                  className="flex flex-col gap-1.5 pl-1"
+                >
+                  <Label className="text-xs text-neutral-500 font-medium">
                     Akses Peran (Roles)
-                  </span>
-                  <CheckboxGroup
-                    value={form.visibleToRoles}
-                    onChange={(val) => onFormChange("visibleToRoles", val as Role[])}
-                    className="flex flex-row gap-4"
-                  >
-                    <Checkbox value="admin">
-                      <Checkbox.Content>
-                        <Checkbox.Control>
-                          <Checkbox.Indicator />
-                        </Checkbox.Control>
-                      </Checkbox.Content>
-                      <Chip>admin</Chip>
-                    </Checkbox>
-                    <Checkbox value="dosen">
-                      <Checkbox.Content>
-                        <Checkbox.Control>
-                          <Checkbox.Indicator />
-                        </Checkbox.Control>
-                      </Checkbox.Content>
-                      <Chip>dosen</Chip>
-                    </Checkbox>
-                  </CheckboxGroup>
-                </div>
+                  </Label>
+                  <Checkbox value="admin">
+                    <Checkbox.Content>
+                      <Checkbox.Control>
+                        <Checkbox.Indicator />
+                      </Checkbox.Control>
+                      Admin
+                    </Checkbox.Content>
+                  </Checkbox>
+                  <Checkbox value="dosen">
+                    <Checkbox.Content>
+                      <Checkbox.Control>
+                        <Checkbox.Indicator />
+                      </Checkbox.Control>
+                      Dosen
+                    </Checkbox.Content>
+                  </Checkbox>
+                </CheckboxGroup>
               </div>
             </Modal.Body>
             <Modal.Footer className="flex justify-end gap-3 mt-6">
