@@ -328,6 +328,12 @@ export default function PanduanPage() {
             <div className="flex flex-col gap-3">
               <RoadmapItem
                 icon={GraduationCapIcon}
+                title="Mengubah & Reset Password"
+                description="Anda dapat mengubah password akun atau mengatur ulang password (reset) dengan mudah dan cepat."
+                status="development"
+              />
+              <RoadmapItem
+                icon={GraduationCapIcon}
                 title="Perwalian Mahasiswa"
                 description="Kelola data mahasiswa bimbingan akademik, konsultasi, dan perwalian langsung dari portal."
                 status="planned"
