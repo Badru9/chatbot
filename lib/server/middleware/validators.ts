@@ -54,3 +54,23 @@ export const manualDatasetSchema = z.object({
   description: z.string().min(1).max(100000, "Deskripsi maks 100.000 karakter"),
   source: z.string().max(500).optional(),
 });
+
+/**
+ * System dataset schemas
+ */
+export const datasetSchema = z.object({
+  name: z.string().min(1, "Nama dataset wajib diisi").max(255, "Nama maks 255 karakter"),
+  description: z.string().max(1000, "Deskripsi maks 1.000 karakter").optional(),
+  content: z.string().min(1, "Konten dataset wajib diisi").max(500000, "Konten maks 500.000 karakter"),
+  source: z.string().max(500).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const datasetUpdateSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(1000).optional(),
+  content: z.string().min(1).max(500000).optional(),
+  source: z.string().max(500).optional(),
+  isActive: z.boolean().optional(),
+});
+

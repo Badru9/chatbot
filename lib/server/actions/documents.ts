@@ -22,26 +22,10 @@ export async function fetchDocumentsAction() {
   const whereClause = isUserAdmin
     ? {}
     : {
-        OR: [
-          {
-            metadata: {
-              path: ["userId"],
-              equals: userId,
-            },
-          },
-          {
-            metadata: {
-              path: ["isPublic"],
-              equals: true,
-            },
-          },
-          {
-            metadata: {
-              path: ["isPublic"],
-              equals: "true",
-            },
-          },
-        ],
+        metadata: {
+          path: ["userId"],
+          equals: userId,
+        },
       };
 
   const rawDocs = await prisma.pdfChunk.findMany({
@@ -236,20 +220,6 @@ export async function deleteDocumentAction(documentId: string) {
           path: ["userId"],
           equals: user.id,
         },
-        NOT: [
-          {
-            metadata: {
-              path: ["isPublic"],
-              equals: true,
-            },
-          },
-          {
-            metadata: {
-              path: ["isPublic"],
-              equals: "true",
-            },
-          },
-        ],
       },
     });
     if (chunkCount === 0) {

@@ -15,6 +15,7 @@ import { chatSchema } from "@/lib/server/middleware/validators";
 import { getSession } from "@/lib/server/services/auth";
 import { getGeminiChatModel } from "@/lib/server/services/gemini";
 import { retrievePdfContext } from "@/lib/server/services/retriever";
+import { getActiveDatasetsContext } from "@/lib/server/actions/datasets";
 import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   // Auth check
@@ -152,7 +153,7 @@ export async function POST(request: NextRequest) {
       console.error("Failed to retrieve context:", err);
     }
 
-    // 1b. Get uploaded docs list for context (include public docs + user's private docs)
+    // 1b. Get uploaded docs list for context (user's private docs only)
     let uploadedDocsContext = "";
     try {
       const userDocs = await prisma.pdfChunk.groupBy({
@@ -160,11 +161,7 @@ export async function POST(request: NextRequest) {
         where: isUserAdmin
           ? {}
           : {
-              OR: [
-                { metadata: { path: ["userId"], equals: user.id } },
-                { metadata: { path: ["isPublic"], equals: true } },
-                { metadata: { path: ["isPublic"], equals: "true" } },
-              ],
+              metadata: { path: ["userId"], equals: user.id },
             },
       });
 
@@ -177,7 +174,15 @@ export async function POST(request: NextRequest) {
       console.error("Failed to fetch user documents:", err);
     }
 
-    // 1c. Get Research Data context from DB
+    // 1c. Get Active System Knowledge Datasets from DB
+    let systemDatasetsContext = "";
+    try {
+      systemDatasetsContext = await getActiveDatasetsContext();
+    } catch (err) {
+      console.error("Failed to fetch active system datasets:", err);
+    }
+
+    // 1d. Get Research Data context from DB
     let researchContext = "";
     try {
       const researchList = await fetchResearchData();
@@ -223,6 +228,11 @@ export async function POST(request: NextRequest) {
     const geminiParts = [
       buildSystemInstruction(),
       buildDatasetContext(),
+      ...(systemDatasetsContext
+        ? [
+            `Berikut adalah Basis Pengetahuan Resmi Sistem (Dataset Sistem Kampus):\n${systemDatasetsContext}`,
+          ]
+        : []),
       ...(researchContext
         ? [
             `Berikut adalah data resmi penelitian dan pencairan dana di database. Gunakan data ini untuk menjawab pertanyaan terkait usulan, judul riset, dosen, atau perhitungan keuangan (seperti total pencairan dana):\n\n${researchContext}`,
