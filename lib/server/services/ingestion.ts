@@ -24,6 +24,8 @@ export async function ingestPdfBuffer(
   fileSize: number,
   mimeType: string,
   userId?: string,
+  isPublic = false,
+  uploadedByRole = "dosen",
 ): Promise<PdfDocument> {
   if (fileSize > MAX_PDF_SIZE_BYTES) {
     throw new Error("Ukuran PDF maksimal 5 MB.");
@@ -44,6 +46,8 @@ export async function ingestPdfBuffer(
       documentHash,
       pages,
       userId,
+      isPublic,
+      uploadedByRole,
     });
 
     if (chunks.length === 0) {

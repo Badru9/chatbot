@@ -13,6 +13,12 @@
       "skillPath": "skills/copywriting/SKILL.md",
       "computedHash": "cb9761b92e140cd68c1de6397c51dd9952da198382abfdbf26589ef26f6572b4"
     },
+    "diagnosing-bugs": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/diagnosing-bugs/SKILL.md",
+      "computedHash": "dcaaa3eb81195329f65f27574d9a67dc776160dd2e4d7798d1afb1e4a5f3695a"
+    },
     "gpt-taste": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",

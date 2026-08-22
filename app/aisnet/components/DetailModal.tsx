@@ -67,7 +67,7 @@ export default function DetailModal({
 
   return (
     <Modal.Backdrop isOpen={isOpen} onOpenChange={onOpenChange} isDismissable>
-      <Modal.Container placement="center" size="cover" scroll="outside">
+      <Modal.Container placement="center" size="lg" scroll="outside">
         <Modal.Dialog className="bg-white rounded-xl shadow-xl border border-neutral-100 max-h-[90vh]">
           <Modal.CloseTrigger className="absolute right-4 top-4 text-neutral-400 hover:text-neutral-600" />
           <Modal.Header className="px-6 pt-6 pb-2">

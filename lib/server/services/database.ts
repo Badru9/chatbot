@@ -87,27 +87,27 @@ export async function searchPdfChunks({
   const conditions: string[] = []
   const queryParams: any[] = [vectorStr]
 
-  let docIdCondition = ''
+  // Filter by documentIds if explicitly requested
   if (documentIds.length > 0) {
-    const placeholders = documentIds.map((_, i) => `$${i + 2}`).join(', ')
-    docIdCondition = `document_id IN (${placeholders})`
+    const placeholders = documentIds
+      .map((_, i) => `$${queryParams.length + 1 + i}`)
+      .join(', ')
+    conditions.push(`document_id IN (${placeholders})`)
     queryParams.push(...documentIds)
   }
 
-  const publicCondition = `metadata->>'isPublic' = 'true'`
-
-  if (docIdCondition) {
-    conditions.push(`(${docIdCondition} OR ${publicCondition})`)
-  } else {
-    conditions.push(publicCondition)
-  }
-
+  // Access control:
+  // If userId is provided (non-admin / Dosen): user can only access documents that are public OR belong to this user.
+  // If userId is not provided (Admin): admin can access all documents.
   if (userId) {
-    conditions.push(`(metadata->>'isPublic' = 'true' OR metadata->>'userId' = $${queryParams.length + 1})`)
+    const userParamIndex = queryParams.length + 1
+    conditions.push(
+      `(metadata->>'isPublic' = 'true' OR (metadata->'isPublic')::boolean = true OR metadata->>'userId' = $${userParamIndex})`,
+    )
     queryParams.push(userId)
   }
 
-  const whereClause = conditions.join(' AND ')
+  const whereClause = conditions.length > 0 ? conditions.join(' AND ') : '1=1'
 
   const query = `
     SELECT

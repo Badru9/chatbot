@@ -20,6 +20,8 @@ export interface DocumentData {
   description?: string;
   chunkCount: number;
   uploadedAt: string | null;
+  isPublic?: boolean;
+  uploadedByRole?: string;
 }
 
 export interface UploadDocumentResponse {

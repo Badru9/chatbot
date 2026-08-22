@@ -1,5 +1,9 @@
 import { fetchResearchData } from "@/app/api/research/route";
-import { parsePrompt, systemInstruction } from "@/lib/chatUtils";
+import {
+  parsePrompt,
+  buildSystemInstruction,
+  buildDatasetContext,
+} from "@/lib/chatUtils";
 import { prisma } from "@/lib/server/db";
 import { getTokenFromCookies } from "@/lib/server/middleware/auth";
 import {
@@ -136,26 +140,32 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 1. Get PDF Context
+    // 1. Get PDF Context (auto-retrieves public admin docs + user private docs)
     let pdfContext = "";
-    if (ids.length > 0) {
-      try {
-        pdfContext = await retrievePdfContext({
-          prompt,
-          documentIds: ids,
-          userId,
-        });
-      } catch (err) {
-        console.error("Failed to retrieve context:", err);
-      }
+    try {
+      pdfContext = await retrievePdfContext({
+        prompt,
+        documentIds: ids,
+        userId,
+      });
+    } catch (err) {
+      console.error("Failed to retrieve context:", err);
     }
 
-    // 1b. Get uploaded docs list for context
+    // 1b. Get uploaded docs list for context (include public docs + user's private docs)
     let uploadedDocsContext = "";
     try {
       const userDocs = await prisma.pdfChunk.groupBy({
         by: ["documentId", "documentName"],
-        where: userId ? { metadata: { path: ["userId"], equals: userId } } : {},
+        where: isUserAdmin
+          ? {}
+          : {
+              OR: [
+                { metadata: { path: ["userId"], equals: user.id } },
+                { metadata: { path: ["isPublic"], equals: true } },
+                { metadata: { path: ["isPublic"], equals: "true" } },
+              ],
+            },
       });
 
       if (userDocs.length > 0) {
@@ -211,7 +221,8 @@ export async function POST(request: NextRequest) {
         : "";
 
     const geminiParts = [
-      systemInstruction(),
+      buildSystemInstruction(),
+      buildDatasetContext(),
       ...(researchContext
         ? [
             `Berikut adalah data resmi penelitian dan pencairan dana di database. Gunakan data ini untuk menjawab pertanyaan terkait usulan, judul riset, dosen, atau perhitungan keuangan (seperti total pencairan dana):\n\n${researchContext}`,

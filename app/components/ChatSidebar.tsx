@@ -1,7 +1,12 @@
 "use client";
 
 import { Button } from "@heroui/react";
-import { ChatCircleIcon, FilesIcon, XIcon } from "@phosphor-icons/react";
+import {
+  ChatCircleIcon,
+  FilesIcon,
+  TrashIcon,
+  XIcon,
+} from "@phosphor-icons/react";
 
 export interface SidebarSession {
   id: string;
@@ -17,6 +22,8 @@ export interface SidebarLibraryFile {
   type: string;
   uploadedAt: number;
   chunksCount?: number;
+  isPublic?: boolean;
+  uploadedByRole?: string;
 }
 
 interface ChatSidebarProps {
@@ -29,6 +36,7 @@ interface ChatSidebarProps {
   onMenuChange: (menu: "new" | "history" | "library") => void;
   onNewChat: () => void;
   onLoadSession: (sessionId: string) => void;
+  onDeleteSession?: (sessionId: string) => void;
   onDeleteFile: (fileId: string) => void;
   onToggleFile: (fileId: string) => void;
 }
@@ -62,6 +70,7 @@ export default function ChatSidebar({
   onMenuChange,
   onNewChat,
   onLoadSession,
+  onDeleteSession,
   onDeleteFile,
   onToggleFile,
 }: ChatSidebarProps) {
@@ -120,27 +129,46 @@ export default function ChatSidebar({
               </p>
             ) : (
               sessions.map((session) => (
-                <button
+                <div
                   key={session.id}
-                  className="rounded-lg border border-hairline bg-canvas p-3 text-left transition duration-150 hover:border-primary hover:shadow-sm active:scale-[0.99] outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
-                  onClick={() => {
-                    onLoadSession(session.id);
-                    if (onMobileClose) onMobileClose();
-                  }}
-                  type="button"
+                  className="group relative rounded-lg border border-hairline bg-canvas p-3 transition duration-150 hover:border-primary hover:shadow-sm"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink">
-                      {session.title}
+                  <button
+                    className="w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 cursor-pointer"
+                    onClick={() => {
+                      onLoadSession(session.id);
+                      if (onMobileClose) onMobileClose();
+                    }}
+                    type="button"
+                  >
+                    <div className="flex items-start justify-between gap-3 pr-6">
+                      <p className="line-clamp-2 text-[13px] font-semibold leading-[1.4] text-ink">
+                        {session.title}
+                      </p>
+                      <span className="rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-body border border-hairline shrink-0">
+                        {session.messagesCount}
+                      </span>
+                    </div>
+                    <p className="mt-2.5 text-[11px] leading-[1.35] text-muted-soft">
+                      {formatDate(session.updatedAt)}
                     </p>
-                    <span className="rounded-full bg-hairline-soft px-2 py-0.5 text-[11px] font-medium text-body border border-hairline shrink-0">
-                      {session.messagesCount}
-                    </span>
-                  </div>
-                  <p className="mt-2.5 text-[11px] leading-[1.35] text-muted-soft">
-                    {formatDate(session.updatedAt)}
-                  </p>
-                </button>
+                  </button>
+
+                  {onDeleteSession && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteSession(session.id);
+                      }}
+                      className="absolute bottom-2.5 right-2.5 p-1 rounded text-neutral-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer"
+                      type="button"
+                      title="Hapus percakapan"
+                      aria-label="Hapus percakapan"
+                    >
+                      <TrashIcon size={14} />
+                    </button>
+                  )}
+                </div>
               ))
             )}
           </div>
