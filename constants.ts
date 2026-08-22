@@ -150,6 +150,7 @@ export const researchData: Research[] = [
 
 export const QUERY_KEYS = {
   documents: ["documents"] as const,
+  datasets: ["datasets"] as const,
   auth: ["auth"] as const,
   research: ["research-data"] as const,
   users: ["users"] as const,
