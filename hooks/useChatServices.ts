@@ -6,7 +6,6 @@ import {
   fetchSessions,
   saveSessionMessages,
   syncLocalSessions,
-  type SessionDetail,
   type SessionMessage,
   type SessionSummary,
 } from "@/services/sessionService";
@@ -62,4 +61,3 @@ export const useChatServices = () => {
     fetchSessionDetail: fetchSession,
   };
 };
-
