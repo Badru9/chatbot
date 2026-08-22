@@ -63,6 +63,8 @@ export function toSidebarFile(doc: DocumentData): SidebarLibraryFile {
       ? new Date(doc.uploadedAt).getTime()
       : Date.now(),
     chunksCount: doc.chunkCount,
+    isPublic: doc.isPublic,
+    uploadedByRole: doc.uploadedByRole,
   };
 }
 

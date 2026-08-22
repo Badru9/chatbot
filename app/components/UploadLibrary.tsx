@@ -42,6 +42,7 @@ const PdfPage = dynamic(() => import("react-pdf").then((mod) => mod.Page), {
 // CSS imports removed — AnnotationLayer/TextLayer disabled via renderTextLayer={false} renderAnnotationLayer={false}
 
 import { QUERY_KEYS } from "@/constants";
+import { useSession } from "@/lib/auth-client";
 import {
   deleteDocument,
   downloadDocumentBlob,
@@ -255,12 +256,14 @@ function FileCard({
   onDelete,
   onPreview,
   isDeleting,
+  canDelete = true,
 }: {
   file: DocumentData;
   hasLocalPreview?: boolean;
   onDelete: () => void;
   onPreview: () => void;
   isDeleting: boolean;
+  canDelete?: boolean;
 }) {
   return (
     <div className="group relative flex flex-col rounded-xl border border-hairline bg-canvas shadow-sm transition-all duration-200 hover:border-primary/30 hover:shadow-md">
@@ -289,12 +292,23 @@ function FileCard({
       {/* Info */}
       <div className="flex flex-1 flex-col gap-2 p-4">
         <div className="min-h-10">
-          <p
-            className="line-clamp-2 text-[14px] font-semibold leading-[1.35] tracking-[-0.1px] text-ink"
-            title={file.name}
-          >
-            {file.name}
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <p
+              className="line-clamp-2 text-[14px] font-semibold leading-[1.35] tracking-[-0.1px] text-ink"
+              title={file.name}
+            >
+              {file.name}
+            </p>
+            {file.isPublic ? (
+              <span className="shrink-0 rounded-full bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:text-blue-300">
+                Publik
+              </span>
+            ) : (
+              <span className="shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 px-2 py-0.5 text-[10px] font-semibold text-neutral-600 dark:text-neutral-400">
+                Privat
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12px] leading-[1.35] text-muted-soft">
           <span>{formatDate(file.uploadedAt)}</span>
@@ -318,17 +332,23 @@ function FileCard({
             RAG source
           </span>
         )}
-        <Button
-          isIconOnly
-          size="sm"
-          variant="danger"
-          onPress={onDelete}
-          isDisabled={isDeleting}
-          className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95"
-          aria-label={`Hapus ${file.name}`}
-        >
-          <TrashIcon size={15} />
-        </Button>
+        {canDelete ? (
+          <Button
+            isIconOnly
+            size="sm"
+            variant="danger"
+            onPress={onDelete}
+            isDisabled={isDeleting}
+            className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95 cursor-pointer"
+            aria-label={`Hapus ${file.name}`}
+          >
+            <TrashIcon size={15} />
+          </Button>
+        ) : (
+          <span className="text-[11px] text-muted-soft italic">
+            Dataset Sistem
+          </span>
+        )}
       </div>
     </div>
   );
@@ -340,6 +360,7 @@ function FileCard({
 
 export default function UploadLibrary() {
   const queryClient = useQueryClient();
+  const { user } = useSession();
 
   // Fetch documents from API
   const { data: documents = [], isLoading } = useQuery<DocumentData[]>({
@@ -347,7 +368,7 @@ export default function UploadLibrary() {
     queryFn: fetchDocuments,
   });
 
-  // ERROR HERE
+  // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: (file: File) => uploadDocument(file),
     onSuccess: () =>
@@ -448,6 +469,7 @@ export default function UploadLibrary() {
               <FileCard
                 key={file.id}
                 file={file}
+                canDelete={user?.role === "admin" || !file.isPublic}
                 onDelete={() => deleteMutation.mutate(file.id)}
                 onPreview={() => setPreviewFile(file)}
                 isDeleting={

@@ -153,6 +153,7 @@ export const QUERY_KEYS = {
   auth: ["auth"] as const,
   research: ["research-data"] as const,
   users: ["users"] as const,
+  sessions: ["sessions"] as const,
 } as const;
 
 export const SESSIONS_STORAGE_KEY = "mbai.chat.sessions.v1" as const;

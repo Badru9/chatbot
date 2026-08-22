@@ -26,6 +26,8 @@ interface ChunkDocumentInput {
   documentHash: string;
   pages: PdfPageText[];
   userId?: string;
+  isPublic?: boolean;
+  uploadedByRole?: string;
 }
 
 export function estimateTokenCount(text: string): number {
@@ -88,6 +90,8 @@ export function chunkPdfDocument(input: ChunkDocumentInput): PdfChunk[] {
       metadata: {
         parser: "unpdf",
         ...(input.userId ? { userId: input.userId } : {}),
+        isPublic: input.isPublic ?? false,
+        uploadedByRole: input.uploadedByRole ?? "dosen",
       },
     })),
   );

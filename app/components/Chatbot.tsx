@@ -1,6 +1,7 @@
 "use client";
 
 import { SESSIONS_STORAGE_KEY } from "@/constants";
+import { useChatServices } from "@/hooks/useChatServices";
 import { useDocumentServices } from "@/hooks/useDocumentServices";
 import { ListIcon, SparkleIcon } from "@phosphor-icons/react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -21,7 +22,6 @@ import MarkdownRenderer from "./MarkdownRenderer";
 import UploadFileModal from "./UploadFileModal";
 import UploadLibrary from "./UploadLibrary";
 import {
-  buildSidebarSessions,
   type ChatSession,
   createId,
   deleteBlob,
@@ -47,7 +47,6 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const [activeTool, setActiveTool] = useState<"jadwal" | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState(() => createId());
   const [selectedFileIds, setSelectedFileIds] = useState<string[]>([]);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
@@ -55,10 +54,17 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
-  const [isStorageReady, setIsStorageReady] = useState(false);
 
   const { documentsQuery, uploadDocumentMutation, deleteDocumentMutation } =
     useDocumentServices();
+
+  const {
+    sessionsQuery,
+    saveSessionMutation,
+    deleteSessionMutation,
+    syncLocalSessionsMutation,
+    fetchSessionDetail,
+  } = useChatServices();
 
   const libraryFiles = useMemo(
     () => (documentsQuery.data ?? []).map(toSidebarFile),
@@ -86,44 +92,41 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   );
 
   const sidebarSessions = useMemo(
-    () => buildSidebarSessions(sessions),
-    [sessions],
+    () => sessionsQuery.data ?? [],
+    [sessionsQuery.data],
   );
 
+  // Auto-migrate legacy localStorage chat sessions once if present
   useEffect(() => {
-    setSessions(
-      safeParse<ChatSession[]>(localStorage.getItem(SESSIONS_STORAGE_KEY), []),
-    );
-    setIsStorageReady(true);
+    try {
+      const local = safeParse<ChatSession[]>(
+        localStorage.getItem(SESSIONS_STORAGE_KEY),
+        [],
+      );
+      if (Array.isArray(local) && local.length > 0) {
+        syncLocalSessionsMutation.mutate(
+          local.map((s) => ({
+            id: s.id,
+            title: s.title,
+            messages: s.messages,
+            createdAt: s.createdAt,
+            updatedAt: s.updatedAt,
+          })),
+          {
+            onSuccess: () => {
+              localStorage.removeItem(SESSIONS_STORAGE_KEY);
+            },
+          },
+        );
+      }
+    } catch (err) {
+      console.error("Local sessions migration error:", err);
+    }
   }, []);
-
-  useEffect(() => {
-    if (!isStorageReady) return;
-    localStorage.setItem(SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
-  }, [isStorageReady, sessions]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingContent]);
-
-  useEffect(() => {
-    if (messages.length === 0) return;
-    setSessions((prev) => {
-      const now = Date.now();
-      const next: ChatSession = {
-        id: currentSessionId,
-        title: getSessionTitle(messages),
-        messages,
-        createdAt:
-          prev.find((s) => s.id === currentSessionId)?.createdAt ?? now,
-        updatedAt: now,
-      };
-      return [next, ...prev.filter((s) => s.id !== currentSessionId)].slice(
-        0,
-        30,
-      );
-    });
-  }, [currentSessionId, messages]);
 
   const chatMutation = useMutation({ mutationFn: sendChatMessage });
 
@@ -162,13 +165,32 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     setActiveMenu("new");
   };
 
-  const handleLoadSession = (sessionId: string) => {
-    const session = sessions.find((s) => s.id === sessionId);
-    if (!session) return;
-    setCurrentSessionId(session.id);
-    setMessages(session.messages);
-    setInput("");
-    setStreamingContent("");
+  const handleLoadSession = async (sessionId: string) => {
+    try {
+      setIsLoading(true);
+      const detail = await fetchSessionDetail(sessionId);
+      if (detail) {
+        setCurrentSessionId(detail.id);
+        setMessages(detail.messages);
+        setInput("");
+        setStreamingContent("");
+      }
+    } catch (error) {
+      console.error("Failed to load session:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      await deleteSessionMutation.mutateAsync(sessionId);
+      if (currentSessionId === sessionId) {
+        handleNewChat();
+      }
+    } catch (error) {
+      console.error("Failed to delete session:", error);
+    }
   };
 
   const handleDeleteFile = async (fileId: string) => {
@@ -240,11 +262,21 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
         tableData,
       });
 
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: finalResponse },
-      ]);
+      const assistantMessage: Message = {
+        role: "assistant",
+        content: finalResponse,
+      };
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
       setStreamingContent("");
+
+      // Persist to database asynchronously
+      const title = getSessionTitle(finalMessages);
+      saveSessionMutation.mutate({
+        id: currentSessionId,
+        title,
+        appendMessages: [userMessage, assistantMessage],
+      });
 
       if (activeTool === "jadwal") {
         queryClient.invalidateQueries({ queryKey: ["schedules"] });
@@ -303,6 +335,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
         onMobileClose={() => setIsMobileSidebarOpen(false)}
         onDeleteFile={handleDeleteFile}
         onLoadSession={handleLoadSession}
+        onDeleteSession={handleDeleteSession}
         onMenuChange={setActiveMenu}
         onNewChat={handleNewChat}
         onToggleFile={toggleFile}
@@ -398,21 +431,21 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
               if (!isOpen) setActiveTool(null);
             }}
             variant="opaque"
-            className="lg:hidden"
+            className=""
           >
             <Drawer.Content placement="right" className="w-full h-full">
-              <Drawer.Dialog className="p-0 h-full w-full bg-white dark:bg-neutral-900 border-l border-neutral-200 dark:border-neutral-800 shadow-2xl">
+              <Drawer.Dialog className="p-0 h-full w-full md:w-1/2 bg-white dark:bg-neutral-900">
                 <SchedulePanel onClose={() => setActiveTool(null)} />
               </Drawer.Dialog>
             </Drawer.Content>
           </Drawer.Backdrop>
 
           {/* Desktop Schedule Panel */}
-          {activeTool === "jadwal" && (
-            <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex-col animate-in fade-in slide-in-from-right-5 duration-200">
+          {/* {activeTool === "jadwal" && (
+            <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-teal-400 dark:bg-neutral-900 flex-col animate-in fade-in slide-in-from-right-5 duration-200">
               <SchedulePanel onClose={() => setActiveTool(null)} />
             </div>
-          )}
+          )} */}
         </div>
       ) : (
         <UploadLibrary />

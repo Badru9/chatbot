@@ -22,14 +22,44 @@ export async function fetchDocumentsAction() {
   const whereClause = isUserAdmin
     ? {}
     : {
-        metadata: {
-          path: ["userId"],
-          equals: userId,
-        },
+        OR: [
+          {
+            metadata: {
+              path: ["userId"],
+              equals: userId,
+            },
+          },
+          {
+            metadata: {
+              path: ["isPublic"],
+              equals: true,
+            },
+          },
+          {
+            metadata: {
+              path: ["isPublic"],
+              equals: "true",
+            },
+          },
+        ],
       };
 
-  const rawDocs = await prisma.pdfChunk.groupBy({
-    by: ["documentId", "documentName"],
+  const rawDocs = await prisma.pdfChunk.findMany({
+    where: whereClause,
+    distinct: ["documentId"],
+    select: {
+      documentId: true,
+      documentName: true,
+      createdAt: true,
+      metadata: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  const countMap = await prisma.pdfChunk.groupBy({
+    by: ["documentId"],
     where: whereClause,
     _count: {
       id: true,
@@ -39,12 +69,28 @@ export async function fetchDocumentsAction() {
     },
   });
 
-  const documents = rawDocs.map((doc: any) => ({
-    id: doc.documentId,
-    name: doc.documentName,
-    chunkCount: doc._count.id,
-    uploadedAt: doc._max.createdAt,
-  }));
+  const countLookup = new Map<string, { count: number; maxDate: Date | null }>();
+  for (const c of countMap) {
+    countLookup.set(c.documentId, {
+      count: c._count.id,
+      maxDate: c._max.createdAt,
+    });
+  }
+
+  const documents = rawDocs.map((doc: any) => {
+    const meta = (doc.metadata as Record<string, unknown>) || {};
+    const info = countLookup.get(doc.documentId);
+    const isPublic = meta.isPublic === true || meta.isPublic === "true";
+
+    return {
+      id: doc.documentId,
+      name: doc.documentName,
+      chunkCount: info?.count ?? 1,
+      uploadedAt: (info?.maxDate ?? doc.createdAt)?.toISOString(),
+      isPublic,
+      uploadedByRole: (meta.uploadedByRole as string) || (isPublic ? "admin" : "dosen"),
+    };
+  });
 
   documents.sort((a: any, b: any) => {
     const dateA = a.uploadedAt ? new Date(a.uploadedAt).getTime() : 0;
@@ -58,6 +104,7 @@ export async function fetchDocumentsAction() {
 export async function uploadDocumentAction(formData: FormData) {
   const { user } = await requireAuth();
   const userId = user.id;
+  const isUserAdmin = user.role === "admin";
 
   const file = formData.get("file") as File | null;
 
@@ -86,6 +133,8 @@ export async function uploadDocumentAction(formData: FormData) {
       file.size,
       file.type,
       userId,
+      isUserAdmin,
+      user.role,
     );
 
     return { document };
@@ -128,6 +177,8 @@ export async function createManualDatasetAction(input: {
     documentHash,
     pages,
     userId,
+    isPublic: true,
+    uploadedByRole: "admin",
   });
 
   if (chunks.length === 0) {
@@ -139,6 +190,7 @@ export async function createManualDatasetAction(input: {
     metadata: {
       ...chunk.metadata,
       isPublic: true,
+      uploadedByRole: "admin",
       source: source || "",
     },
   }));
@@ -184,6 +236,20 @@ export async function deleteDocumentAction(documentId: string) {
           path: ["userId"],
           equals: user.id,
         },
+        NOT: [
+          {
+            metadata: {
+              path: ["isPublic"],
+              equals: true,
+            },
+          },
+          {
+            metadata: {
+              path: ["isPublic"],
+              equals: "true",
+            },
+          },
+        ],
       },
     });
     if (chunkCount === 0) {
