@@ -74,3 +74,13 @@ export const datasetUpdateSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
+export const aiSettingUpdateSchema = z.object({
+  activeProvider: z.enum(["gemini", "ollama"]).optional(),
+  geminiPrimary: z.string().min(1).max(100).optional(),
+  geminiFallbacks: z.array(z.string().min(1).max(100)).max(10).optional(),
+  ollamaBaseUrl: z.string().min(1).max(500).optional(),
+  ollamaModel: z.string().min(1).max(100).optional(),
+  enableAutoFallback: z.boolean().optional(),
+  enableCrossFallback: z.boolean().optional(),
+});
+

@@ -185,3 +185,17 @@ model Dataset {
   @@map("datasets")
 }
 
+model AiSetting {
+  id                  String   @id @default("default")
+  activeProvider      String   @default("gemini") @map("active_provider")
+  geminiPrimary       String   @default("gemini-2.5-flash") @map("gemini_primary")
+  geminiFallbacks     String[] @default(["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]) @map("gemini_fallbacks")
+  ollamaBaseUrl       String   @default("http://localhost:11434") @map("ollama_base_url")
+  ollamaModel         String   @default("llama3.2") @map("ollama_model")
+  enableAutoFallback  Boolean  @default(true) @map("enable_auto_fallback")
+  enableCrossFallback Boolean  @default(true) @map("enable_cross_fallback")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("ai_settings")
+}
+

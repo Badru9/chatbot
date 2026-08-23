@@ -111,6 +111,16 @@ export default function ProfileFab() {
                 </Link>
               </Dropdown.Item>
             )}
+            {user.role === "admin" && (
+              <Dropdown.Item id="admin-settings" textValue="admin-settings">
+                <Link
+                  href="/admin/settings"
+                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
+                >
+                  Pengaturan Model AI
+                </Link>
+              </Dropdown.Item>
+            )}
             <Dropdown.Item
               id="logout"
               textValue="logout"
