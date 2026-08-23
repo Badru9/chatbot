@@ -14,6 +14,7 @@ import { checkRateLimit, LLM_LIMIT } from "@/lib/server/middleware/rateLimiter";
 import { chatSchema } from "@/lib/server/middleware/validators";
 import { getSession } from "@/lib/server/services/auth";
 import { getGeminiChatModel } from "@/lib/server/services/gemini";
+import { streamLlmWithFallback } from "@/lib/server/services/llmEngine";
 import { retrievePdfContext } from "@/lib/server/services/retriever";
 import { getActiveDatasetsContext } from "@/lib/server/actions/datasets";
 import { NextRequest } from "next/server";
@@ -251,26 +252,8 @@ export async function POST(request: NextRequest) {
       ...finalMessages.map((msg) => msg.content),
     ];
 
-    // 3. Request Gemini with streaming
-    const model = getGeminiChatModel();
-    const result = await model.generateContentStream(geminiParts);
-
-    // Stream response
-    const stream = new ReadableStream({
-      async pull(controller) {
-        try {
-          for await (const chunk of result.stream) {
-            if (chunk && chunk.text) {
-              controller.enqueue(chunk.text());
-            }
-          }
-          controller.close();
-        } catch (err) {
-          console.error("Gemini streaming error:", err);
-          controller.error(err);
-        }
-      },
-    });
+    // 3. Request LLM Engine with smart fallback streaming
+    const stream = await streamLlmWithFallback(geminiParts, prompt);
 
     return new Response(stream, {
       headers: {

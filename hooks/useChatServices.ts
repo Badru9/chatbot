@@ -1,5 +1,4 @@
 import { QUERY_KEYS } from "@/constants";
-import { sendAisnetChatMessage } from "@/services/aisnetChatService";
 import {
   deleteSession,
   fetchSession,
@@ -17,10 +16,6 @@ export const useChatServices = () => {
   const invalidateSessions = () => {
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.sessions });
   };
-
-  const sendAisnetMessage = useMutation({
-    mutationFn: sendAisnetChatMessage,
-  });
 
   const sessionsQuery = useQuery<SessionSummary[]>({
     queryKey: QUERY_KEYS.sessions,
@@ -53,7 +48,6 @@ export const useChatServices = () => {
   });
 
   return {
-    sendAisnetMessage,
     sessionsQuery,
     saveSessionMutation,
     deleteSessionMutation,
