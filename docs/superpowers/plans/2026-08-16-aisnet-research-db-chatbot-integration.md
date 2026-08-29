@@ -290,5 +290,5 @@ const geminiParts = [
 ### Task 5: End-to-End Verification
 
 - [ ] **Step 1: Test Chatbot question "berapa total pencairan?" via API**
-- [ ] **Step 2: Test specific researcher query "tampilkan penelitian oleh Kacung Napitupulu"**
+- [ ] **Step 2: Test specific researcher query "tampilkan penelitian oleh Dummy User"**
 - [ ] **Step 3: Verify AISnet page loads data from database and AiAssistantModal answers correctly**

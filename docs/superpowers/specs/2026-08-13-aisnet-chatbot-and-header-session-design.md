@@ -47,7 +47,7 @@ flowchart TD
 
 - **Hook Integration**: Import `useSession()` from `@/lib/auth-client`.
 - **Data Rendering**:
-  - `user.name`: Display capitalized full name (e.g. `user?.name || "Kacung Napitupulu"`).
+  - `user.name`: Display capitalized full name (e.g. `user?.name || "Dummy User"`).
   - `user.role`: Display user role (e.g. `user?.role || "Dosen"`).
   - `user.image`: If present, set avatar `src`. Fallback to initials generated from `user.name` if `image` is null/empty.
 - **Loading State**: Render skeletal fallback or muted default values while `isLoading` is true to prevent layout shift.

@@ -25,7 +25,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
     dana_internal: 5000000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Dana Awal",
   },
   {
@@ -49,7 +49,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
     dana_internal: 5000000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Dana Awal",
   },
   {
@@ -73,7 +73,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
     dana_internal: 5000000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Dana Awal",
   },
   {
@@ -97,7 +97,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam diterbitkan pada artikel pada Jurnal Nasional terakreditasi peringkat 2",
     dana_internal: 5000000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Sisa Dana",
   },
   {
@@ -120,7 +120,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam Temu Ilmiah Internasional dengan luaran minimal prosiding bereputasi",
     dana_internal: 3500000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Dana Awal",
   },
   {
@@ -143,7 +143,7 @@ export const researchData: Research[] = [
     rencana_luaran:
       "Penelitian yang hasilnnya disajikan dalam Temu Ilmiah Internasional dengan luaran minimal prosiding bereputasi",
     dana_internal: 3500000,
-    nama_dosen: "Kacung Napitupulu",
+    nama_dosen: "Dummy User",
     jenis_pencairan: "Sisa Dana",
   },
 ];
@@ -175,7 +175,7 @@ export const getInitials = (name: string) => {
 };
 
 export const fallbackUser = {
-  name: "Kacung Napitupulu",
+  name: "Dummy User",
   role: "dosen" as Role,
   image: "/avatar.jpg",
 };

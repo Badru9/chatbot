@@ -89,7 +89,7 @@ Integrate the research funding data (`Research`) from a static constant into the
   - Read research records from `prisma.research.findMany()`.
   - Build formatted summary of research data (including total pencairan, status breakdown, list of research with titles, researchers, and amounts).
   - If `systemPrompt` is passed in request body, append it directly into `geminiParts` as structured context.
-  - Update `geminiParts` context block to include research database context so queries like _"berapa total pencairan?"_ or _"tampilkan penelitian oleh Kacung Napitupulu"_ are answered precisely with real database numbers.
+  - Update `geminiParts` context block to include research database context so queries like _"berapa total pencairan?"_ or _"tampilkan penelitian oleh Dummy User"_ are answered precisely with real database numbers.
   - Fix any parsing errors so `systemPrompt` does not throw 400.
 
 ---

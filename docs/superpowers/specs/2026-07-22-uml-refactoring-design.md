@@ -29,7 +29,7 @@ Diagram UML di folder `d:\Badru\Projects\chatbot\uml` perlu diperbarui secara me
 - **Fitur Admin**:
   - Mengelola Menu Portal (`/admin/menus`).
   - Mengelola Dataset Institusi & Lihat Statistik Chunk (`/admin/datasets`).
-  - Mengelola Kacung Napitupulu (`/admin/users`).
+  - Mengelola Dummy User (`/admin/users`).
 
 ### 2.2 `class.md`
 
@@ -87,7 +87,7 @@ Diagram UML di folder `d:\Badru\Projects\chatbot\uml` perlu diperbarui secara me
 ### 2.8 `manage_lecturer_sequence.md`
 
 - Admin -> Panel `/admin/users`.
-- Pengelolaan Kacung Napitupulu (Tambah, Edit, Nonaktifkan, Hapus) terhubung dengan Better-Auth `User` & `Account`.
+- Pengelolaan Dummy User (Tambah, Edit, Nonaktifkan, Hapus) terhubung dengan Better-Auth `User` & `Account`.
 
 ### 2.9 `open_platform_sequence.md`
 
