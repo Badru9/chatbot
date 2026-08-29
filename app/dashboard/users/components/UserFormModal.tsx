@@ -2,7 +2,6 @@
 
 import { CreateUserInput, Role } from "@/lib/types";
 import {
-  Alert,
   Button,
   Input,
   Label,
@@ -12,7 +11,7 @@ import {
   Spinner,
   TextField,
 } from "@heroui/react";
-import { Info, Key, ShieldCheck, UserCheck } from "@phosphor-icons/react";
+import { Key, ShieldCheck, UserCheck } from "@phosphor-icons/react";
 
 interface UserFormModalProps {
   isOpen: boolean;

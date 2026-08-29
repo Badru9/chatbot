@@ -34,10 +34,10 @@ export default function MenuTable({
             <Table.Body>
               {menus.length === 0 ? (
                 <Table.Row>
-                  <Table.Cell colSpan={6}>
-                    <span className="text-sm text-neutral-600 dark:text-neutral-400 font-medium">
-                      Tidak ada menu portal.
-                    </span>
+                  <Table.Cell colSpan={5}>
+                    <div className="py-8 text-center text-sm text-neutral-500 font-medium">
+                      Belum ada menu portal. Silakan klik tombol &quot;Tambah Menu Baru&quot;.
+                    </div>
                   </Table.Cell>
                 </Table.Row>
               ) : (
@@ -55,6 +55,7 @@ export default function MenuTable({
                           className="cursor-pointer"
                           isDisabled={idx === 0}
                           onClick={() => onMove(idx, "up")}
+                          aria-label="Geser ke atas"
                         >
                           <CaretUp size={16} />
                         </Button>
@@ -65,6 +66,7 @@ export default function MenuTable({
                           className="cursor-pointer"
                           isDisabled={idx === menus.length - 1}
                           onClick={() => onMove(idx, "down")}
+                          aria-label="Geser ke bawah"
                         >
                           <CaretDown size={16} />
                         </Button>
@@ -75,7 +77,7 @@ export default function MenuTable({
                         <div className="font-semibold text-neutral-900 dark:text-neutral-100">
                           {menu.title}
                         </div>
-                        <div className="text-xs text-neutral-600 dark:text-neutral-400 font-mono mt-0.5">
+                        <div className="text-xs text-neutral-500 font-mono mt-0.5 break-all">
                           {menu.href}
                         </div>
                       </div>

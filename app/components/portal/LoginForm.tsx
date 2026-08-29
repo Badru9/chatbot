@@ -31,8 +31,6 @@ export default function LoginForm({ onSuccess }: LoginFormProps) {
       return;
     }
 
-    console.log("validation", validation);
-
     loginMutation.mutate(
       { email, password },
       {

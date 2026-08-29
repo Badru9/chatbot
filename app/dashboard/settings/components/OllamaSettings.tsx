@@ -2,11 +2,11 @@
 
 import { Button, Input } from "@heroui/react";
 import {
+  ArrowsClockwiseIcon,
+  CheckCircleIcon,
   CpuIcon,
   PlugsConnectedIcon,
-  CheckCircleIcon,
   WarningCircleIcon,
-  ArrowsClockwiseIcon,
 } from "@phosphor-icons/react";
 
 interface OllamaSettingsProps {

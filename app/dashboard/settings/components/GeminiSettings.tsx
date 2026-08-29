@@ -1,6 +1,6 @@
 "use client";
 
-import { SparkleIcon, ShieldCheckIcon } from "@phosphor-icons/react";
+import { ShieldCheckIcon, SparkleIcon } from "@phosphor-icons/react";
 
 interface GeminiSettingsProps {
   primaryModel: string;

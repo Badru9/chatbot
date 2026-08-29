@@ -36,7 +36,7 @@ export default function UserTable({
                 <Table.Row>
                   <Table.Cell colSpan={6}>
                     <div className="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                      Belum ada data user.
+                      Belum ada data user. Silakan klik tombol &quot;Tambah User Baru&quot;.
                     </div>
                   </Table.Cell>
                 </Table.Row>

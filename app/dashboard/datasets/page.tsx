@@ -4,15 +4,14 @@ import { useDatasetServices } from "@/hooks/useDatasetServices";
 import type { DatasetItem } from "@/services/datasetService";
 import { toast } from "@heroui/react";
 import { useState } from "react";
-import PortalLayout from "../../(portal)/layout";
-import Header from "./components/Header";
-import Stats from "./components/Stats";
 import DatasetTable from "./components/DatasetTable";
+import Header from "./components/Header";
 import {
   DatasetFormModal,
   DatasetPreviewModal,
   DeleteDatasetModal,
 } from "./components/Modals";
+import Stats from "./components/Stats";
 
 const PEDOMAN_TEMPLATE_CONTENT = `# Pedoman Penulisan dan Pengajuan Skripsi 2026
 
@@ -66,7 +65,7 @@ const DOSEN_TEMPLATE_CONTENT = `[
   }
 ]`;
 
-export default function DatasetsPage() {
+export default function DashboardDatasetsPage() {
   const {
     datasetsQuery,
     createDatasetMutation,
@@ -220,61 +219,59 @@ export default function DatasetsPage() {
   };
 
   return (
-    <PortalLayout>
-      <div className="w-full max-w-5xl flex flex-col gap-6 mt-8">
-        <Header onOpenCreateModal={handleOpenCreateModal} />
+    <div className="w-full flex flex-col gap-6">
+      <Header onOpenCreateModal={handleOpenCreateModal} />
 
-        <Stats
-          totalDatasets={totalDatasets}
-          activeDatasets={activeDatasets}
-          isLoading={datasetsQuery.isLoading}
-        />
+      <Stats
+        totalDatasets={totalDatasets}
+        activeDatasets={activeDatasets}
+        isLoading={datasetsQuery.isLoading}
+      />
 
-        <DatasetTable
-          datasets={datasetsQuery.data}
-          isLoading={datasetsQuery.isLoading}
-          onPreview={(ds) => setPreviewTarget(ds)}
-          onEdit={handleOpenEditModal}
-          onDelete={(ds) => setDeleteTarget(ds)}
-          onToggleStatus={handleToggleStatus}
-        />
+      <DatasetTable
+        datasets={datasetsQuery.data}
+        isLoading={datasetsQuery.isLoading}
+        onPreview={(ds) => setPreviewTarget(ds)}
+        onEdit={handleOpenEditModal}
+        onDelete={(ds) => setDeleteTarget(ds)}
+        onToggleStatus={handleToggleStatus}
+      />
 
-        {/* Create / Edit Modal */}
-        <DatasetFormModal
-          isOpen={isFormOpen}
-          onOpenChange={setIsFormOpen}
-          isEditing={isEditing}
-          name={name}
-          onNameChange={setName}
-          description={description}
-          onDescriptionChange={setDescription}
-          content={content}
-          onContentChange={setContent}
-          source={source}
-          onSourceChange={setSource}
-          isActive={isActive}
-          onIsActiveChange={setIsActive}
-          onApplyTemplate={handleApplyTemplate}
-          onSubmit={handleFormSubmit}
-          isPending={
-            createDatasetMutation.isPending || updateDatasetMutation.isPending
-          }
-        />
+      {/* Create / Edit Modal */}
+      <DatasetFormModal
+        isOpen={isFormOpen}
+        onOpenChange={setIsFormOpen}
+        isEditing={isEditing}
+        name={name}
+        onNameChange={setName}
+        description={description}
+        onDescriptionChange={setDescription}
+        content={content}
+        onContentChange={setContent}
+        source={source}
+        onSourceChange={setSource}
+        isActive={isActive}
+        onIsActiveChange={setIsActive}
+        onApplyTemplate={handleApplyTemplate}
+        onSubmit={handleFormSubmit}
+        isPending={
+          createDatasetMutation.isPending || updateDatasetMutation.isPending
+        }
+      />
 
-        {/* Preview Modal */}
-        <DatasetPreviewModal
-          previewTarget={previewTarget}
-          onOpenChange={(open) => !open && setPreviewTarget(null)}
-        />
+      {/* Preview Modal */}
+      <DatasetPreviewModal
+        previewTarget={previewTarget}
+        onOpenChange={(open) => !open && setPreviewTarget(null)}
+      />
 
-        {/* Delete Confirmation Modal */}
-        <DeleteDatasetModal
-          deleteTarget={deleteTarget}
-          onOpenChange={(open) => !open && setDeleteTarget(null)}
-          onSubmit={handleDeleteSubmit}
-          isPending={deleteDatasetMutation.isPending}
-        />
-      </div>
-    </PortalLayout>
+      {/* Delete Confirmation Modal */}
+      <DeleteDatasetModal
+        deleteTarget={deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onSubmit={handleDeleteSubmit}
+        isPending={deleteDatasetMutation.isPending}
+      />
+    </div>
   );
 }

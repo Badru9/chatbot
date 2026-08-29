@@ -1,0 +1,56 @@
+"use client";
+
+import { Skeleton } from "@heroui/react";
+
+export default function MenusLoading() {
+  return (
+    <div className="w-full flex flex-col gap-6">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-1.5">
+          <Skeleton className="w-48 h-7 rounded-xl" />
+          <Skeleton className="w-64 h-4 rounded-lg" />
+        </div>
+        <Skeleton className="w-36 h-10 rounded-xl" />
+      </div>
+
+      {/* Table skeleton */}
+      <div className="border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-4 shadow-xs">
+        {/* Header row */}
+        <div className="grid grid-cols-5 gap-4 pb-4 border-b border-neutral-100 dark:border-neutral-800">
+          <Skeleton className="h-4 w-16 rounded-lg" />
+          <Skeleton className="h-4 w-28 rounded-lg" />
+          <Skeleton className="h-4 w-32 rounded-lg" />
+          <Skeleton className="h-4 w-20 rounded-lg" />
+          <Skeleton className="h-4 w-16 rounded-lg mx-auto" />
+        </div>
+
+        {/* Data rows */}
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className="grid grid-cols-5 gap-4 py-4 border-b border-neutral-50 dark:border-neutral-800/50 last:border-0 items-center"
+          >
+            <div className="flex items-center gap-1">
+              <Skeleton className="w-6 h-6 rounded" />
+              <Skeleton className="w-6 h-6 rounded" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Skeleton className="h-4 w-36 rounded-lg" />
+              <Skeleton className="h-3 w-24 rounded-lg" />
+            </div>
+            <Skeleton className="h-4 w-48 rounded-lg" />
+            <div className="flex gap-1">
+              <Skeleton className="w-12 h-5 rounded-full" />
+              <Skeleton className="w-12 h-5 rounded-full" />
+            </div>
+            <div className="flex justify-center gap-2">
+              <Skeleton className="w-8 h-8 rounded-lg" />
+              <Skeleton className="w-8 h-8 rounded-lg" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
