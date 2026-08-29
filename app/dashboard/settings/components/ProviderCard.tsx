@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudIcon, CpuIcon, CheckCircleIcon } from "@phosphor-icons/react";
+import { CheckCircleIcon, CloudIcon, CpuIcon } from "@phosphor-icons/react";
 
 interface ProviderCardProps {
   provider: "gemini" | "ollama";

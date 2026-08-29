@@ -4,17 +4,14 @@ import { Skeleton } from "@heroui/react";
 
 export default function UsersLoading() {
   return (
-    <div className="w-full max-w-5xl flex flex-col gap-6 mt-8">
+    <div className="w-full flex flex-col gap-6">
       {/* Header skeleton */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Skeleton className="w-10 h-10 rounded-full" />
-          <div className="flex flex-col gap-1.5">
-            <Skeleton className="w-20 h-3 rounded-lg" />
-            <Skeleton className="w-40 h-6 rounded-lg" />
-          </div>
+        <div className="flex flex-col gap-1.5">
+          <Skeleton className="w-48 h-7 rounded-xl" />
+          <Skeleton className="w-64 h-4 rounded-lg" />
         </div>
-        <Skeleton className="w-32 h-10 rounded-xl" />
+        <Skeleton className="w-36 h-10 rounded-xl" />
       </div>
 
       {/* Table skeleton */}

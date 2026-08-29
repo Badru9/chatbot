@@ -5,7 +5,6 @@ import {
   Button,
   Checkbox,
   CheckboxGroup,
-  Chip,
   Input,
   Label,
   Modal,
@@ -13,7 +12,7 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface MenuFormState {
   title: string;
@@ -46,7 +45,18 @@ export default function MenuFormModal({
   onSave,
   isPending,
 }: MenuFormModalProps) {
-  const [selected, setSelected] = useState(["admin", "dosen"]);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(form.visibleToRoles || ["admin", "dosen"]);
+
+  useEffect(() => {
+    if (form.visibleToRoles) {
+      setSelectedRoles(form.visibleToRoles);
+    }
+  }, [form.visibleToRoles]);
+
+  const handleRolesChange = (values: string[]) => {
+    setSelectedRoles(values);
+    onFormChange("visibleToRoles", values as Role[]);
+  };
 
   return (
     <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -87,7 +97,7 @@ export default function MenuFormModal({
                   className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-transparent min-h-20 text-sm outline-none focus:border-neutral-900 dark:focus:border-white transition-colors"
                 />
               </TextField>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <TextField
                   value={form.href}
                   onChange={(val) => onFormChange("href", val)}
@@ -102,8 +112,6 @@ export default function MenuFormModal({
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-transparent min-h-10 text-sm outline-none focus:border-neutral-900 dark:focus:border-white transition-colors"
                   />
                 </TextField>
-              </div>
-              <div className="grid grid-cols-2 gap-4 items-center">
                 <TextField
                   value={String(form.order)}
                   onChange={(val) => onFormChange("order", Number(val))}
@@ -118,31 +126,36 @@ export default function MenuFormModal({
                     className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-xl bg-transparent min-h-10 text-sm outline-none focus:border-neutral-900 dark:focus:border-white transition-colors"
                   />
                 </TextField>
+              </div>
+
+              <div className="pt-2">
                 <CheckboxGroup
                   name="visibleToRoles"
-                  value={selected}
-                  onChange={setSelected}
+                  value={selectedRoles}
+                  onChange={handleRolesChange}
                   className="flex flex-col gap-1.5 pl-1"
                 >
                   <Label className="text-xs text-neutral-500 font-medium">
                     Akses Peran (Roles)
                   </Label>
-                  <Checkbox value="admin">
-                    <Checkbox.Content>
-                      <Checkbox.Control>
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      Admin
-                    </Checkbox.Content>
-                  </Checkbox>
-                  <Checkbox value="dosen">
-                    <Checkbox.Content>
-                      <Checkbox.Control>
-                        <Checkbox.Indicator />
-                      </Checkbox.Control>
-                      Dosen
-                    </Checkbox.Content>
-                  </Checkbox>
+                  <div className="flex items-center gap-6 mt-1">
+                    <Checkbox value="admin">
+                      <Checkbox.Content>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        Admin
+                      </Checkbox.Content>
+                    </Checkbox>
+                    <Checkbox value="dosen">
+                      <Checkbox.Content>
+                        <Checkbox.Control>
+                          <Checkbox.Indicator />
+                        </Checkbox.Control>
+                        Dosen
+                      </Checkbox.Content>
+                    </Checkbox>
+                  </div>
                 </CheckboxGroup>
               </div>
             </Modal.Body>

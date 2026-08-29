@@ -44,7 +44,7 @@ import { useSession } from "@/lib/auth-client";
 export default function Header() {
   const { user, isLoading } = useSession();
 
-  const userName = user?.name || "Kacung Napitupulu";
+  const userName = user?.name || "Dummy User";
   const userRole = user?.role || "dosen";
   const userImage =
     user?.image || "https://api-aisnet.itg.ac.id/uploads/foto/F1669432653.png";

@@ -82,42 +82,12 @@ export default function ProfileFab() {
               </div>
             </Dropdown.Item>
             {user.role === "admin" && (
-              <Dropdown.Item id="admin-menus" textValue="admin-menus">
+              <Dropdown.Item id="admin-dashboard" textValue="admin-dashboard">
                 <Link
-                  href="/admin/menus"
-                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
+                  href="/dashboard"
+                  className="w-full h-full flex items-center font-semibold text-neutral-900 dark:text-white"
                 >
-                  Kelola Menu Portal
-                </Link>
-              </Dropdown.Item>
-            )}
-            {user.role === "admin" && (
-              <Dropdown.Item id="admin-datasets" textValue="admin-datasets">
-                <Link
-                  href="/admin/datasets"
-                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
-                >
-                  Kelola Dataset AI
-                </Link>
-              </Dropdown.Item>
-            )}
-            {user.role === "admin" && (
-              <Dropdown.Item id="admin-users" textValue="admin-users">
-                <Link
-                  href="/admin/users"
-                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
-                >
-                  Kelola Akun User
-                </Link>
-              </Dropdown.Item>
-            )}
-            {user.role === "admin" && (
-              <Dropdown.Item id="admin-settings" textValue="admin-settings">
-                <Link
-                  href="/admin/settings"
-                  className="w-full h-full block text-neutral-700 dark:text-neutral-300"
-                >
-                  Pengaturan Model AI
+                  Dashboard Admin →
                 </Link>
               </Dropdown.Item>
             )}

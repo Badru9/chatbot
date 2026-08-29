@@ -14,7 +14,7 @@ export default function Stats({
   isLoading,
 }: StatsProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div className="border border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 rounded-2xl p-5 shadow-xs flex items-center gap-4">
         <div className="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-900 dark:text-white border border-neutral-200/60 dark:border-neutral-700/60">
           <DatabaseIcon size={24} weight="duotone" />
