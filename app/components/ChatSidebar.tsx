@@ -27,7 +27,7 @@ export interface SidebarLibraryFile {
 }
 
 interface ChatSidebarProps {
-  activeMenu: "new" | "history" | "library";
+  activeMenu: "new" | "history" | "library" | "schedule";
   sessions: SidebarSession[];
   libraryFiles: SidebarLibraryFile[];
   selectedFileIds: string[];
@@ -77,6 +77,7 @@ export default function ChatSidebar({
   const navItems = [
     { key: "new" as const, label: "Chat baru", icon: ChatCircleIcon },
     { key: "library" as const, label: "Library", icon: FilesIcon },
+    { key: "schedule" as const, label: "Jadwal Mengajar", icon: FilesIcon },
   ];
 
   const sidebarContent = (
