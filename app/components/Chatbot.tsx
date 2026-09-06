@@ -41,9 +41,9 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const [activeMenu, setActiveMenu] = useState<
-    "new" | "history" | "library" | "schedule"
-  >("new");
+  const [activeMenu, setActiveMenu] = useState<"new" | "library" | "schedule">(
+    "new",
+  );
   const [activeTool, setActiveTool] = useState<"jadwal" | null>(null);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);

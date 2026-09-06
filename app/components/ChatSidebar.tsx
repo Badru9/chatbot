@@ -27,13 +27,13 @@ export interface SidebarLibraryFile {
 }
 
 interface ChatSidebarProps {
-  activeMenu: "new" | "history" | "library" | "schedule";
+  activeMenu: "new" | "library" | "schedule";
   sessions: SidebarSession[];
   libraryFiles: SidebarLibraryFile[];
   selectedFileIds: string[];
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
-  onMenuChange: (menu: "new" | "history" | "library") => void;
+  onMenuChange: (menu: "new" | "library" | "schedule") => void;
   onNewChat: () => void;
   onLoadSession: (sessionId: string) => void;
   onDeleteSession?: (sessionId: string) => void;
