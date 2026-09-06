@@ -15,7 +15,7 @@ import {
 } from "react";
 import { sendChatMessage } from "../../services/chatService";
 
-import { Drawer, ScrollShadow } from "@heroui/react";
+import { Button, Drawer, ScrollShadow } from "@heroui/react";
 import ChatInputBar from "./ChatInputBar";
 import ChatSidebar, { type SidebarLibraryFile } from "./ChatSidebar";
 import MarkdownRenderer from "./MarkdownRenderer";
@@ -41,7 +41,7 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const queryClient = useQueryClient();
 
-  const [activeMenu, setActiveMenu] = useState<"new" | "history" | "library">(
+  const [activeMenu, setActiveMenu] = useState<"new" | "library" | "schedule">(
     "new",
   );
   const [activeTool, setActiveTool] = useState<"jadwal" | null>(null);
@@ -217,16 +217,40 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
     );
   };
 
+  // const chooseMentionFile = (file: SidebarLibraryFile) => {
+  //   const beforeMention = input.slice(0, mentionStart);
+  //   const afterQuery = input.slice(mentionStart + mentionQuery.length + 1);
+  //   setInput(
+  //     `${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, " "),
+  //   );
+  //   setSelectedFileIds((prev) =>
+  //     prev.includes(file.id) ? prev : [...prev, file.id],
+  //   );
+  //   requestAnimationFrame(() => chatbotInputRef.current?.focus());
+  // };
+
   const chooseMentionFile = (file: SidebarLibraryFile) => {
     const beforeMention = input.slice(0, mentionStart);
     const afterQuery = input.slice(mentionStart + mentionQuery.length + 1);
-    setInput(
-      `${beforeMention}@${file.name} ${afterQuery}`.replace(/\s+/g, " "),
+    const newValue = `${beforeMention}@${file.name} ${afterQuery}`.replace(
+      /\s+/g,
+      " ",
     );
+
+    setInput(newValue);
     setSelectedFileIds((prev) =>
       prev.includes(file.id) ? prev : [...prev, file.id],
     );
-    requestAnimationFrame(() => chatbotInputRef.current?.focus());
+
+    // Wait for React to commit the new value to the DOM, then move the caret to the end
+    requestAnimationFrame(() => {
+      const el = chatbotInputRef.current;
+      if (el) {
+        el.focus();
+        const pos = newValue.length;
+        el.setSelectionRange(pos, pos);
+      }
+    });
   };
 
   const handleInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -426,24 +450,24 @@ export default function Chatbot({ tableData }: ChatbotProps = {}) {
 
           {/* Mobile Schedule Drawer */}
           <Drawer.Backdrop
-            isOpen={activeTool === "jadwal"}
+            isOpen={activeMenu === "schedule"}
             onOpenChange={(isOpen) => {
-              if (!isOpen) setActiveTool(null);
+              if (!isOpen) setActiveMenu("new");
             }}
             variant="opaque"
             className=""
           >
             <Drawer.Content placement="right" className="w-full h-full">
               <Drawer.Dialog className="p-0 h-full w-full md:w-1/2 bg-white dark:bg-neutral-900">
-                <SchedulePanel onClose={() => setActiveTool(null)} />
+                <SchedulePanel onClose={() => setActiveMenu("new")} />
               </Drawer.Dialog>
             </Drawer.Content>
           </Drawer.Backdrop>
 
           {/* Desktop Schedule Panel */}
-          {/* {activeTool === "jadwal" && (
+          {/* {openTool === "jadwal" && (
             <div className="hidden lg:flex w-[360px] xl:w-[400px] h-full shrink-0 border-l border-neutral-200 dark:border-neutral-800 bg-teal-400 dark:bg-neutral-900 flex-col animate-in fade-in slide-in-from-right-5 duration-200">
-              <SchedulePanel onClose={() => setActiveTool(null)} />
+              <SchedulePanel onClose={() => setOpenTool(null)} />
             </div>
           )} */}
         </div>

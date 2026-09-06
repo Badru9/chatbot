@@ -27,13 +27,13 @@ export interface SidebarLibraryFile {
 }
 
 interface ChatSidebarProps {
-  activeMenu: "new" | "history" | "library";
+  activeMenu: "new" | "library" | "schedule";
   sessions: SidebarSession[];
   libraryFiles: SidebarLibraryFile[];
   selectedFileIds: string[];
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
-  onMenuChange: (menu: "new" | "history" | "library") => void;
+  onMenuChange: (menu: "new" | "library" | "schedule") => void;
   onNewChat: () => void;
   onLoadSession: (sessionId: string) => void;
   onDeleteSession?: (sessionId: string) => void;
@@ -77,6 +77,7 @@ export default function ChatSidebar({
   const navItems = [
     { key: "new" as const, label: "Chat baru", icon: ChatCircleIcon },
     { key: "library" as const, label: "Library", icon: FilesIcon },
+    { key: "schedule" as const, label: "Jadwal Mengajar", icon: FilesIcon },
   ];
 
   const sidebarContent = (
