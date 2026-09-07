@@ -4,6 +4,7 @@ import { Button, toast } from "@heroui/react";
 import {
   CaretLeftIcon,
   CaretRightIcon,
+  DownloadIcon,
   FilePdfIcon,
   MagnifyingGlassMinusIcon,
   MagnifyingGlassPlusIcon,
@@ -255,6 +256,7 @@ function FileCard({
   hasLocalPreview,
   onDelete,
   onPreview,
+  onDownload,
   isDeleting,
   canDelete = true,
 }: {
@@ -262,6 +264,7 @@ function FileCard({
   hasLocalPreview?: boolean;
   onDelete: () => void;
   onPreview: () => void;
+  onDownload: () => void;
   isDeleting: boolean;
   canDelete?: boolean;
 }) {
@@ -332,23 +335,36 @@ function FileCard({
             RAG source
           </span>
         )}
-        {canDelete ? (
+        <div className="space-x-2">
           <Button
             isIconOnly
             size="sm"
-            variant="danger"
-            onPress={onDelete}
+            variant="secondary"
+            onPress={onDownload}
             isDisabled={isDeleting}
-            className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95 cursor-pointer"
-            aria-label={`Hapus ${file.name}`}
+            className="size-8 rounded-lg active:scale-95 cursor-pointer"
+            aria-label={`Download ${file.name}`}
           >
-            <TrashIcon size={15} />
+            <DownloadIcon size={15} />
           </Button>
-        ) : (
-          <span className="text-[11px] text-muted-soft italic">
-            Dataset Sistem
-          </span>
-        )}
+          {canDelete ? (
+            <Button
+              isIconOnly
+              size="sm"
+              variant="danger"
+              onPress={onDelete}
+              isDisabled={isDeleting}
+              className="size-8 rounded-lg hover:bg-red-50 hover:text-danger active:scale-95 cursor-pointer"
+              aria-label={`Hapus ${file.name}`}
+            >
+              <TrashIcon size={15} />
+            </Button>
+          ) : (
+            <span className="text-[11px] text-muted-soft italic">
+              Dataset Sistem
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -472,6 +488,9 @@ export default function UploadLibrary() {
                 canDelete={user?.role === "admin" || !file.isPublic}
                 onDelete={() => deleteMutation.mutate(file.id)}
                 onPreview={() => setPreviewFile(file)}
+                onDownload={() => {
+                  downloadDocumentBlob(file.id, file.name);
+                }}
                 isDeleting={
                   deleteMutation.isPending &&
                   deleteMutation.variables === file.id

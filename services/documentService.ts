@@ -57,14 +57,43 @@ export async function deleteDocument(
   return { ok: true };
 }
 
-export async function downloadDocumentBlob(documentId: string): Promise<Blob> {
+// export async function downloadDocumentBlob(documentId: string): Promise<Blob> {
+//   const response = await axiosInstance.get(
+//     `/api/documents/${documentId}/download`,
+//     {
+//       responseType: "blob",
+//     },
+//   );
+
+//   return response.data;
+// }
+
+export async function downloadDocumentBlob(
+  documentId: string,
+  filename?: string,
+): Promise<void> {
   const response = await axiosInstance.get(
     `/api/documents/${documentId}/download`,
-    {
-      responseType: "blob",
-    },
+    { responseType: "blob" },
   );
-  return response.data;
+
+  const blob = response.data as Blob;
+
+  // Prefer filename from Content-Disposition header if the server sends one
+  const disposition = response.headers["content-disposition"];
+  const headerFilename = disposition?.match(/filename="?([^"]+)"?/)?.[1];
+
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename ?? headerFilename ?? `${documentId}.pdf`;
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  // Free the memory held by the object URL
+  window.URL.revokeObjectURL(url);
 }
 
 export async function createManualDataset(payload: {
