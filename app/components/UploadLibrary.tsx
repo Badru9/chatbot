@@ -485,7 +485,7 @@ export default function UploadLibrary() {
               <FileCard
                 key={file.id}
                 file={file}
-                canDelete={user?.role === "admin" || !file.isPublic}
+                canDelete={user?.role.name === "admin" || !file.isPublic}
                 onDelete={() => deleteMutation.mutate(file.id)}
                 onPreview={() => setPreviewFile(file)}
                 onDownload={() => {

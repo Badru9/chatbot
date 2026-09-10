@@ -10,12 +10,32 @@ interface GeminiSettingsProps {
 }
 
 const AVAILABLE_GEMINI_MODELS = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", tag: "Cepat & Stabil (Default)" },
-  { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite", tag: "Ringan & Hemat Kuota" },
-  { id: "gemini-flash-latest", name: "Gemini Flash Latest", tag: "Model Flash Terbaru" },
+  {
+    id: "gemini-3.8-flash",
+    name: "Gemini 2.5 Flash",
+    tag: "Cepat & Stabil (Default)",
+  },
+  {
+    id: "gemini-2.5-flash-lite",
+    name: "Gemini 2.5 Flash Lite",
+    tag: "Ringan & Hemat Kuota",
+  },
+  {
+    id: "gemini-flash-latest",
+    name: "Gemini Flash Latest",
+    tag: "Model Flash Terbaru",
+  },
   { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash", tag: "Generasi 3.5" },
-  { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", tag: "Performa Tertinggi" },
-  { id: "gemini-pro-latest", name: "Gemini Pro Latest", tag: "Model Pro Terbaru" },
+  {
+    id: "gemini-3.7-flash",
+    name: "Gemini 3.7 Flash",
+    tag: "Performa Tertinggi",
+  },
+  {
+    id: "gemini-pro-latest",
+    name: "Gemini Pro Latest",
+    tag: "Model Pro Terbaru",
+  },
 ];
 
 export default function GeminiSettings({
@@ -43,7 +63,8 @@ export default function GeminiSettings({
             Konfigurasi Google Gemini Cloud
           </h2>
           <p className="text-xs text-neutral-500 dark:text-neutral-400">
-            Tentukan model utama dan urutan model cadangan saat terjadi pembatasan kuota API.
+            Tentukan model utama dan urutan model cadangan saat terjadi
+            pembatasan kuota API.
           </p>
         </div>
       </div>
@@ -89,7 +110,8 @@ export default function GeminiSettings({
               Daftar Model Cadangan (Gemini Failover Chain)
             </label>
             <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-              Jika model utama terkena error 429 (kuota habis), sistem otomatis mencoba model yang dicentang di bawah ini secara berurutan.
+              Jika model utama terkena error 429 (kuota habis), sistem otomatis
+              mencoba model yang dicentang di bawah ini secara berurutan.
             </p>
           </div>
         </div>

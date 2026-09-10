@@ -8,6 +8,40 @@ datasource db {
   extensions = [vector]
 }
 
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum DayOfWeek {
+  SENIN
+  SELASA
+  RABU
+  KAMIS
+  JUMAT
+  SABTU
+  MINGGU
+}
+
+enum ChatRole {
+  USER
+  ASSISTANT
+}
+
+enum ResearchType {
+  PENELITIAN
+  PKM
+}
+
+enum ValidationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// ---------------------------------------------------------------------------
+// Vector store (RAG)
+// ---------------------------------------------------------------------------
+
 model PdfChunk {
   id           Int      @id @default(autoincrement())
   documentId   String   @map("document_id")
@@ -17,31 +51,95 @@ model PdfChunk {
   chunkIndex   Int      @map("chunk_index")
   chunkText    String   @map("chunk_text") @db.Text
   tokenCount   Int      @map("token_count")
-  embedding    Unsupported("vector(768)")
+  embedding    Unsupported("vector(1024)")
   metadata     Json     @default("{}")
   createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
 
+  @@unique([documentHash, chunkIndex])
   @@index([documentId])
   @@map("vectors")
 }
 
-model User {
-  id            String    @id @default(uuid())
+// NOTE: Prisma cannot declare an HNSW/IVFFlat index on `embedding` through
+// the schema DSL. After migrating, add it manually via raw SQL, e.g.:
+//
+//   CREATE INDEX vectors_embedding_hnsw_idx
+//     ON vectors USING hnsw (embedding vector_cosine_ops);
+//
+// Without this, similarity search does a full table scan.
+
+// ---------------------------------------------------------------------------
+// Academic structure
+// ---------------------------------------------------------------------------
+
+model StudyProgram {
+  id            String   @id @default(uuid())
+  code          String   @unique
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false) @map("email_verified")
+  degreeLevel   String   @map("degree_level") // e.g., "S1", "D3"
+  faculty       String?
+  accreditation String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("study_programs")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users User[]
+
+  @@map("roles")
+}
+
+model User {
+  id            String  @id @default(uuid())
+  name          String
+  email         String  @unique
+  emailVerified Boolean @default(false) @map("email_verified")
   password      String?
   image         String?
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  role          String    @default("dosen") // "admin" atau "dosen"
-  sessions      Session[]
-  accounts      Account[]
-  schedules     Schedule[]
-  chatSessions  ChatSession[]
 
-  @@map("user")
+  // Academic-specific fields
+  nidn             String? @unique // Acronyms like NIDN/NIP remain as is
+  nip              String? @unique
+  academicRank     String? @map("academic_rank") // e.g., "Asisten Ahli", "Lektor"
+  highestEducation String? @map("highest_education") // e.g., "S2", "S3"
+
+  studyProgramId String?       @map("study_program_id")
+  studyProgram   StudyProgram? @relation(fields: [studyProgramId], references: [id], onDelete: SetNull)
+
+  // FIX: previously `role` was reused as both the relation name and the FK
+  // scalar (`fields: [role]`), which is invalid — a relation needs its own
+  // scalar FK column. Also added the missing back-relation on Role.
+  roleName String? @map("role_name")
+  role     Role?   @relation(fields: [roleName], references: [name], onDelete: SetNull)
+
+  researches   Research[]
+  sessions     Session[]
+  accounts     Account[]
+  schedules    Schedule[]
+  chatSessions ChatSession[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([studyProgramId])
+  @@index([roleName])
+  @@map("users")
 }
+
+// ---------------------------------------------------------------------------
+// Auth (better-auth style)
+// ---------------------------------------------------------------------------
 
 model Session {
   id        String   @id
@@ -54,6 +152,7 @@ model Session {
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("session")
 }
 
@@ -73,6 +172,7 @@ model Account {
   createdAt             DateTime  @map("created_at")
   updatedAt             DateTime  @map("updated_at")
 
+  @@index([userId])
   @@map("account")
 }
 
@@ -86,6 +186,10 @@ model Verification {
 
   @@map("verification")
 }
+
+// ---------------------------------------------------------------------------
+// Portal / navigation
+// ---------------------------------------------------------------------------
 
 model PortalMenu {
   id             String   @id @default(uuid())
@@ -102,48 +206,88 @@ model PortalMenu {
   @@map("portal_menu")
 }
 
-model Schedule {
-  id         String   @id @default(uuid())
-  userId     String   @map("user_id")
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  day        String   // "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"
-  startTime  String   // format "HH:MM" (misal "08:00")
-  endTime    String   // format "HH:MM" (misal "09:40")
-  courseName String   @map("course_name")
-  courseCode String?  @map("course_code")
-  className  String   @map("class_name") // misal "IF-A"
-  room       String   // misal "Lab AI"
-  sks        Int      @default(2)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+// ---------------------------------------------------------------------------
+// Schedules
+// ---------------------------------------------------------------------------
 
+model Schedule {
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // FIX: was free-form String; enum enforces the 7 valid Indonesian day names
+  day        DayOfWeek
+  startTime  String    @map("start_time") // "HH:MM"
+  endTime    String    @map("end_time") // "HH:MM"
+  courseName String    @map("course_name")
+  courseCode String?   @map("course_code")
+  className  String    @map("class_name") // e.g. "IF-A"
+  room       String
+  sks        Int       @default(2)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Prevents the exact same user/day/time-slot from being scheduled twice.
+  // Does NOT catch partial time-range overlaps — validate those in the app layer.
+  @@unique([userId, day, startTime, endTime])
+  @@index([userId])
   @@map("schedules")
 }
 
-model Research {
-  id               Int      @id @default(autoincrement())
-  trPengusulanId   Int      @map("tr_pengusulan_id")
-  tahap            String
-  dokumenPengajuan String?  @map("dokumen_pengajuan")
-  biaya            String
-  validasiStafLppm Int      @default(0) @map("validasi_staf_lppm")
-  validasiLppm     Int      @default(0) @map("validasi_lppm")
-  validasiRektor   Int      @default(0) @map("validasi_rektor")
-  status           Int      @default(0)
-  tanggal          String
-  catatan          String?
-  slip             String?
-  jenis            String   // "PENELITIAN" | "PKM"
-  judul            String   @db.Text
-  rencanaLuaran    String?  @map("rencana_luaran") @db.Text
-  danaInternal     Float?   @map("dana_internal")
-  namaDosen        String   @map("nama_dosen")
-  jenisPencairan   String   @map("jenis_pencairan")
-  createdAt        DateTime @default(now()) @map("created_at")
-  updatedAt        DateTime @updatedAt @map("updated_at")
+// ---------------------------------------------------------------------------
+// Research / LPPM workflow
+// ---------------------------------------------------------------------------
 
+model Research {
+  // FIX: was `@unique` with no `@id` — every model needs a primary key.
+  id             String @id @default(uuid())
+  trPengusulanId String @map("tr_pengusulan_id")
+  tahap          String
+
+  dokumenPengajuan String? @map("dokumen_pengajuan")
+
+  // FIX: money fields as String prevent aggregation/sorting; Decimal keeps
+  // exact precision (unlike Float) which matters for currency.
+  biaya       Decimal @db.Decimal(14, 2)
+  danaInternal Decimal? @map("dana_internal") @db.Decimal(14, 2)
+
+  // FIX: 0/1/2 Int flags had no explicit meaning — enum documents intent
+  // and prevents invalid values.
+  validasiStafLppm ValidationStatus @default(PENDING) @map("validasi_staf_lppm")
+  validasiLppm     ValidationStatus @default(PENDING) @map("validasi_lppm")
+  validasiRektor   ValidationStatus @default(PENDING) @map("validasi_rektor")
+  status           Int              @default(0) // overall workflow status code
+
+  // FIX: was String; DateTime enables correct sorting/filtering by date.
+  tanggal DateTime
+
+  catatan String?
+  slip    String?
+
+  // FIX: was free-form String ("PENELITIAN" | "PKM" in a comment only).
+  jenis ResearchType
+
+  judul          String  @db.Text
+  rencanaLuaran  String? @map("rencana_luaran") @db.Text
+  namaDosen      String  @map("nama_dosen")
+  jenisPencairan String  @map("jenis_pencairan")
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([status])
+  @@index([jenis])
   @@map("research")
 }
+
+// ---------------------------------------------------------------------------
+// Chat / assistant
+// ---------------------------------------------------------------------------
 
 model ChatSession {
   id        String        @id @default(uuid())
@@ -162,13 +306,18 @@ model ChatMessage {
   id        Int         @id @default(autoincrement())
   sessionId String      @map("session_id")
   session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  role      String      // "user" | "assistant"
+  // FIX: was free-form String ("user" | "assistant" in a comment only).
+  role      ChatRole
   content   String      @db.Text
   createdAt DateTime    @default(now()) @map("created_at")
 
   @@index([sessionId])
   @@map("chat_message")
 }
+
+// ---------------------------------------------------------------------------
+// Misc
+// ---------------------------------------------------------------------------
 
 model Dataset {
   id          String   @id @default(uuid())
@@ -188,7 +337,7 @@ model Dataset {
 model AiSetting {
   id                  String   @id @default("default")
   activeProvider      String   @default("gemini") @map("active_provider")
-  geminiPrimary       String   @default("gemini-2.5-flash") @map("gemini_primary")
+  geminiPrimary       String   @default("gemini-3.8-flash") @map("gemini_primary")
   geminiFallbacks     String[] @default(["gemini-2.0-flash", "gemini-1.5-flash", "gemini-2.0-flash-lite"]) @map("gemini_fallbacks")
   ollamaBaseUrl       String   @default("http://localhost:11434") @map("ollama_base_url")
   ollamaModel         String   @default("llama3.2") @map("ollama_model")
@@ -198,4 +347,3 @@ model AiSetting {
 
   @@map("ai_settings")
 }
-

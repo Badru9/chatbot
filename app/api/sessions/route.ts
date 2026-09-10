@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/server/db";
 import { getTokenFromCookies } from "@/lib/server/middleware/auth";
 import { getSession } from "@/lib/server/services/auth";
+import { ChatRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
@@ -83,7 +84,10 @@ export async function POST(request: NextRequest) {
               updatedAt: item.updatedAt ? new Date(item.updatedAt) : new Date(),
               messages: {
                 create: (item.messages || []).map((msg: any) => ({
-                  role: msg.role === "assistant" ? "assistant" : "user",
+                  role:
+                    msg.role === "assistant"
+                      ? "assistant"
+                      : ("user" as ChatRole),
                   content: msg.content || "",
                 })),
               },
@@ -102,14 +106,15 @@ export async function POST(request: NextRequest) {
         id: id || undefined,
         userId,
         title: title || "Chat baru",
-        messages: Array.isArray(messages) && messages.length > 0
-          ? {
-              create: messages.map((msg: any) => ({
-                role: msg.role === "assistant" ? "assistant" : "user",
-                content: msg.content || "",
-              })),
-            }
-          : undefined,
+        messages:
+          Array.isArray(messages) && messages.length > 0
+            ? {
+                create: messages.map((msg: any) => ({
+                  role: msg.role === "ASSISTANT" ? "ASSISTANT" : "USER",
+                  content: msg.content || "",
+                })),
+              }
+            : undefined,
       },
       include: {
         messages: {

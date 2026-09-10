@@ -32,7 +32,7 @@ export async function GET(
 
   try {
     // Ownership check for non-admin: allow if user's own document or public document
-    if (user.role !== "admin") {
+    if (user.role?.name !== "admin") {
       const chunkCount = await prisma.pdfChunk.count({
         where: {
           documentId,

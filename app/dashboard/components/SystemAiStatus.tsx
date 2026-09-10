@@ -21,7 +21,7 @@ interface SystemAiStatusProps {
 
 export default function SystemAiStatus({
   activeProvider = "gemini",
-  primaryModel = "gemini-2.5-flash",
+  primaryModel = "gemini-3.8-flash",
   fallbacks = [],
   enableAutoFallback = true,
   enableCrossFallback = true,
@@ -77,13 +77,17 @@ export default function SystemAiStatus({
 
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
             <div>
-              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block font-normal">Model Utama:</span>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block font-normal">
+                Model Utama:
+              </span>
               <span className="font-mono font-medium text-neutral-900 dark:text-white">
                 {isGemini ? primaryModel : ollamaModel || "llama3.2"}
               </span>
             </div>
             <div>
-              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block font-normal">Mode Fallback:</span>
+              <span className="text-[11px] text-neutral-500 dark:text-neutral-400 block font-normal">
+                Mode Fallback:
+              </span>
               <span className="font-medium text-neutral-800 dark:text-neutral-200">
                 {enableAutoFallback ? "Otomatis Aktif" : "Nonaktif"}
               </span>
@@ -124,8 +128,14 @@ export default function SystemAiStatus({
       {/* Footer Info */}
       <div className="mt-4 pt-3 border-t border-neutral-100 dark:border-neutral-800 flex items-center justify-between text-xs text-neutral-500 dark:text-neutral-400">
         <div className="flex items-center gap-1.5 text-[11px]">
-          <CheckCircle size={14} weight="fill" className="text-emerald-600 dark:text-emerald-400" />
-          <span>Cross-provider fallback: {enableCrossFallback ? "Siap" : "Off"}</span>
+          <CheckCircle
+            size={14}
+            weight="fill"
+            className="text-emerald-600 dark:text-emerald-400"
+          />
+          <span>
+            Cross-provider fallback: {enableCrossFallback ? "Siap" : "Off"}
+          </span>
         </div>
         <Link
           href="/dashboard/settings"

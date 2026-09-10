@@ -16,7 +16,7 @@ import { manualDatasetSchema } from "@/lib/server/middleware/validators";
 
 export async function fetchDocumentsAction() {
   const { user } = await requireAuth();
-  const isUserAdmin = user.role === "admin";
+  const isUserAdmin = user.role.name === "admin";
   const userId = user.id;
 
   const whereClause = isUserAdmin
@@ -53,7 +53,10 @@ export async function fetchDocumentsAction() {
     },
   });
 
-  const countLookup = new Map<string, { count: number; maxDate: Date | null }>();
+  const countLookup = new Map<
+    string,
+    { count: number; maxDate: Date | null }
+  >();
   for (const c of countMap) {
     countLookup.set(c.documentId, {
       count: c._count.id,
@@ -72,7 +75,8 @@ export async function fetchDocumentsAction() {
       chunkCount: info?.count ?? 1,
       uploadedAt: (info?.maxDate ?? doc.createdAt)?.toISOString(),
       isPublic,
-      uploadedByRole: (meta.uploadedByRole as string) || (isPublic ? "admin" : "dosen"),
+      uploadedByRole:
+        (meta.uploadedByRole as string) || (isPublic ? "admin" : "dosen"),
     };
   });
 
@@ -88,7 +92,7 @@ export async function fetchDocumentsAction() {
 export async function uploadDocumentAction(formData: FormData) {
   const { user } = await requireAuth();
   const userId = user.id;
-  const isUserAdmin = user.role === "admin";
+  const isUserAdmin = user.role.name === "admin";
 
   const file = formData.get("file") as File | null;
 
@@ -118,7 +122,7 @@ export async function uploadDocumentAction(formData: FormData) {
       file.type,
       userId,
       isUserAdmin,
-      user.role,
+      user.role.name,
     );
 
     return { document };
@@ -212,7 +216,7 @@ export async function deleteDocumentAction(documentId: string) {
     return { error: "Parameter id wajib diisi." };
   }
 
-  if (user.role !== "admin") {
+  if (user.role.name !== "admin") {
     const chunkCount = await prisma.pdfChunk.count({
       where: {
         documentId,

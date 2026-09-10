@@ -31,6 +31,7 @@ import {
   toSidebarFile,
 } from "./chatbotUtils";
 import SchedulePanel from "./portal/SchedulePanel";
+import { ChatMessage } from "@/lib/chatUtils";
 
 interface ChatbotProps {
   tableData?: any[];

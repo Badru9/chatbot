@@ -2,15 +2,13 @@
 
 import { useAiSettingServices } from "@/hooks/useAiSettingServices";
 import { Button, toast } from "@heroui/react";
-import {
-  ArrowsClockwiseIcon,
-  FloppyDiskIcon,
-} from "@phosphor-icons/react";
+import { ArrowsClockwiseIcon, FloppyDiskIcon } from "@phosphor-icons/react";
 import { useEffect, useState } from "react";
 import FallbackSettings from "./components/FallbackSettings";
 import GeminiSettings from "./components/GeminiSettings";
 import OllamaSettings from "./components/OllamaSettings";
 import ProviderCard from "./components/ProviderCard";
+import { geminiFallbacks as geminiFallbackModels } from "@/constants";
 
 export default function DashboardAiSettingsPage() {
   const { aiSettingQuery, updateAiSettingMutation, testOllamaMutation } =
@@ -19,12 +17,9 @@ export default function DashboardAiSettingsPage() {
   const [activeProvider, setActiveProvider] = useState<"gemini" | "ollama">(
     "gemini",
   );
-  const [geminiPrimary, setGeminiPrimary] = useState("gemini-2.5-flash");
-  const [geminiFallbacks, setGeminiFallbacks] = useState<string[]>([
-    "gemini-2.5-flash-lite",
-    "gemini-flash-latest",
-    "gemini-3.5-flash",
-  ]);
+  const [geminiPrimary, setGeminiPrimary] = useState("gemini-3.8-flash");
+  const [geminiFallbacks, setGeminiFallbacks] =
+    useState<string[]>(geminiFallbackModels);
   const [ollamaBaseUrl, setOllamaBaseUrl] = useState("http://localhost:11434");
   const [ollamaModel, setOllamaModel] = useState("llama3.2");
   const [enableAutoFallback, setEnableAutoFallback] = useState(true);
@@ -43,7 +38,7 @@ export default function DashboardAiSettingsPage() {
       setActiveProvider(
         (data.activeProvider as "gemini" | "ollama") || "gemini",
       );
-      setGeminiPrimary(data.geminiPrimary || "gemini-2.5-flash");
+      setGeminiPrimary(data.geminiPrimary || "gemini-3.8-flash");
       setGeminiFallbacks(data.geminiFallbacks || []);
       setOllamaBaseUrl(data.ollamaBaseUrl || "http://localhost:11434");
       setOllamaModel(data.ollamaModel || "llama3.2");
@@ -109,7 +104,8 @@ export default function DashboardAiSettingsPage() {
             Pengaturan Model AI
           </h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
-            Konfigurasikan provider AI, model utama, dan aturan failover multi-model
+            Konfigurasikan provider AI, model utama, dan aturan failover
+            multi-model
           </p>
         </div>
 

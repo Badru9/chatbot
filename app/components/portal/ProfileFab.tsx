@@ -51,7 +51,7 @@ export default function ProfileFab() {
     );
   }
 
-  const initial = user.name.charAt(0).toUpperCase();
+  const initial = user.name.split(" ")[1].charAt(0);
 
   return (
     <div className="">
@@ -77,11 +77,11 @@ export default function ProfileFab() {
                   {user.name}
                 </p>
                 <p className="text-xs text-neutral-500 capitalize">
-                  {user.role}
+                  {user.role?.name}
                 </p>
               </div>
             </Dropdown.Item>
-            {user.role === "admin" && (
+            {user.role?.name === "admin" && (
               <Dropdown.Item id="admin-dashboard" textValue="admin-dashboard">
                 <Link
                   href="/dashboard"

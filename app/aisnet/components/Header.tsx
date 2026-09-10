@@ -21,7 +21,7 @@ export default function Header({
   const router = useRouter();
 
   const userName = user?.name || fallbackUser.name;
-  const userRole = user?.role || fallbackUser.role;
+  const userRole = user?.role?.name || fallbackUser.role;
   const userImage = user?.image || fallbackUser.image;
 
   const handleLogout = async () => {

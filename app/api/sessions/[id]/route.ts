@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/server/db";
 import { getTokenFromCookies } from "@/lib/server/middleware/auth";
 import { getSession } from "@/lib/server/services/auth";
+import { ChatMessage, ChatRole } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
@@ -30,6 +31,8 @@ export async function GET(
       },
     });
 
+    console.log("chat session", chatSession);
+
     if (!chatSession) {
       return NextResponse.json(
         { error: "Percakapan tidak ditemukan" },
@@ -37,7 +40,10 @@ export async function GET(
       );
     }
 
-    if (chatSession.userId !== userId && sessionResult.user.role !== "admin") {
+    if (
+      chatSession.userId !== userId &&
+      sessionResult.user.role?.name !== "admin"
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -82,22 +88,27 @@ export async function PATCH(
     const body = await request.json().catch(() => ({}));
     const { title, messages, appendMessages } = body;
 
+    console.log("body", body);
+
     // Check if session exists or upsert
     const existing = await prisma.chatSession.findUnique({
       where: { id },
     });
 
     if (existing) {
-      if (existing.userId !== userId && sessionResult.user.role !== "admin") {
+      if (
+        existing.userId !== userId &&
+        sessionResult.user.role?.name !== "admin"
+      ) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
       // If appendMessages is provided, only create the new messages
       if (Array.isArray(appendMessages) && appendMessages.length > 0) {
         await prisma.chatMessage.createMany({
-          data: appendMessages.map((msg: any) => ({
+          data: appendMessages.map((msg: ChatMessage) => ({
             sessionId: id,
-            role: msg.role === "assistant" ? "assistant" : "user",
+            role: msg.role === "ASSISTANT" ? "ASSISTANT" : "USER",
             content: msg.content || "",
           })),
         });
@@ -119,7 +130,10 @@ export async function PATCH(
           await prisma.chatMessage.createMany({
             data: messages.map((msg: any) => ({
               sessionId: id,
-              role: msg.role === "assistant" ? "assistant" : "user",
+              role:
+                msg.role === ChatRole.ASSISTANT
+                  ? ChatRole.ASSISTANT
+                  : ChatRole.USER,
               content: msg.content || "",
             })),
           });
@@ -154,14 +168,15 @@ export async function PATCH(
           id,
           userId,
           title: title || "Chat baru",
-          messages: messagesToCreate.length > 0
-            ? {
-                create: messagesToCreate.map((msg: any) => ({
-                  role: msg.role === "assistant" ? "assistant" : "user",
-                  content: msg.content || "",
-                })),
-              }
-            : undefined,
+          messages:
+            messagesToCreate.length > 0
+              ? {
+                  create: messagesToCreate.map((msg: ChatMessage) => ({
+                    role: msg.role === "ASSISTANT" ? "ASSISTANT" : "USER",
+                    content: msg.content || "",
+                  })),
+                }
+              : undefined,
         },
       });
     }
@@ -181,6 +196,8 @@ export async function PATCH(
         { status: 404 },
       );
     }
+
+    console.log("updated messages", updated.messages);
 
     return NextResponse.json({
       data: {
@@ -232,7 +249,10 @@ export async function DELETE(
       );
     }
 
-    if (chatSession.userId !== userId && sessionResult.user.role !== "admin") {
+    if (
+      chatSession.userId !== userId &&
+      sessionResult.user.role?.name !== "admin"
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
