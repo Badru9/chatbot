@@ -22,7 +22,7 @@ export default function DashboardPage() {
   const activeDatasets =
     datasetsQuery.data?.filter((d) => d.isActive).length ?? 0;
   const totalUsers = users?.length ?? 0;
-  const totalDosen = users?.filter((u) => u.role === "dosen").length ?? 0;
+  const totalDosen = users?.filter((u) => u.roleName === "dosen").length ?? 0;
 
   const aiData = aiSettingQuery.data;
   const isStatsLoading =

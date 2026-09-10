@@ -1,6 +1,5 @@
 "use client";
 
-import { UserData } from "@/lib/types";
 import { dateFormatter } from "@/lib/utils/dateFormatter";
 import { Button, Chip, Table } from "@heroui/react";
 import { Trash, User as UserIcon } from "@phosphor-icons/react";
@@ -8,7 +7,7 @@ import { User } from "@prisma/client";
 
 interface UserTableProps {
   users: User[];
-  onDelete: (user: User) => void;
+  onDelete: (user: any) => void;
   currentUserId?: string;
 }
 

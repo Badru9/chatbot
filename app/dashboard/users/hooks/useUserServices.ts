@@ -1,12 +1,13 @@
 import { QUERY_KEYS } from "@/constants";
-import { CreateUserInput, UserData } from "@/lib/types";
+import { CreateUserInput } from "@/lib/types";
 import { createUser, deleteUser, getUsers } from "@/services/userApi";
+import { User } from "@prisma/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export function useUserServices() {
   const queryClient = useQueryClient();
 
-  const usersQuery = useQuery<UserData[]>({
+  const usersQuery = useQuery<User[]>({
     queryKey: QUERY_KEYS.users,
     queryFn: getUsers,
   });

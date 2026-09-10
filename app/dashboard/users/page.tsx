@@ -14,7 +14,7 @@ import UsersLoading from "./UsersLoading";
 const EMPTY_FORM: CreateUserInput = {
   name: "",
   email: "",
-  role: "dosen",
+  roleName: "dosen",
 };
 
 export default function DashboardUsersPage() {
@@ -37,7 +37,7 @@ export default function DashboardUsersPage() {
   };
 
   const handleSave = () => {
-    if (!form.name.trim() || !form.email.trim() || !form.role) {
+    if (!form.name.trim() || !form.email.trim() || !form.roleName) {
       toast("Semua kolom wajib diisi.", { variant: "danger" });
       return;
     }

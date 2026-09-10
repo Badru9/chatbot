@@ -1,4 +1,4 @@
-import { ResearchType, Role, ValidationStatus } from "@prisma/client";
+import { ResearchType, Role, User, ValidationStatus } from "@prisma/client";
 
 export type VisibleRole = "admin" | "dosen";
 
@@ -14,7 +14,7 @@ export interface UserData {
 export interface CreateUserInput {
   name: string;
   email: string;
-  role: Role;
+  roleName: string;
 }
 
 export interface MenuData {
@@ -23,7 +23,7 @@ export interface MenuData {
   description: string;
   icon?: string;
   href: string;
-  visibleToRoles: Role[];
+  visibleToRoles: string[];
   order?: number;
   createdBy?: string;
 }

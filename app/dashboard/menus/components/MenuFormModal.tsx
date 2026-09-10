@@ -19,7 +19,7 @@ export interface MenuFormState {
   description: string;
   icon: string;
   href: string;
-  visibleToRoles: VisibleRole[];
+  visibleToRoles: string[];
   order: number;
 }
 

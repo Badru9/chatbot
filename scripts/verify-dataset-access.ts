@@ -13,8 +13,8 @@ async function main() {
   });
   console.log("Users:", users);
 
-  const admin = users.find((u) => u.role === "admin");
-  const dosen = users.find((u) => u.role === "dosen");
+  const admin = users.find((u) => u.role?.name === "admin");
+  const dosen = users.find((u) => u.role?.name === "dosen");
 
   console.log("Admin user:", admin?.name, admin?.id);
   console.log("Dosen user:", dosen?.name, dosen?.id);

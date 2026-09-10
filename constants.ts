@@ -1,4 +1,4 @@
-import { Role } from "./lib/types";
+import { VisibleRole } from "./lib/types";
 
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
@@ -31,7 +31,7 @@ export const getInitials = (name: string) => {
 
 export const fallbackUser = {
   name: "Dummy User",
-  role: "dosen" as Role,
+  role: "dosen" as VisibleRole,
   image: "/avatar.jpg",
 };
 

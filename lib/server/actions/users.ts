@@ -20,12 +20,14 @@ export async function getUsersAction(): Promise<User[]> {
   return users as User[];
 }
 
-export async function createUserAction(values: CreateUserInput) {
+export async function createUserAction(
+  values: Pick<User, "name" | "email" | "roleName">,
+) {
   await requireAdmin();
 
-  const { name, email, role } = values;
+  const { name, email, roleName } = values;
 
-  if (!name || !email || !role) {
+  if (!name || !email || !roleName) {
     return { error: "Semua kolom wajib diisi." };
   }
 
@@ -47,7 +49,7 @@ export async function createUserAction(values: CreateUserInput) {
         email,
         role: {
           create: {
-            name: role.name,
+            name: roleName,
           },
         },
         password: hashedPassword,
