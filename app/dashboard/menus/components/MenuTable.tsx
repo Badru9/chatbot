@@ -30,7 +30,7 @@ export default function MenuTable({
               </Table.Column>
               <Table.Column>JUDUL & LINK</Table.Column>
               <Table.Column>DESKRIPSI</Table.Column>
-              <Table.Column className="w-48">HAK AKSES</Table.Column>
+              {/* <Table.Column className="w-48">HAK AKSES</Table.Column> */}
               <Table.Column className="w-32 text-center">AKSI</Table.Column>
             </Table.Header>
             <Table.Body>
@@ -90,7 +90,7 @@ export default function MenuTable({
                         {menu.description}
                       </div>
                     </Table.Cell>
-                    <Table.Cell>
+                    {/* <Table.Cell>
                       <div className="flex gap-1 flex-wrap">
                         {menu.visibleToRoles.map((role) => (
                           <Chip
@@ -103,7 +103,7 @@ export default function MenuTable({
                           </Chip>
                         ))}
                       </div>
-                    </Table.Cell>
+                    </Table.Cell> */}
                     <Table.Cell>
                       <div className="flex items-center justify-center gap-2">
                         <Button
