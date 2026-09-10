@@ -1,9 +1,27 @@
 import { prisma } from "@/lib/server/db";
+import { getTokenFromCookies } from "@/lib/server/middleware/auth";
 import { NextResponse } from "next/server";
 
 export async function fetchResearchData() {
+  const token = await getTokenFromCookies();
+  if (!token) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const sessionResult = await prisma.session.findUnique({
+    where: { token },
+    include: {
+      user: true,
+    },
+  });
+
+  console.log("session", sessionResult);
+
   if (typeof (prisma as any).research?.findMany === "function") {
     const research = await (prisma as any).research.findMany({
+      where: {
+        userId: sessionResult?.user?.id,
+      },
       orderBy: { id: "desc" },
     });
 

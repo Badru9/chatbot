@@ -27,7 +27,7 @@ export default function DashboardLayout({
           },
         );
         router.replace("/");
-      } else if (user.role !== "admin") {
+      } else if (user.role?.name !== "admin") {
         toast(
           "Akses Ditolak: Hanya administrator yang dapat mengakses Dashboard.",
           {
@@ -55,7 +55,7 @@ export default function DashboardLayout({
   }
 
   // Unauthorized State (while redirecting)
-  if (!user || user.role !== "admin") {
+  if (!user || user.role?.name !== "admin") {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-neutral-50 dark:bg-neutral-950 p-4">
         <div className="max-w-md w-full p-6 text-center rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 flex flex-col items-center">

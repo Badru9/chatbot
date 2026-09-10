@@ -31,8 +31,8 @@ async function runEndToEndVerification() {
   const users = await prisma.user.findMany({
     select: { id: true, name: true, role: true },
   });
-  const admin = users.find((u) => u.role === "admin");
-  const dosen = users.find((u) => u.role === "dosen");
+  const admin = users.find((u) => u.role?.name === "admin");
+  const dosen = users.find((u) => u.role?.name === "dosen");
 
   if (!admin || !dosen) {
     throw new Error("Admin or Dosen user not found in database.");
@@ -48,7 +48,8 @@ async function runEndToEndVerification() {
   const dataset = await prisma.dataset.create({
     data: {
       name: "Pedoman Penulisan Skripsi & Tugas Akhir 2026",
-      description: "Syarat SKS, alur pengajuan proposal, dan pembagian dosen pembimbing",
+      description:
+        "Syarat SKS, alur pengajuan proposal, dan pembagian dosen pembimbing",
       source: "Buku Pedoman Akademik Fakultas 2026",
       content: `## Syarat Pengajuan Skripsi
 1. Mahasiswa aktif minimal semester 7.
@@ -63,14 +64,23 @@ async function runEndToEndVerification() {
       createdBy: admin.id,
     },
   });
-  console.log(`[PASS] Created system dataset: ${dataset.name} (id: ${dataset.id})`);
+  console.log(
+    `[PASS] Created system dataset: ${dataset.name} (id: ${dataset.id})`,
+  );
 
   // 2. Verify getActiveDatasetsContext
   const activeContext = await getActiveDatasetsContextSim();
-  if (!activeContext.includes("Pedoman Penulisan Skripsi & Tugas Akhir 2026") || !activeContext.includes("110 SKS")) {
-    throw new Error("Active dataset context failed to include created dataset content!");
+  if (
+    !activeContext.includes("Pedoman Penulisan Skripsi & Tugas Akhir 2026") ||
+    !activeContext.includes("110 SKS")
+  ) {
+    throw new Error(
+      "Active dataset context failed to include created dataset content!",
+    );
   }
-  console.log("[PASS] getActiveDatasetsContext successfully compiled active datasets for systemPrompt.");
+  console.log(
+    "[PASS] getActiveDatasetsContext successfully compiled active datasets for systemPrompt.",
+  );
 
   // 3. Test Inactive Toggle
   await prisma.dataset.update({
@@ -78,10 +88,16 @@ async function runEndToEndVerification() {
     data: { isActive: false },
   });
   const inactiveContext = await getActiveDatasetsContextSim();
-  if (inactiveContext.includes("Pedoman Penulisan Skripsi & Tugas Akhir 2026")) {
-    throw new Error("Inactive dataset was incorrectly included in active context!");
+  if (
+    inactiveContext.includes("Pedoman Penulisan Skripsi & Tugas Akhir 2026")
+  ) {
+    throw new Error(
+      "Inactive dataset was incorrectly included in active context!",
+    );
   }
-  console.log("[PASS] Inactive dataset correctly excluded from systemPrompt context.");
+  console.log(
+    "[PASS] Inactive dataset correctly excluded from systemPrompt context.",
+  );
 
   // Re-activate dataset
   await prisma.dataset.update({
@@ -102,10 +118,15 @@ async function runEndToEndVerification() {
     select: { documentId: true, documentName: true, metadata: true },
   });
 
-  console.log(`[PASS] Dosen document library count: ${dosenDocs.length} file(s):`, dosenDocs.map(d => d.documentName));
+  console.log(
+    `[PASS] Dosen document library count: ${dosenDocs.length} file(s):`,
+    dosenDocs.map((d) => d.documentName),
+  );
   for (const doc of dosenDocs) {
     if (doc.documentId.startsWith("manual-")) {
-      throw new Error(`Legacy manual document ${doc.documentId} still found in dosen library!`);
+      throw new Error(
+        `Legacy manual document ${doc.documentId} still found in dosen library!`,
+      );
     }
     const meta = (doc.metadata as any) || {};
     if (meta.userId !== dosen.id) {
@@ -118,7 +139,9 @@ async function runEndToEndVerification() {
     where: { documentId: { startsWith: "manual-" } },
   });
   if (manualChunksInVectors > 0) {
-    throw new Error(`Found ${manualChunksInVectors} manual chunks in vectors table!`);
+    throw new Error(
+      `Found ${manualChunksInVectors} manual chunks in vectors table!`,
+    );
   }
   console.log("[PASS] Vectors table is clean with 0 manual-* chunks.");
 

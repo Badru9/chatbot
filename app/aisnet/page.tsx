@@ -36,6 +36,8 @@ export default function AisnetPage() {
 
   const researchData = data?.data || [];
 
+  console.log(researchData);
+
   return (
     <div className="min-h-screen bg-[#f5f8fa] font-sans antialiased text-[#181c32] flex">
       <Sidebar

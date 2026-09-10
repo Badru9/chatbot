@@ -1,9 +1,11 @@
 import { fetchResearchData } from "@/app/api/research/route";
 import {
-  parsePrompt,
-  buildSystemInstruction,
   buildDatasetContext,
+  buildSystemInstruction,
+  getUserSessionContext,
+  parsePrompt,
 } from "@/lib/chatUtils";
+import { getActiveDatasetsContext } from "@/lib/server/actions/datasets";
 import { prisma } from "@/lib/server/db";
 import { getTokenFromCookies } from "@/lib/server/middleware/auth";
 import {
@@ -13,10 +15,9 @@ import {
 import { checkRateLimit, LLM_LIMIT } from "@/lib/server/middleware/rateLimiter";
 import { chatSchema } from "@/lib/server/middleware/validators";
 import { getSession } from "@/lib/server/services/auth";
-import { getGeminiChatModel } from "@/lib/server/services/gemini";
+import { getGeminiModel } from "@/lib/server/services/gemini";
 import { streamLlmWithFallback } from "@/lib/server/services/llmEngine";
 import { retrievePdfContext } from "@/lib/server/services/retriever";
-import { getActiveDatasetsContext } from "@/lib/server/actions/datasets";
 import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   // Auth check
@@ -31,9 +32,11 @@ export async function POST(request: NextRequest) {
   }
 
   const user = sessionResult.user;
-  const isUserAdmin = user.role === "admin";
+  const isUserAdmin = user.role?.name === "admin";
   const userId = isUserAdmin ? undefined : user.id;
   const scheduleUserId = user.id;
+
+  const userContext = await getUserSessionContext(user.id);
 
   // Rate limit check
   const rateLimitResult = checkRateLimit(user.id, LLM_LIMIT);
@@ -106,7 +109,8 @@ export async function POST(request: NextRequest) {
         if (chunks.length > 0) {
           const fullPdfText = chunks.map((c) => c.chunkText).join("\n");
 
-          const model = getGeminiChatModel();
+          const model = getGeminiModel();
+
           const parseResult = await model.generateContent(
             parsePrompt(fullPdfText),
           );
@@ -227,7 +231,7 @@ export async function POST(request: NextRequest) {
         : "";
 
     const geminiParts = [
-      buildSystemInstruction(),
+      buildSystemInstruction(userContext),
       buildDatasetContext(),
       ...(systemDatasetsContext
         ? [

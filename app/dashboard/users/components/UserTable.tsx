@@ -1,13 +1,13 @@
 "use client";
 
-import { UserData } from "@/lib/types";
 import { dateFormatter } from "@/lib/utils/dateFormatter";
 import { Button, Chip, Table } from "@heroui/react";
 import { Trash, User as UserIcon } from "@phosphor-icons/react";
+import { User } from "@prisma/client";
 
 interface UserTableProps {
-  users: UserData[];
-  onDelete: (user: UserData) => void;
+  users: User[];
+  onDelete: (user: any) => void;
   currentUserId?: string;
 }
 
@@ -36,7 +36,8 @@ export default function UserTable({
                 <Table.Row>
                   <Table.Cell colSpan={6}>
                     <div className="py-8 text-center text-sm text-neutral-500 dark:text-neutral-400">
-                      Belum ada data user. Silakan klik tombol &quot;Tambah User Baru&quot;.
+                      Belum ada data user. Silakan klik tombol &quot;Tambah User
+                      Baru&quot;.
                     </div>
                   </Table.Cell>
                 </Table.Row>
@@ -55,7 +56,11 @@ export default function UserTable({
                       <Table.Cell>
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-neutral-700 dark:text-neutral-300 font-semibold text-xs border border-neutral-200/60 dark:border-neutral-700/60 shrink-0">
-                            {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon size={14} />}
+                            {user.name ? (
+                              user.name.charAt(0).toUpperCase()
+                            ) : (
+                              <UserIcon size={14} />
+                            )}
                           </div>
                           <div>
                             <p className="font-semibold text-neutral-900 dark:text-white text-sm">
@@ -78,12 +83,12 @@ export default function UserTable({
                         <Chip
                           size="sm"
                           className={
-                            user.role === "admin"
+                            user.roleName === "admin"
                               ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/50 dark:text-purple-300 dark:border-purple-800"
                               : "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800"
                           }
                         >
-                          {user.role}
+                          {user.roleName}
                         </Chip>
                       </Table.Cell>
                       <Table.Cell>

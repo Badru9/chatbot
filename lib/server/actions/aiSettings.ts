@@ -1,5 +1,6 @@
 "use server";
 
+import { geminiFallbacks } from "@/constants";
 import { prisma } from "@/lib/server/db";
 import { requireAdmin } from "@/lib/server/middleware/auth";
 import { aiSettingUpdateSchema } from "@/lib/server/middleware/validators";
@@ -11,8 +12,8 @@ import { fetchOllamaModels } from "@/lib/server/services/ollama";
 
 const DEFAULT_SETTINGS = {
   activeProvider: "gemini",
-  geminiPrimary: "gemini-2.5-flash",
-  geminiFallbacks: ["gemini-2.5-flash-lite", "gemini-flash-latest", "gemini-3.5-flash"],
+  geminiPrimary: "gemini-3.8-flash",
+  geminiFallbacks,
   ollamaBaseUrl: "http://localhost:11434",
   ollamaModel: "llama3.2",
   enableAutoFallback: true,
@@ -86,13 +87,17 @@ export async function updateAiSettingAction(
     },
     create: {
       id: "default",
-      activeProvider: validated.activeProvider ?? DEFAULT_SETTINGS.activeProvider,
+      activeProvider:
+        validated.activeProvider ?? DEFAULT_SETTINGS.activeProvider,
       geminiPrimary: validated.geminiPrimary ?? DEFAULT_SETTINGS.geminiPrimary,
-      geminiFallbacks: validated.geminiFallbacks ?? DEFAULT_SETTINGS.geminiFallbacks,
+      geminiFallbacks:
+        validated.geminiFallbacks ?? DEFAULT_SETTINGS.geminiFallbacks,
       ollamaBaseUrl: validated.ollamaBaseUrl ?? DEFAULT_SETTINGS.ollamaBaseUrl,
       ollamaModel: validated.ollamaModel ?? DEFAULT_SETTINGS.ollamaModel,
-      enableAutoFallback: validated.enableAutoFallback ?? DEFAULT_SETTINGS.enableAutoFallback,
-      enableCrossFallback: validated.enableCrossFallback ?? DEFAULT_SETTINGS.enableCrossFallback,
+      enableAutoFallback:
+        validated.enableAutoFallback ?? DEFAULT_SETTINGS.enableAutoFallback,
+      enableCrossFallback:
+        validated.enableCrossFallback ?? DEFAULT_SETTINGS.enableCrossFallback,
     },
   });
 

@@ -76,19 +76,25 @@ async function runVerification() {
   console.log("[PASS] Status Ollama terdeteksi:", {
     isOnline: ollamaStatus.isOnline,
     modelCount: ollamaStatus.models.length,
-    note: ollamaStatus.isOnline ? "Server lokal aktif" : "Server lokal offline (ditangani secara graceful)",
+    note: ollamaStatus.isOnline
+      ? "Server lokal aktif"
+      : "Server lokal offline (ditangani secara graceful)",
   });
 
   console.log("\n=== [3] Verifikasi Gemini Streaming Model Utama ===");
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
-  const primaryModel = genAI.getGenerativeModel({ model: initial.geminiPrimary || "gemini-2.5-flash" });
+  const primaryModel = genAI.getGenerativeModel({
+    model: initial.geminiPrimary || "gemini-3.8-flash",
+  });
   const result = await primaryModel.generateContentStream([
     "Katakan 'Halo Gemini Berhasil' dalam 3 kata saja.",
   ]);
   const text = await readStream(result.stream);
   console.log("[PASS] Respon streaming model utama:", text.trim());
 
-  console.log("\n=== [4] Verifikasi Simulasi Failover Otomatis (Primary Fail -> Fallback) ===");
+  console.log(
+    "\n=== [4] Verifikasi Simulasi Failover Otomatis (Primary Fail -> Fallback) ===",
+  );
   // Coba fallback model jika model primer tidak valid atau 429
   const fallbackModels = ["gemini-2.5-flash-lite", "gemini-flash-latest"];
   let fallbackSuccess = false;
@@ -103,7 +109,10 @@ async function runVerification() {
       ]);
       fallbackResponse = await readStream(streamRes.stream);
       fallbackSuccess = true;
-      console.log(`[PASS] Fallback ${fModel} sukses merespon:`, fallbackResponse.trim());
+      console.log(
+        `[PASS] Fallback ${fModel} sukses merespon:`,
+        fallbackResponse.trim(),
+      );
       break;
     } catch (err: any) {
       console.warn(`Fallback ${fModel} gagal:`, err.message);
@@ -119,8 +128,12 @@ async function runVerification() {
     where: { id: "default" },
     data: {
       activeProvider: "gemini",
-      geminiPrimary: "gemini-2.5-flash",
-      geminiFallbacks: ["gemini-2.5-flash-lite", "gemini-flash-latest", "gemini-3.5-flash"],
+      geminiPrimary: "gemini-3.8-flash",
+      geminiFallbacks: [
+        "gemini-2.5-flash-lite",
+        "gemini-flash-latest",
+        "gemini-3.5-flash",
+      ],
       ollamaBaseUrl: "http://localhost:11434",
       ollamaModel: "llama3.2",
       enableAutoFallback: true,

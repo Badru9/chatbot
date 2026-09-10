@@ -44,9 +44,7 @@ export default function DashboardMenusPage() {
     setForm({
       ...EMPTY_FORM,
       order:
-        menus.length > 0
-          ? Math.max(...menus.map((m) => m.order ?? 0)) + 1
-          : 1,
+        menus.length > 0 ? Math.max(...menus.map((m) => m.order ?? 0)) + 1 : 1,
     });
     setIsFormOpen(true);
   };
@@ -79,18 +77,24 @@ export default function DashboardMenusPage() {
             setIsFormOpen(false);
           },
           onError: (err: any) => {
-            toast(`Gagal memperbarui menu: ${err.message}`, { variant: "danger" });
+            toast(`Gagal memperbarui menu: ${err.message}`, {
+              variant: "danger",
+            });
           },
         },
       );
     } else {
       createMutation.mutate(form, {
         onSuccess: () => {
-          toast("Menu portal baru berhasil ditambahkan.", { variant: "success" });
+          toast("Menu portal baru berhasil ditambahkan.", {
+            variant: "success",
+          });
           setIsFormOpen(false);
         },
         onError: (err: any) => {
-          toast(`Gagal menambahkan menu: ${err.message}`, { variant: "danger" });
+          toast(`Gagal menambahkan menu: ${err.message}`, {
+            variant: "danger",
+          });
         },
       });
     }

@@ -1,3 +1,4 @@
+import { Role } from "@prisma/client";
 import { z } from "zod";
 
 export const LoginSchema = z.object({
@@ -11,7 +12,7 @@ export interface AuthUser {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: Role;
   image?: string | null;
 }
 

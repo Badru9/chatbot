@@ -1,8 +1,9 @@
 import "server-only";
 
 import { prisma } from "@/lib/server/db";
-import { getGeminiChatModel } from "@/lib/server/services/gemini";
+import { getGeminiModel } from "@/lib/server/services/gemini";
 import { streamOllamaResponse } from "@/lib/server/services/ollama";
+import { geminiFallbacks } from "@/constants";
 
 export interface AiSettingData {
   id: string;
@@ -19,8 +20,8 @@ export interface AiSettingData {
 const DEFAULT_AI_SETTING: AiSettingData = {
   id: "default",
   activeProvider: "gemini",
-  geminiPrimary: "gemini-2.5-flash",
-  geminiFallbacks: ["gemini-2.5-flash-lite", "gemini-flash-latest", "gemini-3.5-flash"],
+  geminiPrimary: "gemini-3.8-flash",
+  geminiFallbacks,
   ollamaBaseUrl: "http://localhost:11434",
   ollamaModel: "llama3.2",
   enableAutoFallback: true,
@@ -67,7 +68,10 @@ export async function getAiSetting(): Promise<AiSettingData> {
     cacheExpiresAt = now + 30000;
     return cachedSetting;
   } catch (err) {
-    console.error("Failed to query ai_settings from database, using defaults:", err);
+    console.error(
+      "Failed to query ai_settings from database, using defaults:",
+      err,
+    );
     return DEFAULT_AI_SETTING;
   }
 }
@@ -79,7 +83,8 @@ export function partsToPromptText(parts: (string | any)[]): string {
   return parts
     .map((p) => {
       if (typeof p === "string") return p;
-      if (p && typeof p === "object" && typeof p.text === "string") return p.text;
+      if (p && typeof p === "object" && typeof p.text === "string")
+        return p.text;
       return JSON.stringify(p);
     })
     .join("\n\n");
@@ -92,7 +97,7 @@ export async function streamGeminiModel(
   modelName: string,
   parts: (string | any)[],
 ): Promise<ReadableStream<string>> {
-  const model = getGeminiChatModel(modelName);
+  const model = getGeminiModel();
   const result = await model.generateContentStream(parts);
 
   return new ReadableStream<string>({
@@ -126,6 +131,7 @@ export async function streamLlmWithFallback(
   promptText?: string,
 ): Promise<ReadableStream<string>> {
   const setting = await getAiSetting();
+
   const fullPrompt = promptText || partsToPromptText(geminiParts);
 
   const errors: string[] = [];
@@ -146,7 +152,9 @@ export async function streamLlmWithFallback(
       for (const fallbackModel of setting.geminiFallbacks) {
         if (!fallbackModel || fallbackModel === setting.geminiPrimary) continue;
         try {
-          console.info(`[llmEngine] Switching to Gemini fallback model: ${fallbackModel}`);
+          console.info(
+            `[llmEngine] Switching to Gemini fallback model: ${fallbackModel}`,
+          );
           return await streamGeminiModel(fallbackModel, geminiParts);
         } catch (err: any) {
           const msg = `Gemini fallback (${fallbackModel}) failed: ${err.message || err}`;
@@ -174,9 +182,7 @@ export async function streamLlmWithFallback(
       }
     }
 
-    throw new Error(
-      `Semua model AI gagal merespon:\n${errors.join("\n")}`,
-    );
+    throw new Error(`Semua model AI gagal merespon:\n${errors.join("\n")}`);
   }
 
   // Branch 2: Active Provider is Ollama
@@ -209,11 +215,17 @@ export async function streamLlmWithFallback(
       }
 
       // 2b. Try Gemini Fallbacks
-      if (setting.enableAutoFallback && Array.isArray(setting.geminiFallbacks)) {
+      if (
+        setting.enableAutoFallback &&
+        Array.isArray(setting.geminiFallbacks)
+      ) {
         for (const fallbackModel of setting.geminiFallbacks) {
-          if (!fallbackModel || fallbackModel === setting.geminiPrimary) continue;
+          if (!fallbackModel || fallbackModel === setting.geminiPrimary)
+            continue;
           try {
-            console.info(`[llmEngine] Switching to Gemini fallback model: ${fallbackModel}`);
+            console.info(
+              `[llmEngine] Switching to Gemini fallback model: ${fallbackModel}`,
+            );
             return await streamGeminiModel(fallbackModel, geminiParts);
           } catch (err: any) {
             const msg = `Gemini fallback (${fallbackModel}) failed: ${err.message || err}`;
@@ -224,9 +236,7 @@ export async function streamLlmWithFallback(
       }
     }
 
-    throw new Error(
-      `Semua model AI gagal merespon:\n${errors.join("\n")}`,
-    );
+    throw new Error(`Semua model AI gagal merespon:\n${errors.join("\n")}`);
   }
 
   throw new Error(`Provider AI tidak dikenal: ${setting.activeProvider}`);

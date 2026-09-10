@@ -4,35 +4,30 @@ import { prisma } from "@/lib/server/db";
 import { requireAdmin } from "@/lib/server/middleware/auth";
 import { hashPassword } from "@/lib/server/services/auth";
 import { CreateUserInput, UserData } from "@/lib/types";
+import { User } from "@prisma/client";
 
 const DEFAULT_PASSWORD = "password123";
 
-export async function getUsersAction(): Promise<UserData[]> {
+export async function getUsersAction(): Promise<User[]> {
   await requireAdmin();
 
   const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      image: true,
-      createdAt: true,
-    },
     orderBy: {
       createdAt: "desc",
     },
   });
 
-  return users as UserData[];
+  return users as User[];
 }
 
-export async function createUserAction(values: CreateUserInput) {
+export async function createUserAction(
+  values: Pick<User, "name" | "email" | "roleName">,
+) {
   await requireAdmin();
 
-  const { name, email, role } = values;
+  const { name, email, roleName } = values;
 
-  if (!name || !email || !role) {
+  if (!name || !email || !roleName) {
     return { error: "Semua kolom wajib diisi." };
   }
 
@@ -52,7 +47,11 @@ export async function createUserAction(values: CreateUserInput) {
       data: {
         name,
         email,
-        role,
+        role: {
+          create: {
+            name: roleName,
+          },
+        },
         password: hashedPassword,
       },
       select: {
@@ -65,10 +64,11 @@ export async function createUserAction(values: CreateUserInput) {
       },
     });
 
-    return newUser as UserData;
+    return newUser;
   } catch (error) {
     return {
-      error: error instanceof Error ? error.message : "Gagal membuat user baru.",
+      error:
+        error instanceof Error ? error.message : "Gagal membuat user baru.",
     };
   }
 }

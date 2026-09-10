@@ -1,6 +1,6 @@
 "use client";
 
-import { CreateUserInput, Role } from "@/lib/types";
+import { CreateUserInput, VisibleRole } from "@/lib/types";
 import {
   Button,
   Input,
@@ -80,8 +80,10 @@ export default function UserFormModal({
                   Peran / Hak Akses (Role)
                 </Label>
                 <RadioGroup
-                  value={form.role}
-                  onChange={(val) => onFormChange("role", val as Role)}
+                  value={form.roleName}
+                  onChange={(val) =>
+                    onFormChange("roleName", val as VisibleRole)
+                  }
                   className="flex flex-row gap-4"
                 >
                   <Radio

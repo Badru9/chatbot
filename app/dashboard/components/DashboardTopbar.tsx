@@ -37,7 +37,9 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   },
 };
 
-export default function DashboardTopbar({ onOpenMobile }: DashboardTopbarProps) {
+export default function DashboardTopbar({
+  onOpenMobile,
+}: DashboardTopbarProps) {
   const pathname = usePathname();
   const { user } = useSession();
 
@@ -82,7 +84,9 @@ export default function DashboardTopbar({ onOpenMobile }: DashboardTopbarProps) 
 
         <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-medium bg-[#EDF3EC] text-[#346538] dark:bg-emerald-950/50 dark:text-emerald-300 border border-emerald-200/60 dark:border-emerald-800/40">
           <ShieldCheck size={13} weight="fill" />
-          <span>{user?.role === "admin" ? "Admin Access" : "Authorized"}</span>
+          <span>
+            {user?.role?.name === "admin" ? "Admin Access" : "Authorized"}
+          </span>
         </div>
       </div>
     </header>

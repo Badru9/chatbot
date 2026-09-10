@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuData, Role } from "@/lib/types";
+import { MenuData, VisibleRole } from "@/lib/types";
 import {
   Button,
   Checkbox,
@@ -19,7 +19,7 @@ export interface MenuFormState {
   description: string;
   icon: string;
   href: string;
-  visibleToRoles: Role[];
+  visibleToRoles: string[];
   order: number;
 }
 
@@ -45,7 +45,9 @@ export default function MenuFormModal({
   onSave,
   isPending,
 }: MenuFormModalProps) {
-  const [selectedRoles, setSelectedRoles] = useState<string[]>(form.visibleToRoles || ["admin", "dosen"]);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>(
+    form.visibleToRoles || ["admin", "dosen"],
+  );
 
   useEffect(() => {
     if (form.visibleToRoles) {
@@ -55,7 +57,7 @@ export default function MenuFormModal({
 
   const handleRolesChange = (values: string[]) => {
     setSelectedRoles(values);
-    onFormChange("visibleToRoles", values as Role[]);
+    onFormChange("visibleToRoles", values as VisibleRole[]);
   };
 
   return (

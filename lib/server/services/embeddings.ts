@@ -1,6 +1,7 @@
 import "server-only";
 import { TaskType } from "@google/generative-ai";
-import { getGeminiEmbeddingModel } from "./gemini";
+import { getGeminiChatModel, getGeminiModel } from "./gemini";
+import { EMBEDDING_DIMENSIONALITY } from "@/constants";
 
 /**
  * Embeddings service — Google Gemini (text-embedding-004, 768 dimensions).
@@ -12,12 +13,15 @@ import { getGeminiEmbeddingModel } from "./gemini";
  */
 export async function embedText(text: string): Promise<number[]> {
   try {
-    const model = getGeminiEmbeddingModel();
+    const model = getGeminiChatModel();
     const result = await model.embedContent({
       content: { role: "user", parts: [{ text }] },
       taskType: TaskType.RETRIEVAL_QUERY,
-      outputDimensionality: 768,
+      outputDimensionality: EMBEDDING_DIMENSIONALITY,
     } as any);
+
+    console.log("embed content result", result);
+
     return result.embedding.values;
   } catch (error) {
     console.error("Error generating Gemini embedding:", error);
@@ -32,18 +36,21 @@ export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
 
   try {
-    const model = getGeminiEmbeddingModel();
+    const model = getGeminiChatModel();
     const BATCH_SIZE = 50; // Ukuran batch aman untuk request Gemini batchEmbedContents
     const results: number[][] = [];
 
     for (let i = 0; i < texts.length; i += BATCH_SIZE) {
       const batch = texts.slice(i, i + BATCH_SIZE);
       const res = await model.batchEmbedContents({
-        requests: batch.map((text) => ({
-          content: { role: "user", parts: [{ text }] },
-          taskType: TaskType.RETRIEVAL_DOCUMENT,
-          outputDimensionality: 768,
-        } as any)),
+        requests: batch.map(
+          (text) =>
+            ({
+              content: { role: "user", parts: [{ text }] },
+              taskType: TaskType.RETRIEVAL_DOCUMENT,
+              outputDimensionality: EMBEDDING_DIMENSIONALITY,
+            }) as any,
+        ),
       });
 
       const batchVectors = res.embeddings.map((e) => e.values);

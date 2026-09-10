@@ -22,12 +22,14 @@ export default function DashboardPage() {
   const activeDatasets =
     datasetsQuery.data?.filter((d) => d.isActive).length ?? 0;
   const totalUsers = users?.length ?? 0;
-  const totalDosen =
-    users?.filter((u) => u.role === "dosen").length ?? 0;
+  const totalDosen = users?.filter((u) => u.roleName === "dosen").length ?? 0;
 
   const aiData = aiSettingQuery.data;
   const isStatsLoading =
-    isMenusLoading || datasetsQuery.isLoading || isUsersLoading || aiSettingQuery.isLoading;
+    isMenusLoading ||
+    datasetsQuery.isLoading ||
+    isUsersLoading ||
+    aiSettingQuery.isLoading;
 
   return (
     <div className="space-y-6">
@@ -43,7 +45,9 @@ export default function DashboardPage() {
             Selamat Datang, {user?.name || "Admin"}
           </h2>
           <p className="text-xs sm:text-sm text-neutral-400 mt-2 leading-relaxed font-normal">
-            Kelola pintasan layanan dosen, dokumen pedoman dan dataset pengetahuan untuk RAG Chatbot, serta konfigurasi engine AI dalam satu kontrol terpadu.
+            Kelola pintasan layanan dosen, dokumen pedoman dan dataset
+            pengetahuan untuk RAG Chatbot, serta konfigurasi engine AI dalam
+            satu kontrol terpadu.
           </p>
         </div>
       </div>
@@ -56,7 +60,7 @@ export default function DashboardPage() {
         totalUsers={totalUsers}
         totalDosen={totalDosen}
         aiProvider={aiData?.activeProvider || "gemini"}
-        aiPrimaryModel={aiData?.geminiPrimary || "gemini-2.5-flash"}
+        aiPrimaryModel={aiData?.geminiPrimary || "gemini-3.8-flash"}
         isLoading={isStatsLoading}
       />
 
@@ -69,7 +73,7 @@ export default function DashboardPage() {
           primaryModel={
             aiData?.activeProvider === "ollama"
               ? aiData?.ollamaModel || "llama3.2"
-              : aiData?.geminiPrimary || "gemini-2.5-flash"
+              : aiData?.geminiPrimary || "gemini-3.8-flash"
           }
           fallbacks={aiData?.geminiFallbacks || []}
           enableAutoFallback={aiData?.enableAutoFallback ?? true}

@@ -178,7 +178,7 @@ export default function DashboardSidebar({
                 {user?.name || "Admin"}
               </span>
               <span className="text-[10px] font-mono text-[#346538] dark:text-emerald-400 font-medium capitalize">
-                {user?.role || "admin"}
+                {user?.role?.name || "admin"}
               </span>
             </div>
           </div>

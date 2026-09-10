@@ -1,21 +1,21 @@
-import 'server-only'
-import { searchPdfChunks } from './database'
-import { embedText } from './embeddings'
+import "server-only";
+import { searchPdfChunks } from "./database";
+import { embedText } from "./embeddings";
 
 interface RetrievedPdfChunk {
-  documentId: string
-  documentName: string
-  pageNumber: number | null
-  chunkIndex: number
-  chunkText: string
-  score: number
+  documentId: string;
+  documentName: string;
+  pageNumber: number | null;
+  chunkIndex: number;
+  chunkText: string;
+  score: number;
 }
 
 interface RetrievePdfContextInput {
-  prompt: string
-  documentIds: string[]
-  limit?: number
-  userId?: string
+  prompt: string;
+  documentIds: string[];
+  limit?: number;
+  userId?: string;
 }
 
 export async function retrievePdfChunks({
@@ -24,36 +24,42 @@ export async function retrievePdfChunks({
   limit = 8,
   userId,
 }: RetrievePdfContextInput): Promise<RetrievedPdfChunk[]> {
-  const promptEmbedding = await embedText(prompt)
+  const promptEmbedding = await embedText(prompt);
+
+  console.log("prompt embedding", promptEmbedding);
 
   const initialChunks = await searchPdfChunks({
     embedding: promptEmbedding,
     documentIds,
     limit,
     userId,
-  })
+  });
 
-  return initialChunks
+  return initialChunks;
 }
 
 export function formatRetrievedPdfContext(chunks: RetrievedPdfChunk[]): string {
-  if (chunks.length === 0) return ''
+  if (chunks.length === 0) return "";
 
   return chunks
     .map((chunk: any, index: number) =>
       [
         `[Sumber PDF ${index + 1}]`,
         `Dokumen: ${chunk.documentName}`,
-        `Halaman: ${chunk.pageNumber ?? '-'}`,
+        `Halaman: ${chunk.pageNumber ?? "-"}`,
         `Chunk: ${chunk.chunkIndex}`,
         `Skor relevansi: ${chunk.score.toFixed(4)}`,
         chunk.chunkText,
-      ].join('\n'),
+      ].join("\n"),
     )
-    .join('\n\n---\n\n')
+    .join("\n\n---\n\n");
 }
 
-export async function retrievePdfContext(input: RetrievePdfContextInput): Promise<string> {
-  const chunks = await retrievePdfChunks(input)
-  return formatRetrievedPdfContext(chunks)
+export async function retrievePdfContext(
+  input: RetrievePdfContextInput,
+): Promise<string> {
+  console.log("pdf chunks input", input);
+
+  const chunks = await retrievePdfChunks(input);
+  return formatRetrievedPdfContext(chunks);
 }
